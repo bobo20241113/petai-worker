@@ -1,5 +1,6 @@
 import {ApiError,id,text,jsonBody,hash,allowed,guestMessages,fastgpt,imageData} from './core.js';
 import {DB,authenticate} from './db.js';
+import {imageObjectPath} from './images.js';
 import {enqueue,runTurn,recover,petContext,syncMemory} from './jobs.js';
 function response(data,status=200) { return new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}}); }
 async function rate(env,key) {
@@ -34,7 +35,7 @@ async function upload(db,env,user,body) {
   const png=bytes.slice(0,8).join(',')==='137,80,78,71,13,10,26,10';
   const webp=new TextDecoder().decode(bytes.slice(0,4))==='RIFF'&&new TextDecoder().decode(bytes.slice(8,12))==='WEBP';
   if (!((mime==='image/jpeg'&&jpg)||(mime==='image/png'&&png)||(mime==='image/webp'&&webp))) throw new ApiError(400,'INVALID_IMAGE','图片内容与类型不匹配');
-  const attachment=crypto.randomUUID();const path=user+'/'+conv.id+'/'+attachment;
+  const attachment=crypto.randomUUID();const path=imageObjectPath(user,conv.id,attachment,mime);
   // Metadata first means cron can clean failed/unreferenced uploads.
   await db.insert('attachments',{id:attachment,owner_id:user,conversation_id:conv.id,storage_path:path,mime,size:bytes.length});
   const key=env.SUPABASE_SECRET_KEY;const headers={apikey:key,'Content-Type':mime};
@@ -52,7 +53,7 @@ export async function route(request,env,ctx) {
     return response({supabaseUrl:env.SUPABASE_URL||'',supabasePublishableKey:key,turnstileSiteKey:env.TURNSTILE_SITE_KEY||'',guestEnabled:env.GUEST_ENABLED==='true'});
   }
   if(method==='GET'&&!p.startsWith('/api/')&&p!=='/health'&&env.ASSETS)return env.ASSETS.fetch(request);
-  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.0.0'});
+  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.1.0'});
   if(p==='/api/guest/chat'&&method==='POST')return guest(request,env);
   if(!p.startsWith('/api/'))throw new ApiError(404,'NOT_FOUND','接口不存在');
   const user=(await authenticate(request,env)).id;await rate(env,'user:'+user);const db=new DB(env);

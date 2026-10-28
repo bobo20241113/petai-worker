@@ -247,3 +247,11 @@ tests/            核心及本地Postgres测试
 ```
 
 参考：[Deploy按钮](https://developers.cloudflare.com/workers/platform/deploy-buttons/)、[Queues配置](https://developers.cloudflare.com/queues/configuration/configure-queues/)、[Worker Secrets](https://developers.cloudflare.com/workers/configuration/secrets/)、[Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security)。
+
+## 2026-10-29 图片输入兼容修复
+
+FastGPT V4.14.5会根据AI节点fileUrlList中的URL后缀判断图片类型。旧上传路径只有UUID，导致“空扩展名文件不支持”。新上传保留jpg/png/webp后缀，旧签名URL补filename参数；不改私有bucket，不迁移数据库。
+
+本次新增`src/images.js`，请不要只提交index.js而漏掉该文件。详细说明见[IMAGE_FIX.md](IMAGE_FIX.md)。在FastGPT现有应用中清空图片识别/日常/健康节点的fileUrlList引用，选择学校实际支持视觉的模型；或使用已更新的fastgpt/chat-cloud.json。仅勾选视觉开关不能让文本模型识图。
+
+自动记忆也拦截了“这是什么猫”被误建成“猫”档案的情况；旧误建数据不自动删除。

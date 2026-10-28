@@ -12,7 +12,7 @@
     "MEMORY_API_URL": "https://maas.eduhk.hk/api/v1/chat/completions",
     "FASTGPT_TIMEOUT_MS": "90000",
     "MAX_USER_TURNS_PER_DAY": "100",
-    "WORKFLOW_VERSION": "petai-cloud-v1"
+    "WORKFLOW_VERSION": "petai-cloud-v2-image"
   },
   "queues": {
     "producers": [{"binding": "CHAT_QUEUE", "queue": "petai-chat"}],

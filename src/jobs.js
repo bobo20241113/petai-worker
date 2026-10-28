@@ -1,6 +1,7 @@
 import {DB} from './db.js';
 import {fastgpt, content, today} from './core.js';
-import {parseExtraction} from './memory.js';
+import {parseExtraction,autoPetCandidate} from './memory.js';
+import {signedImageUrl} from './images.js';
 export async function enqueue(db, env, turnId) {
   await env.CHAT_QUEUE.send({turn_id:turnId});
   await db.update('outbox',{turn_id:'eq.'+turnId},{delivered_at:new Date().toISOString()});
@@ -31,8 +32,8 @@ export async function runTurn(env, turnId) {
     const history = rows.filter(m=>m.turn_id!==turnId && m.status==='complete' && !m.memory_excluded).reverse();
     const pets = await db.rows('pets',{owner_id:'eq.'+owner,order:'created_at.asc',limit:'100'});
     if (!conv.pet_id) {
-      const matches=pets.filter(p=>current.content.includes(p.name));
-      if(matches.length===1){await db.rpc('petai_bind_pet',{p_turn:turnId,p_lease:lease,p_pet:matches[0].id});conv=await db.own('conversations',owner,conversationId);}
+      const candidate=autoPetCandidate(pets,current.content);
+      if(candidate){await db.rpc('petai_bind_pet',{p_turn:turnId,p_lease:lease,p_pet:candidate.id});conv=await db.own('conversations',owner,conversationId);}
     }
     let ctx = await petContext(db,owner,conv.pet_id); let memoryStatus = 'saved';
     const priorState = await db.rows('conversation_states',{conversation_id:'eq.'+conversationId,owner_id:'eq.'+owner,limit:'1'});
@@ -56,7 +57,7 @@ export async function runTurn(env, turnId) {
     if (current.attachment_id) {
       const attachment = await db.own('attachments',owner,current.attachment_id);
       const signed = await db.request('/storage/v1/object/sign/petai-private/'+attachment.storage_path,{method:'POST',body:{expiresIn:600}});
-      image = env.SUPABASE_URL.replace(/\/$/,'') + (signed.signedURL.startsWith('/storage/v1/') ? signed.signedURL : '/storage/v1'+signed.signedURL);
+      image = signedImageUrl(env.SUPABASE_URL,signed.signedURL,attachment.mime);
     }
     const messages = [...history.slice(-12).map(m=>({role:m.role,content:m.content})),{role:'user',content:content(current.content,image)}];
     const variables = {petProfile:ctx.profile?JSON.stringify(ctx.profile):'',petRecords:JSON.stringify(ctx.records),clarificationState:JSON.stringify(states[0]?.state||{}),currentDate:today(),memoryStatus:JSON.stringify({status:memoryStatus,issues:ctx.issues})};
