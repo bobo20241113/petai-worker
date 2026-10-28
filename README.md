@@ -2,7 +2,16 @@
 
 Cloudflare Workers + Supabase + 学校 FastGPT。实现《宠AI后端设计 v2》的后端：已登录云端会话、从聊天自动建档、跨会话事实读取、只读档案 API、临时访客、持久任务与重试。**此目录可单独作为 GitHub 仓库上传。** Supabase 建表文件位于并列的 `petai-supabase/` 目录。
 
-这是后端项目，不会自动改造原来的 `6137-12.html`。旧HTML仍直连学校API并写IndexedDB，不能只改URL就当作云端版。前端需要按下文API接入登录、任务轮询和只读档案，并删除访客持久缓存逻辑。
+本次已加入云端前端 `public/index.html`，部署后直接打开Worker根地址即可使用。旧的 `6137-12.html`仍是历史版本，不会自动变成云端版。新页面通过Worker API访问会话和档案，访客只用页面内存。
+
+
+## 2026-10-29 前端接入更新
+
+Worker现在同时托管HTML，并通过`GET /api/config`提供白名单公开配置。请补上 `SUPABASE_PUBLISHABLE_KEY`（也支持旧变量名`SUPABASE_ANON_KEY`）以及访客用的 `TURNSTILE_SITE_KEY`，两者均为公开值，不是后端私钥。`SUPABASE_URL`复用现有值。公开接口不会返回Secret Key或任何FastGPT密钥。
+
+Supabase Auth的Site URL/允许重定向地址设为实际Worker根URL。Turnstile允许实际Worker hostname，`TURNSTILE_HOSTNAMES`同步修改，访客开启时`GUEST_ENABLED=true`。前后端同域无需额外配置ALLOWED_ORIGINS；其他托管域名仍要加到白名单。
+
+本次后端更新不涉及SQL迁移，原数据库不需要重建。完整的前端操作说明见并列`petai-frontend/README.md`，该前端也有独立单文件版本6137-16.html。
 
 ## 一键部署按钮
 
@@ -84,6 +93,8 @@ npm run deploy
 | `SUPABASE_SECRET_KEY` | Secret | 服务端secret或旧service_role，仅后端可见 |
 | `FASTGPT_API_KEY` | Secret | 主聊天应用API key |
 | `MEMORY_API_KEY` | Secret | 独立提取应用API key |
+| `SUPABASE_PUBLISHABLE_KEY` | 公开变量 | 浏览器登录使用的Publishable Key或旧anon key，不能填service_role |
+| `TURNSTILE_SITE_KEY` | 公开变量 | 浏览器人机验证使用，与私钥来自同一站点 |
 | `FASTGPT_API_URL` | 普通变量 | 完整chat/completions URL，默认学校接口 |
 | `MEMORY_API_URL` | 普通变量 | 提取应用接口URL，默认学校接口 |
 | `ALLOWED_ORIGINS` | 普通变量 | 逗号分隔的前端origin，例`https://pet.example.com,http://localhost:8080`，无末尾斜杠，不支持`*` |
@@ -94,7 +105,7 @@ npm run deploy
 | `MAX_USER_TURNS_PER_DAY` | 普通变量 | 默认每用户每天100次新问题；重试另受最多5次attempt约束 |
 | `WORKFLOW_VERSION` | 普通变量 | 快照中的流程版本标记 |
 
-修改 `wrangler.jsonc` 中的普通变量后再部署；如果只在控制台修改，后续仓库部署可能覆盖，建议以仓库配置为准。
+配置使用keep_vars保留控制台中的额外变量。ALLOWED_ORIGINS、GUEST_ENABLED、TURNSTILE_HOSTNAMES由控制台配置，不再用仓库默认值覆盖；wrangler.jsonc中仍明确列出的变量会以仓库值部署。
 
 检查 `GET /health` 返回`ok:true`。该检查仅表示Worker存活，不表示数据库、提取模型或聊天模型配置成功；再用下文登录用户测试验证整条链路。
 
@@ -106,6 +117,7 @@ npm run deploy
 
 | 方法/路径 | 说明 |
 | --- | --- |
+| `GET /api/config` | 无需登录，只返回公开配置白名单 |
 | `GET /api/pets` | 自动生成的宠物列表，只读 |
 | `GET /api/pets/:id` | 当前有效档案、记录和待澄清冲突 |
 | `GET /api/pets/:id/records` | 有效记录，只读 |

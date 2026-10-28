@@ -65,3 +65,20 @@ test('logged-in readonly profile has no manual write route or service-key exposu
   assert.equal(res.status,404);assert.equal(calls,1);assert.ok(!(await res.text()).includes('sb_secret_never_return'));
  }finally{globalThis.fetch=original;}
 });
+test('public config returns an explicit whitelist and never private secrets',async()=>{
+ const env={SUPABASE_URL:'https://demo.supabase.co',SUPABASE_SECRET_KEY:'sb_secret_private',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_public',FASTGPT_API_KEY:'private_chat_key',MEMORY_API_KEY:'private_memory_key',TURNSTILE_SECRET_KEY:'private_challenge',TURNSTILE_SITE_KEY:'public_site',GUEST_ENABLED:'true'};
+ const r=await worker.fetch(new Request('https://api/api/config',{headers:{Origin:'https://api'}}),env,{});
+ assert.equal(r.status,200);const raw=await r.text();assert.ok(raw.includes('sb_publishable_public'));assert.ok(raw.includes('public_site'));
+ for(const secret of ['sb_secret_private','private_chat_key','private_memory_key','private_challenge'])assert.ok(!raw.includes(secret));
+ const unsafe=await worker.fetch(new Request('https://api/api/config'),{...env,SUPABASE_PUBLISHABLE_KEY:'sb_secret_wrong'},{});assert.equal((await unsafe.json()).supabasePublishableKey,'');
+ const jwt='x.'+btoa(JSON.stringify({role:'service_role'}))+'.x';
+ const old=await worker.fetch(new Request('https://api/api/config'),{...env,SUPABASE_PUBLISHABLE_KEY:jwt},{});assert.equal((await old.json()).supabasePublishableKey,'');
+});
+test('same-origin guest access works without adding own domain to cross-origin allowlist',async()=>{
+ const response=await worker.fetch(new Request('https://api/api/guest/chat',{method:'POST',headers:{Origin:'https://api'}}),{GUEST_ENABLED:'false'},{});
+ assert.equal(response.status,503);assert.equal((await response.json()).error.code,'GUEST_DISABLED');
+});
+test('worker can serve packaged frontend asset through ASSETS binding',async()=>{
+ const r=await worker.fetch(new Request('https://api/'),{ASSETS:{fetch:async()=>new Response('<html>宠AI</html>',{headers:{'Content-Type':'text/html'}})}},{});
+ assert.equal(r.status,200);assert.ok((await r.text()).includes('宠AI'));
+});

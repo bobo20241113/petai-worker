@@ -1,13 +1,45 @@
 {
-  "name": "petai-worker", "version": "1.0.0", "private": true, "type": "module",
-  "engines": {"node": ">=22"},
-  "scripts": {"dev": "wrangler dev", "deploy": "wrangler deploy", "test": "node --test tests/*.test.js", "check": "node --check src/index.js && node --check src/memory.js && node --check src/jobs.js", "deploy:link": "node scripts/deploy-link.mjs"},
-  "devDependencies": {"wrangler": "^4.0.0", "@electric-sql/pglite": "^0.3.0"},
-  "cloudflare": {"bindings": {
-    "SUPABASE_URL": {"description": "Supabase项目URL，例如https://YOUR_PROJECT.supabase.co"},
-    "SUPABASE_SECRET_KEY": {"description": "Supabase服务端secret key或旧service_role，严禁发到浏览器"},
-    "FASTGPT_API_KEY": {"description": "主聊天工作流的API密钥"},
-    "MEMORY_API_KEY": {"description": "单独的记忆提取工作流API密钥；导入fastgpt/memory-extractor.json后创建"},
-    "TURNSTILE_SECRET_KEY": {"description": "公开访客模式需要Cloudflare Turnstile私钥；默认关闭访客，配置后开启"}
-  }}
+  "name": "petai-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node --test tests/*.test.js",
+    "check": "node --check src/index.js && node --check src/memory.js && node --check src/jobs.js",
+    "deploy:link": "node scripts/deploy-link.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0",
+    "@electric-sql/pglite": "^0.3.0"
+  },
+  "cloudflare": {
+    "bindings": {
+      "SUPABASE_URL": {
+        "description": "Supabase项目URL，例如https://YOUR_PROJECT.supabase.co"
+      },
+      "SUPABASE_SECRET_KEY": {
+        "description": "Supabase服务端secret key或旧service_role，严禁发到浏览器"
+      },
+      "FASTGPT_API_KEY": {
+        "description": "主聊天工作流的API密钥"
+      },
+      "MEMORY_API_KEY": {
+        "description": "单独的记忆提取工作流API密钥；导入fastgpt/memory-extractor.json后创建"
+      },
+      "TURNSTILE_SECRET_KEY": {
+        "description": "公开访客模式需要Cloudflare Turnstile私钥；默认关闭访客，配置后开启"
+      },
+      "SUPABASE_PUBLISHABLE_KEY": {
+        "description": "可公开的Supabase Publishable Key或旧anon key，前端登录使用；不能填secret/service_role"
+      },
+      "TURNSTILE_SITE_KEY": {
+        "description": "可公开的Turnstile Site Key，与后端私钥配对"
+      }
+    }
+  }
 }

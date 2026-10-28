@@ -10,7 +10,7 @@ async function guest(request,env) {
   if (request.headers.has('authorization')) throw new ApiError(400,'WRONG_MODE','登录请求请使用云端会话接口');
   if (env.GUEST_ENABLED !== 'true') throw new ApiError(503,'GUEST_DISABLED','访客模式尚未开放');
   const origin = request.headers.get('origin');
-  if (!origin || !allowed(env,origin)) throw new ApiError(403,'ORIGIN_DENIED','访客来源不允许');
+  if (!origin || !(allowed(env,origin)||origin===new URL(request.url).origin)) throw new ApiError(403,'ORIGIN_DENIED','访客来源不允许');
   await rate(env,'guest:'+(request.headers.get('CF-Connecting-IP')||'unknown'));
   const body = await jsonBody(request,1500000);
   if (!env.TURNSTILE_SECRET_KEY || typeof body.turnstile_token !== 'string') throw new ApiError(403,'CHALLENGE_REQUIRED','请完成人机验证');
@@ -45,6 +45,13 @@ async function upload(db,env,user,body) {
 }
 export async function route(request,env,ctx) {
   const url=new URL(request.url);const p=url.pathname;const method=request.method;
+  if(p==='/api/config'&&method==='GET'){
+    let key=env.SUPABASE_PUBLISHABLE_KEY||env.SUPABASE_ANON_KEY||'';
+    if(!key.startsWith('sb_publishable_')&&!key.includes('.'))key='';
+    if(key.includes('.')){try{const claims=JSON.parse(atob(key.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));if(claims.role!=='anon')key='';}catch{key='';}}
+    return response({supabaseUrl:env.SUPABASE_URL||'',supabasePublishableKey:key,turnstileSiteKey:env.TURNSTILE_SITE_KEY||'',guestEnabled:env.GUEST_ENABLED==='true'});
+  }
+  if(method==='GET'&&!p.startsWith('/api/')&&p!=='/health'&&env.ASSETS)return env.ASSETS.fetch(request);
   if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.0.0'});
   if(p==='/api/guest/chat'&&method==='POST')return guest(request,env);
   if(!p.startsWith('/api/'))throw new ApiError(404,'NOT_FOUND','接口不存在');
@@ -114,11 +121,11 @@ export default {
   async fetch(request,env,ctx){
     const origin=request.headers.get('origin');let res;const rid=crypto.randomUUID();
     try{
-      if(origin&&!allowed(env,origin))throw new ApiError(403,'ORIGIN_DENIED','请求来源未获允许');
+      if(origin&&!(allowed(env,origin)||origin===new URL(request.url).origin))throw new ApiError(403,'ORIGIN_DENIED','请求来源未获允许');
       if(request.method==='OPTIONS')res=new Response(null,{status:204});else res=await route(request,env,ctx);
     }catch(e){res=response({error:{code:e instanceof ApiError?e.code:'INTERNAL_ERROR',message:e instanceof ApiError?e.message:'服务暂时不可用',request_id:rid}},e instanceof ApiError?e.status:500);}
     const headers=new Headers(res.headers);headers.set('X-Request-Id',rid);headers.set('Vary','Origin');headers.set('Cache-Control','no-store');
-    if(origin&&allowed(env,origin)){headers.set('Access-Control-Allow-Origin',origin);headers.set('Access-Control-Allow-Headers','Authorization, Content-Type');headers.set('Access-Control-Allow-Methods','GET, POST, PATCH, DELETE, OPTIONS');}
+    if(origin&&(allowed(env,origin)||origin===new URL(request.url).origin)){headers.set('Access-Control-Allow-Origin',origin);headers.set('Access-Control-Allow-Headers','Authorization, Content-Type');headers.set('Access-Control-Allow-Methods','GET, POST, PATCH, DELETE, OPTIONS');}
     return new Response(res.body,{status:res.status,headers});
   },
   async queue(batch,env){for(const msg of batch.messages){try{if(!msg.body||typeof msg.body.turn_id!=='string'){msg.ack();continue;}id(msg.body.turn_id);if(msg.body.memory_only===true)await syncMemory(env,msg.body.turn_id);else await runTurn(env,msg.body.turn_id);msg.ack();}catch{msg.retry({delaySeconds:30});}}},

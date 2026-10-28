@@ -1,16 +1,15 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "petai-api",
+  "name": "petai-worker",
   "main": "src/index.js",
   "compatibility_date": "2026-10-27",
   "workers_dev": true,
+  "keep_vars": true,
+  "assets": {"directory":"./public", "binding":"ASSETS", "run_worker_first":["/api/*","/health"]},
   "observability": {"enabled": false},
   "vars": {
     "FASTGPT_API_URL": "https://maas.eduhk.hk/api/v1/chat/completions",
     "MEMORY_API_URL": "https://maas.eduhk.hk/api/v1/chat/completions",
-    "ALLOWED_ORIGINS": "http://localhost:8080",
-    "GUEST_ENABLED": "false",
-    "TURNSTILE_HOSTNAMES": "localhost",
     "FASTGPT_TIMEOUT_MS": "90000",
     "MAX_USER_TURNS_PER_DAY": "100",
     "WORKFLOW_VERSION": "petai-cloud-v1"
