@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "petai-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-27",
+  "workers_dev": true,
+  "observability": {"enabled": false},
+  "vars": {
+    "FASTGPT_API_URL": "https://maas.eduhk.hk/api/v1/chat/completions",
+    "MEMORY_API_URL": "https://maas.eduhk.hk/api/v1/chat/completions",
+    "ALLOWED_ORIGINS": "http://localhost:8080",
+    "GUEST_ENABLED": "false",
+    "TURNSTILE_HOSTNAMES": "localhost",
+    "FASTGPT_TIMEOUT_MS": "90000",
+    "MAX_USER_TURNS_PER_DAY": "100",
+    "WORKFLOW_VERSION": "petai-cloud-v1"
+  },
+  "queues": {
+    "producers": [{"binding": "CHAT_QUEUE", "queue": "petai-chat"}],
+    "consumers": [{"queue": "petai-chat", "max_batch_size": 1, "max_concurrency": 5, "max_retries": 3, "dead_letter_queue": "petai-chat-dead"}]
+  },
+  "triggers": {"crons": ["*/2 * * * *"]},
+  "ratelimits": [{"name": "API_RATE_LIMITER", "namespace_id": "1001", "simple": {"limit": 30, "period": 60}}]
+}
