@@ -255,3 +255,9 @@ FastGPT V4.14.5会根据AI节点fileUrlList中的URL后缀判断图片类型。�
 本次新增`src/images.js`，请不要只提交index.js而漏掉该文件。详细说明见[IMAGE_FIX.md](IMAGE_FIX.md)。在FastGPT现有应用中清空图片识别/日常/健康节点的fileUrlList引用，选择学校实际支持视觉的模型；或使用已更新的fastgpt/chat-cloud.json。仅勾选视觉开关不能让文本模型识图。
 
 自动记忆也拦截了“这是什么猫”被误建成“猫”档案的情况；旧误建数据不自动删除。
+
+## 2026-10-29 v18 短追问与法规路由
+
+“香港呢”通过完整成功的历史问答理解，分类器读取改写后的问题；Worker增加法规意图辅助与安全路由，模糊短句可澄清，不直接拒绝。前端同时修复空行引起的有序列表重复编号。
+
+需要更新本目录代码并同步更新FastGPT主工作流；没有数据库迁移。**优先使用`scripts/upgrade-workflow.mjs`升级你当前学校导出，以保留实际视觉模型、知识库与私有HTTP配置**，不要把带私钥的升级结果公开。详见[CONTEXT_FIX.md](CONTEXT_FIX.md)。公开模板在fastgpt/chat-cloud.json，独立版本为6137-18.json。

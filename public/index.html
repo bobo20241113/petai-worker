@@ -176,7 +176,14 @@ function renderMarkdown(parent,s){
     }
     if(isBullet(line)||isNumber(line)){
       const ordered=isNumber(line),list=document.createElement(ordered?'ol':'ul');
+      if(ordered){const start=Number(line.match(/^\s*(\d+)[.)]/)[1]);if(start>1)list.start=start}
       while(i<lines.length){
+        // Blank lines between items belong to the same list, not a fresh <ol>.
+        if(!lines[i].trim()){
+          let next=i;while(next<lines.length&&!lines[next].trim())next++;
+          if(next<lines.length&&(ordered?isNumber(lines[next]):isBullet(lines[next])))i=next;
+          else break;
+        }
         const current=lines[i],match=ordered?current.match(/^\s*\d+[.)]\s+(.+)$/):current.match(/^\s*[-*+]\s+(.+)$/);
         if(!match)break;
         const li=document.createElement('li');appendInline(li,match[1]);list.append(li);i++;

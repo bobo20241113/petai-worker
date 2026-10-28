@@ -2,6 +2,7 @@ import {DB} from './db.js';
 import {fastgpt, content, today} from './core.js';
 import {parseExtraction,autoPetCandidate} from './memory.js';
 import {signedImageUrl} from './images.js';
+import {conversationHints,successfulHistory} from './conversation.js';
 export async function enqueue(db, env, turnId) {
   await env.CHAT_QUEUE.send({turn_id:turnId});
   await db.update('outbox',{turn_id:'eq.'+turnId},{delivered_at:new Date().toISOString()});
@@ -29,7 +30,7 @@ export async function runTurn(env, turnId) {
     let conv = await db.own('conversations',owner,conversationId);
     const current = (await db.rows('messages',{owner_id:'eq.'+owner,turn_id:'eq.'+turnId,role:'eq.user',limit:'1'}))[0]; if (!current) throw new Error('MESSAGE_MISSING');
     const rows = await db.rows('messages',{owner_id:'eq.'+owner,conversation_id:'eq.'+conversationId,sequence:'lt.'+current.sequence,order:'sequence.desc',limit:'24'});
-    const history = rows.filter(m=>m.turn_id!==turnId && m.status==='complete' && !m.memory_excluded).reverse();
+    const history = successfulHistory(rows.filter(m=>m.turn_id!==turnId));
     const pets = await db.rows('pets',{owner_id:'eq.'+owner,order:'created_at.asc',limit:'100'});
     if (!conv.pet_id) {
       const candidate=autoPetCandidate(pets,current.content);
@@ -60,7 +61,7 @@ export async function runTurn(env, turnId) {
       image = signedImageUrl(env.SUPABASE_URL,signed.signedURL,attachment.mime);
     }
     const messages = [...history.slice(-12).map(m=>({role:m.role,content:m.content})),{role:'user',content:content(current.content,image)}];
-    const variables = {petProfile:ctx.profile?JSON.stringify(ctx.profile):'',petRecords:JSON.stringify(ctx.records),clarificationState:JSON.stringify(states[0]?.state||{}),currentDate:today(),memoryStatus:JSON.stringify({status:memoryStatus,issues:ctx.issues})};
+    const variables = {...conversationHints(current.content,history,ctx.profile),petProfile:ctx.profile?JSON.stringify(ctx.profile):'',petRecords:JSON.stringify(ctx.records),clarificationState:JSON.stringify(states[0]?.state||{}),currentDate:today(),memoryStatus:JSON.stringify({status:memoryStatus,issues:ctx.issues})};
     // Persist before calling upstream: a lost response is not automatically safe to repeat.
     const started = await db.rpc('petai_start_answer',{p_turn:turnId,p_lease:lease,p_context:{messages,variables,workflow:env.WORKFLOW_VERSION}});
     if (!started) return;
@@ -97,7 +98,7 @@ export async function syncMemory(env, turnId) {
     const pets=await db.rows('pets',{owner_id:'eq.'+turn.owner_id,limit:'100'});
     const history=await db.rows('messages',{conversation_id:'eq.'+conv.id,owner_id:'eq.'+turn.owner_id,sequence:'lt.'+current.sequence,status:'eq.complete',memory_excluded:'eq.false',order:'sequence.desc',limit:'8'});
     const context=await petContext(db,turn.owner_id,conv.pet_id);
-    const output=await fastgpt(env,[{role:'user',content:JSON.stringify({message:current.content,current_pet:conv.pet_id,pets:pets.map(p=>({id:p.id,name:p.name})),profile:context.profile,records:context.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:history.reverse().map(m=>({role:m.role,content:m.content})),received_at:current.created_at})}],{},true);
+    const output=await fastgpt(env,[{role:'user',content:JSON.stringify({message:current.content,current_pet:conv.pet_id,pets:pets.map(p=>({id:p.id,name:p.name})),profile:context.profile,records:context.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:successfulHistory(history,4).map(m=>({role:m.role,content:m.content})),received_at:current.created_at})}],{},true);
     await db.rpc('petai_apply_memory',{p_turn:turnId,p_lease:turn.lease_token,p_data:parseExtraction(output,current.content)});
   }catch{await db.rpc('petai_memory_pending',{p_turn:turnId,p_lease:turn.lease_token});}
 }

@@ -1,6 +1,7 @@
 import {ApiError,id,text,jsonBody,hash,allowed,guestMessages,fastgpt,imageData} from './core.js';
 import {DB,authenticate} from './db.js';
 import {imageObjectPath} from './images.js';
+import {conversationHints} from './conversation.js';
 import {enqueue,runTurn,recover,petContext,syncMemory} from './jobs.js';
 function response(data,status=200) { return new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}}); }
 async function rate(env,key) {
@@ -22,7 +23,8 @@ async function guest(request,env) {
   const hosts=(env.TURNSTILE_HOSTNAMES||'').split(',').map(x=>x.trim());
   if (!verdict.success || !hosts.includes(verdict.hostname) || verdict.action !== 'guest_chat') throw new ApiError(403,'CHALLENGE_FAILED','人机验证失败');
   try {
-    const answer = await fastgpt(env,guestMessages(body),{petProfile:'',petRecords:'[]',clarificationState:'{}',memoryStatus:'{"mode":"guest","persistent":false}'});
+    const messages=guestMessages(body);
+    const answer = await fastgpt(env,messages,{...conversationHints(body.text,messages.slice(0,-1)),petProfile:'',petRecords:'[]',clarificationState:'{}',memoryStatus:'{"mode":"guest","persistent":false}'});
     return response({answer,mode:'guest',persistent:false});
   } catch(e) { if(e instanceof ApiError) throw e; throw new ApiError(502,'UPSTREAM_FAILED','本次回答失败，访客对话未保存'); }
 }
@@ -53,7 +55,7 @@ export async function route(request,env,ctx) {
     return response({supabaseUrl:env.SUPABASE_URL||'',supabasePublishableKey:key,turnstileSiteKey:env.TURNSTILE_SITE_KEY||'',guestEnabled:env.GUEST_ENABLED==='true'});
   }
   if(method==='GET'&&!p.startsWith('/api/')&&p!=='/health'&&env.ASSETS)return env.ASSETS.fetch(request);
-  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.1.0'});
+  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.2.0'});
   if(p==='/api/guest/chat'&&method==='POST')return guest(request,env);
   if(!p.startsWith('/api/'))throw new ApiError(404,'NOT_FOUND','接口不存在');
   const user=(await authenticate(request,env)).id;await rate(env,'user:'+user);const db=new DB(env);
