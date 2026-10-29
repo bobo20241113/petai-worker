@@ -37,7 +37,7 @@ test('workflow actually routes confirmed law hints before main classifier, and u
  assert.deepEqual(val('rvbo634w3AYj','userChatInput'),['viGpsYsOOUgV6xbI','answerText']);
  const rules=val('petcareLawIntentGateV18','ifElseList');assert.deepEqual(rules[0].list[0].variable,['VARIABLE_NODE_ID','lawIntent']);assert.equal(rules[0].list[0].condition,'equalTo');
  const branch=(id,p)=>f.edges.find(e=>e.source===id&&e.sourceHandle===id+'-source-'+p)?.target;
- assert.equal(branch('viGpsYsOOUgV6xbI','right'),'petcareLawIntentGateV18');assert.equal(branch('petcareLawIntentGateV18','IF'),'i4LYS9E0BvJ0Gy1C');
+ assert.equal(branch('viGpsYsOOUgV6xbI','right'),'petcareLawIntentGateV18');assert.equal(branch('petcareLawIntentGateV18','IF'),'petcareLegalScopeV19');
  assert.equal(branch('petcareLawIntentGateV18','ELSE'),'rvbo634w3AYj');assert.equal(branch('petcareFollowupGateV18','IF'),'petcareClarifyFollowupV18');
  assert.deepEqual(val('petcareEntryRiskGuardV13','ifElseList')[0].list[0].variable,['workflowStartNodeId','userChatInput']);
 });
@@ -63,4 +63,16 @@ test('city substitution does not rename a Pekingese breed or replace purchase lo
 test('personal suitability questions are not forced into legal route just for mentioning a city',()=>{
  assert.equal(conversationHints('我在深圳住小户型，可以养拉布拉多吗').lawIntent,'no');
  assert.equal(conversationHints('深圳小户型养狗也需要登记吗').lawIntent,'yes');
+});
+test('upgrader removes retired regional branches from v18 without restoring stale references',()=>{
+ const dir=mkdtempSync(join(tmpdir(),'petai-v19-upgrade-'));
+ try{
+  const input=new URL('../../6137-18.json',import.meta.url);const output=join(dir,'out.json');
+  execFileSync(process.execPath,[new URL('../scripts/upgrade-workflow.mjs',import.meta.url).pathname,input.pathname,output]);
+  const out=JSON.parse(readFileSync(output,'utf8'));const raw=JSON.stringify(out);
+  assert.ok(!raw.includes('petcareHk'));assert.ok(!raw.includes('pets.gov.hk'));
+  const query=out.nodes.find(n=>n.nodeId==='sMnGaCpKJevxBZHb').inputs.find(i=>i.key==='searchQuery').value;
+  assert.deepEqual(query,['petcareOfficialQueryV5','answerText']);
+  const read=out.nodes.find(n=>n.nodeId==='petcareReadOfficialV7').inputs.find(i=>i.key==='system_httpJsonBody').value;assert.match(read,/sourceUrl/);
+ }finally{rmSync(dir,{recursive:true,force:true})}
 });

@@ -5,13 +5,17 @@ Cloudflare Workers + Supabase + 学校 FastGPT。实现《宠AI后端设计 v2�
 本次已加入云端前端 `public/index.html`，部署后直接打开Worker根地址即可使用。旧的 `6137-12.html`仍是历史版本，不会自动变成云端版。新页面通过Worker API访问会话和档案，访客只用页面内存。
 
 
+## v19 通用法规更新
+
+已删除地区专属法规分支，统一范围规划、缺项补问、检索与证据审查。Worker 增加本次实际来源核对，阻止拼接或无依据引用；主聊天使用 `detail:true`，详细节点结果不返回浏览器。**请同时更新 Worker 和学校主工作流**；无需数据库迁移。保留学校配置的升级步骤见 [GENERIC_WORKFLOW.md](GENERIC_WORKFLOW.md)。
+
 ## 2026-10-29 前端接入更新
 
 Worker现在同时托管HTML，并通过`GET /api/config`提供白名单公开配置。请补上 `SUPABASE_PUBLISHABLE_KEY`（也支持旧变量名`SUPABASE_ANON_KEY`）以及访客用的 `TURNSTILE_SITE_KEY`，两者均为公开值，不是后端私钥。`SUPABASE_URL`复用现有值。公开接口不会返回Secret Key或任何FastGPT密钥。
 
 Supabase Auth的Site URL/允许重定向地址设为实际Worker根URL。Turnstile允许实际Worker hostname，`TURNSTILE_HOSTNAMES`同步修改，访客开启时`GUEST_ENABLED=true`。前后端同域无需额外配置ALLOWED_ORIGINS；其他托管域名仍要加到白名单。
 
-本次后端更新不涉及SQL迁移，原数据库不需要重建。完整的前端操作说明见并列`petai-frontend/README.md`，该前端也有独立单文件版本6137-16.html。
+本次后端更新不涉及SQL迁移，原数据库不需要重建。完整的前端操作说明见并列`petai-frontend/README.md`，该前端也有独立单文件版本6137-19.html。
 
 ## 一键部署按钮
 
@@ -55,7 +59,7 @@ npm run deploy:link -- https://github.com/你的用户名/你的仓库 main peta
 
 | 文件 | 用途 | 密钥配置 |
 | --- | --- | --- |
-| `chat-cloud.json` | 基于v15，加入云端记录/补问/同步状态变量 | `FASTGPT_API_KEY` |
+| `chat-cloud.json` | v19 通用范围、补问、法规证据审查及云端上下文 | `FASTGPT_API_KEY` |
 | `memory-extractor.json` | 独立的用户事实JSON提取器，不是普通问答 | `MEMORY_API_KEY` |
 
 导入后在学校平台选择实际可用模型，主应用自行绑定知识库。**公开模板已清空HTTP节点的隐藏鉴权头**，联网搜索所需鉴权需在学校平台自行重配；不要把带真实密钥的导出JSON上传公开仓库。记忆应用不需要知识库、联网或视觉。
