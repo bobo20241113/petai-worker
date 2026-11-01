@@ -1,3 +1,11 @@
+# 宠AI v30：当前页面首次验证一次
+
+取消页面内定时重验，更新访客底部引导文案。本次须同时更新 Worker 与页面。见 [GUEST_SESSION_V30.md](GUEST_SESSION_V30.md)。以下旧版本说明仅供历史参考。
+
+# 宠AI v29：访客验证一次，连续聊天 30 分钟
+
+本次需要同时更新 Worker 后端与 `public/index.html`，不能只替换 HTML。沿用现有 Turnstile 配置，不需要 SQL 或 FastGPT 工作流变更。见 [GUEST_SESSION_V29.md](GUEST_SESSION_V29.md)。
+
 # 宠AI v25 升级提示 · Worker 1.8.0
 
 新会话也能查看账号档案；唯一已确认自养宠物可默认使用，多只按聊天识别。先执行 Supabase 006（此前缺 005 时先补 005），再部署本版 Worker 与页面，并更新记忆提取提示词。
@@ -144,6 +152,7 @@ npm run deploy
 
 | 方法/路径 | 说明 |
 | --- | --- |
+| `POST /api/guest/session` | Turnstile 验证后签发页面范围通行凭证，无数据库访问 |
 | `GET /api/config` | 无需登录，只返回公开配置白名单 |
 | `GET /api/pets` | 自动生成的宠物列表，只读 |
 | `GET /api/pets/:id` | 当前有效档案、记录和待澄清冲突 |
@@ -196,13 +205,13 @@ const result = await fetch(`${API}/api/turns/${task.turn_id}`, {headers}).then(r
 
 ## 5. 访客 API：不持久化
 
-`POST /api/guest/chat`不带Authorization，需要允许的Origin、开启的访客开关及有效Turnstile token。前端Turnstile组件action必须为`guest_chat`，每次发送使用新token。
+首次调用 `POST /api/guest/session`，提交一次性 `turnstile_token` 和 `session_version:2`，Worker 验证成功后返回 `guest_session_token` 和 `session_scope:"page"`。Turnstile 组件 action 为 `guest_chat`。之后在当前页面调用 `POST /api/guest/chat` 携带该通行凭证，不带 Authorization；两条路径均要求允许的 Origin、开启访客及限流通过。
 
 ```json
 {
   "text":"猫能吃什么",
   "history":[{"role":"user","content":"我家有一只猫"},{"role":"assistant","content":"你想了解哪方面？"}],
-  "turnstile_token":"本次验证token"
+  "guest_session_token":"服务器签发的短期访客通行凭证"
 }
 ```
 

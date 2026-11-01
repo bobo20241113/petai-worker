@@ -304,6 +304,7 @@ let config={...DEFAULT_CONFIG},auth=null,authSubscription=null,authEpoch=0,ident
 let conversations=[],pets=[],active=null,messages=[],guestTurns=[],photo=null,busy=false,epoch=0,photoEpoch=0;
 let activeTask=null,pendingSubmit=null,firstSequence=null,authMode='login',recovery=false,widget=null,turnstileToken='',widgetPromise=null;
 let controllers=new Set(),authTimer=null,configNotice='',serverConfigReady=false;
+let guestPass=null,verificationPromise=null,verificationGeneration=0;
 class ClientError extends Error{constructor(message,code='',status=0){super(message);this.code=code;this.status=status}}
 function element(tag,text,className){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(className)n.className=className;return n}
 function toast(value){const n=$('toast');n.textContent=value;n.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>n.hidden=true,5000)}
@@ -407,8 +408,8 @@ async function useSession(session,event=''){
  if(event==='PASSWORD_RECOVERY'){recovery=true;setAuthMode('recovery');openDialog('auth-dialog')}
  const next=session?.user?.id||null;
  if(next===userId){identity=session;if(!session)renderShell();return}
- stopWait();userId=next;identity=session;conversations=[];pets=[];clearView();renderShell();
- if(!session){setStatus('Enter 发送，Shift＋Enter 换行');return}
+ stopWait();clearGuestPass();resetVerification();userId=next;identity=session;conversations=[];pets=[];clearView();renderShell();
+ if(!session){setStatus('当前为访客，登录后可保存会话，让我持续了解你的宠物。');return}
  const stamp=epoch;setStatus('正在读取云端会话…');
  try{await reloadLists(stamp);assertEpoch(stamp);if(conversations.length)await openConversation(conversations[0].id);else setStatus('直接聊天即可自动完善档案。');if(!recovery)$('auth-dialog').close();}catch(e){showError(e);setStatus('云端数据读取失败，可点击“刷新云端”重试。')}
 }
@@ -426,7 +427,7 @@ async function setupAuth(){
  if(recoveryLink){recovery=true;setAuthMode('recovery');openDialog('auth-dialog')}
  await useSession(initial.data.session);
 }
-function newConversation(){stopWait();if(!identity)resetVerification();clearView();renderShell();setStatus(identity?'账号档案会保留，本轮对象根据聊天自动确定。':'新的访客对话，之前的临时上下文已清空。');$('question').focus()}
+function newConversation(){stopWait();if(!identity)resetVerification();clearView();renderShell();setStatus(identity?'账号档案会保留，本轮对象根据聊天自动确定。':'当前为访客，登录后可保存会话，让我持续了解你的宠物。');$('question').focus()}
 function renderMessages(){
  chat.replaceChildren();if(!messages.length){restoreWelcome();return}
  if(firstSequence!==null){const more=element('button','加载更早消息','cloud-button older-messages');more.id='load-older';more.type='button';chat.append(more)}
@@ -492,15 +493,46 @@ async function submitCloud(d,stamp=epoch){
  finally{if(stamp===epoch)setBusy(false)}
 }
 function guestHistory(){let h=guestTurns.filter(t=>t.answer).flatMap(t=>[{role:'user',content:t.text},{role:'assistant',content:t.answer}]).slice(-12);while(h.length&&h.reduce((sum,m)=>sum+m.content.length,0)>17000)h=h.slice(2);return h}
+function validGuestPass(){return !!guestPass}
+function clearGuestPass(){guestPass=null}
+function installGuestPass(data){
+ if(data.session_scope!=='page'||typeof data.guest_session_token!=='string'||!data.guest_session_token)throw new ClientError('访客验证返回异常，请更新后端或稍后重试','BAD_RESPONSE');
+ guestPass={token:data.guest_session_token};
+}
+function exchangeGuestPass(token){
+ if(verificationPromise)return verificationPromise;
+ const stamp=epoch,generation=verificationGeneration;
+ $('guest-verification-note').textContent='正在确认验证结果…';
+ const task=(async()=>{
+  try{
+   const data=await request('/api/guest/session',{method:'POST',guest:true,stamp,body:{turnstile_token:token,session_version:2}});
+   assertEpoch(stamp);if(identity||generation!==verificationGeneration)throw new ClientError('页面已切换','STALE_VIEW');
+   installGuestPass(data);resetVerification();$('guest-verification').hidden=true;
+  }catch(e){
+   if(stamp===epoch&&generation===verificationGeneration&&!identity){
+    turnstileToken='';$('guest-verification').hidden=false;
+    $('guest-verification-note').textContent=e?.status===404?'访客服务需要更新，请登录使用。':'验证未完成，请重新验证或登录使用。';
+    if(!$('retry-guest-verification')){const retry=element('button','重新验证','cloud-button');retry.id='retry-guest-verification';retry.type='button';retry.addEventListener('click',()=>{resetVerification();renderVerification()});$('guest-verification').append(retry)}
+   }
+   throw e;
+  }finally{if(verificationPromise===task)verificationPromise=null}
+ })();
+ verificationPromise=task;return task;
+}
 async function sendGuest(input){
- if(!config.turnstileSiteKey){toast('访客验证尚未配置，请登录使用或打开连接设置。');openSettings();return}
- if(config.guestEnabled===false){toast('Worker 尚未开启访客模式。可先登录使用。');return}
- if(!turnstileToken){toast('请先完成输入框下方的人机验证。');renderVerification();return}
- const stamp=epoch,token=turnstileToken,history=guestHistory(),image=photo?.dataUrl;turnstileToken='';
+ if(config.guestEnabled===false){toast('访客模式暂不可用，请登录使用。');return}
+ if(!validGuestPass()){
+  clearGuestPass();
+  if(verificationPromise){try{await verificationPromise}catch{return}}
+  else if(turnstileToken){try{await exchangeGuestPass(turnstileToken)}catch{return}}
+  else {toast(config.turnstileSiteKey?'首次使用请完成验证，之后可在当前页面连续聊天。':'访客模式暂不可用，请登录使用。');renderVerification();return}
+ }
+ if(!validGuestPass()||identity)return;
+ const stamp=epoch,token=guestPass.token,history=guestHistory(),image=photo?.dataUrl;
  setBusy(true);addMessage('user',input,image);const bubble=addMessage('assistant','正在等待回复…');$('question').value='';clearPhoto();fitQuestion();
- try{const data=await request('/api/guest/chat',{method:'POST',guest:true,timeout:125000,stamp,body:{text:input,history,turnstile_token:token,...(image?{image}:{})}});assertEpoch(stamp);renderMarkdown(bubble,data.answer);setMessageTime(bubble,data.answered_at??Date.now());guestTurns.push({text:input,answer:data.answer});setStatus('访客回复仅保留在当前页面。');}
- catch(e){if(stamp!==epoch)return;showError(e);bubble.textContent='访客请求失败，本次未写入云端。你可以重新填写问题后发送。';if(!$('question').value)$('question').value=input;fitQuestion();}
- finally{if(stamp===epoch){setBusy(false);if(widget!==null&&window.turnstile)window.turnstile.reset(widget)}}
+ try{const data=await request('/api/guest/chat',{method:'POST',guest:true,timeout:125000,stamp,body:{text:input,history,guest_session_token:token,...(image?{image}:{})}});assertEpoch(stamp);renderMarkdown(bubble,data.answer);setMessageTime(bubble,data.answered_at??Date.now());guestTurns.push({text:input,answer:data.answer});setStatus('当前为访客，登录后可保存会话，让我持续了解你的宠物。');}
+ catch(e){if(stamp!==epoch)return;if(['GUEST_SESSION_EXPIRED','GUEST_SESSION_INVALID','CHALLENGE_REQUIRED'].includes(e.code)){clearGuestPass();resetVerification();renderVerification()}showError(e);bubble.textContent='访客请求失败，本次未写入云端。你可以重新填写问题后发送。';if(!$('question').value)$('question').value=input;fitQuestion();}
+ finally{if(stamp===epoch)setBusy(false)}
 }
 async function cancelRequest(){
  const task=activeTask;const wasCloud=!!identity;stopWait();
@@ -601,23 +633,23 @@ async function saveSettings(event){
  event.preventDefault();const next=validateConfig({...config,apiBase:$('config-worker').value.trim().replace(/\/$/,''),supabaseUrl:$('config-supabase').value.trim(),supabasePublishableKey:$('config-publishable').value.trim(),turnstileSiteKey:$('config-turnstile').value.trim()});
  const changeProject=next.supabaseUrl!==config.supabaseUrl||next.supabasePublishableKey!==config.supabasePublishableKey;
  if(identity&&!await confirmChoice('更新连接配置','这会清空当前页面的账号数据并重新读取云端状态，未发送草稿将丢失。是否继续？'))return;
- stopWait();if(changeProject&&auth)await auth.auth.signOut({scope:'local'});identity=null;userId=null;conversations=[];pets=[];clearView();config=next;
+ stopWait();if(changeProject&&auth)await auth.auth.signOut({scope:'local'});identity=null;userId=null;conversations=[];pets=[];clearView();config=next;clearGuestPass();
  try{localStorage.setItem(CONFIG_KEY,JSON.stringify({apiBase:config.apiBase,supabaseUrl:config.supabaseUrl,supabasePublishableKey:config.supabasePublishableKey,turnstileSiteKey:config.turnstileSiteKey}))}catch{toast('浏览器未允许保存公开配置，刷新后需重新填写。')}
  resetVerification();$('settings-dialog').close();renderShell();notice('');configNotice='';await setupAuth();
 }
 async function checkConnection(){const target=$('config-status');target.textContent='正在检查…';try{const url=$('config-worker').value.trim().replace(/\/$/,'');const parsed=new URL(url);if(parsed.protocol!=='https:')throw Error('Worker 地址需使用HTTPS');const r=await fetch(url+'/health',{cache:'no-store',signal:AbortSignal.timeout(15000)});const data=await r.json();if(!r.ok||!data.ok)throw Error('Worker健康检查未通过');target.className='cloud-status connection-ok';target.textContent='Worker 健康接口正常。还需登录后验证数据库和模型。'}catch(e){target.className='cloud-status cloud-error';target.textContent='连接检查失败，请核对地址、网络及 ALLOWED_ORIGINS。'}}
-function resetVerification(){turnstileToken='';if(widget!==null&&window.turnstile){window.turnstile.remove(widget);widget=null}$('turnstile-mount').replaceChildren()}
+function resetVerification(){$('retry-guest-verification')?.remove();verificationGeneration++;verificationPromise=null;turnstileToken='';if(widget!==null&&window.turnstile){window.turnstile.remove(widget);widget=null}$('turnstile-mount').replaceChildren()}
 async function renderVerification(){
- const area=$('guest-verification');area.hidden=!!identity;
- if(identity){resetVerification();return}
- $('guest-verification-note').textContent=config.guestEnabled===false?'访客模式尚未在 Worker 开启，可先登录使用。':!config.turnstileSiteKey?'登录可保存会话；访客使用前需要配置公开的人机验证 Site Key。':'发送访客问题前请完成人机验证。对话仅在当前页面保留。';
+ const area=$('guest-verification');area.hidden=!!identity||validGuestPass();
+ if(identity||validGuestPass()){resetVerification();return}
+ $('guest-verification-note').textContent=config.guestEnabled===false?'访客模式暂不可用，请登录使用。':!config.turnstileSiteKey?'访客模式暂不可用，请登录使用。':'首次打开时验证一次，即可在当前页面连续聊天。';
  if(!config.turnstileSiteKey||config.guestEnabled===false||widget!==null)return;
  if(!window.turnstile){
   if(!widgetPromise)widgetPromise=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';script.async=true;script.onload=resolve;script.onerror=()=>reject(Error('人机验证组件加载失败'));document.head.append(script)});
   try{await widgetPromise}catch{$('guest-verification-note').textContent='验证组件加载失败，请检查网络或登录使用。';return}
  }
  if(identity||widget!==null||!window.turnstile)return;
- try{widget=window.turnstile.render($('turnstile-mount'),{sitekey:config.turnstileSiteKey,action:'guest_chat',theme:'light',callback:token=>{turnstileToken=token},'expired-callback':()=>{turnstileToken=''},'error-callback':()=>{turnstileToken='';$('guest-verification-note').textContent='访客验证失败，请检查 Site Key 与当前域名配置。'}})}catch{$('guest-verification-note').textContent='无法初始化访客验证，请检查 Site Key。'}
+ try{widget=window.turnstile.render($('turnstile-mount'),{sitekey:config.turnstileSiteKey,action:'guest_chat',theme:'light',callback:token=>{turnstileToken=token;exchangeGuestPass(token).catch(()=>{})},'expired-callback':()=>{turnstileToken='';if(!validGuestPass()){$('guest-verification').hidden=false;$('guest-verification-note').textContent='验证已到期，请重新验证后继续。'}},'error-callback':()=>{turnstileToken='';$('guest-verification-note').textContent='访客验证失败，请检查 Site Key 与当前域名配置。'}})}catch{$('guest-verification-note').textContent='无法初始化访客验证，请检查 Site Key。'}
 }
 async function exportData(){const data=await request('/api/export');const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=element('a');a.href=URL.createObjectURL(blob);a.download='宠AI云端记录.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 async function deleteData(){if(!await confirmChoice('删除全部云端数据','会话、宠物档案与照护记录将删除，无法在本应用恢复。登录账号保留。是否继续？'))return;await request('/api/account/data',{method:'DELETE',body:{confirm:'DELETE_MY_DATA'}});newConversation();await reloadLists();toast('云端业务数据已删除，图片清理将在后台继续。')}
@@ -665,9 +697,9 @@ window.addEventListener('resize',()=>closeSessionOptions());
 window.addEventListener('pageshow',event=>{if(event.persisted&&!identity)newConversation()});
 setInterval(()=>{if(!document.hidden)refreshMessageTimes()},30000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshMessageTimes()});
-window.addEventListener('focus',()=>refreshMessageTimes());
-window.addEventListener('pagehide',()=>{if(!identity){stopWait();clearView();resetVerification()}});
-if(window.__PETAI_TEST__)window.__petai={formatMessageTime,refreshMessageTimes,bootstrap,useSession,newConversation,send,openConversation,openProfiles,request,validateConfig,guestHistory,cancelRequest,config:()=>config,changeConfig:c=>Object.assign(config,c),snapshot:()=>({userId,guestTurns:guestTurns.length,activeId:active?.id,busy,pendingRequest:pendingSubmit?.client_request_id}),setToken:t=>turnstileToken=t,setPhoto:p=>{photo=p}};
+window.addEventListener('focus',()=>{refreshMessageTimes();if(!identity&&!validGuestPass())renderVerification()});
+window.addEventListener('pagehide',()=>{if(!identity){stopWait();clearGuestPass();clearView();resetVerification()}});
+if(window.__PETAI_TEST__)window.__petai={formatMessageTime,refreshMessageTimes,bootstrap,useSession,newConversation,send,openConversation,openProfiles,request,validateConfig,guestHistory,cancelRequest,config:()=>config,changeConfig:c=>Object.assign(config,c),snapshot:()=>({userId,guestTurns:guestTurns.length,activeId:active?.id,busy,pendingRequest:pendingSubmit?.client_request_id,guestVerified:validGuestPass()}),setToken:t=>turnstileToken=t,setPhoto:p=>{photo=p}};
 window.addEventListener('DOMContentLoaded',()=>bootstrap().catch(showError));
 })();
 

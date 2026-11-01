@@ -11,3 +11,6 @@ ALLOWED_ORIGINS=http://localhost:8080
 GUEST_ENABLED=false
 TURNSTILE_HOSTNAMES=localhost
 
+
+# 可选：独立访客通行凭证签名密钥；不设置时复用带用途前缀的 TURNSTILE_SECRET_KEY
+# GUEST_SESSION_SECRET="至少32字节的随机字符串，不可公开"

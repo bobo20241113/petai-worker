@@ -1,3 +1,4 @@
+import {verifyTurnstile,issueGuestSession,verifyGuestSession} from './guest-session.js';
 import {petSummaries} from './pet-identity.js';
 import {ApiError,id,text,jsonBody,hash,allowed,guestMessages,fastgpt,imageData} from './core.js';
 import {DB,authenticate} from './db.js';
@@ -9,20 +10,20 @@ async function rate(env,key) {
   if (!env.API_RATE_LIMITER) throw new ApiError(503,'RATE_CONFIG_MISSING','限流尚未配置');
   if (!(await env.API_RATE_LIMITER.limit({key})).success) throw new ApiError(429,'RATE_LIMITED','请求过于频繁，请稍后再试');
 }
-async function guest(request,env) {
+async function guest(request,env,sessionOnly=false) {
   if (request.headers.has('authorization')) throw new ApiError(400,'WRONG_MODE','登录请求请使用云端会话接口');
   if (env.GUEST_ENABLED !== 'true') throw new ApiError(503,'GUEST_DISABLED','访客模式尚未开放');
   const origin = request.headers.get('origin');
   if (!origin || !(allowed(env,origin)||origin===new URL(request.url).origin)) throw new ApiError(403,'ORIGIN_DENIED','访客来源不允许');
   await rate(env,'guest:'+(request.headers.get('CF-Connecting-IP')||'unknown'));
-  const body = await jsonBody(request,1500000);
-  if (!env.TURNSTILE_SECRET_KEY || typeof body.turnstile_token !== 'string') throw new ApiError(403,'CHALLENGE_REQUIRED','请完成人机验证');
-  const form = new FormData(); form.set('secret',env.TURNSTILE_SECRET_KEY); form.set('response',body.turnstile_token);
-  const ip = request.headers.get('CF-Connecting-IP'); if(ip) form.set('remoteip',ip);
-  const check = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify',{method:'POST',body:form,signal:AbortSignal.timeout(10000)});
-  const verdict = await check.json();
-  const hosts=(env.TURNSTILE_HOSTNAMES||'').split(',').map(x=>x.trim());
-  if (!verdict.success || !hosts.includes(verdict.hostname) || verdict.action !== 'guest_chat') throw new ApiError(403,'CHALLENGE_FAILED','人机验证失败');
+  const body = await jsonBody(request,sessionOnly?8192:1500000);
+  if(sessionOnly){
+    await verifyTurnstile(request,env,body.turnstile_token);
+    return response(await issueGuestSession(env,origin,Date.now(),body.session_version===2));
+  }
+  // Older pages may still submit a fresh one-use Turnstile token during rollout.
+  if(body.guest_session_token!==undefined)await verifyGuestSession(env,origin,body.guest_session_token);
+  else await verifyTurnstile(request,env,body.turnstile_token);
   try {
     const messages=guestMessages(body);
     const answer = await fastgpt(env,messages,{...conversationHints(body.text,messages.slice(0,-1)),petProfile:'',petRecords:'[]',clarificationState:'{}',memoryStatus:'{"mode":"guest","persistent":false}'});
@@ -56,7 +57,8 @@ export async function route(request,env,ctx) {
     return response({supabaseUrl:env.SUPABASE_URL||'',supabasePublishableKey:key,turnstileSiteKey:env.TURNSTILE_SITE_KEY||'',guestEnabled:env.GUEST_ENABLED==='true'});
   }
   if(method==='GET'&&!p.startsWith('/api/')&&p!=='/health'&&env.ASSETS)return env.ASSETS.fetch(request);
-  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.8.0'});
+  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.10.0'});
+  if(p==='/api/guest/session'&&method==='POST')return guest(request,env,true);
   if(p==='/api/guest/chat'&&method==='POST')return guest(request,env);
   if(!p.startsWith('/api/'))throw new ApiError(404,'NOT_FOUND','接口不存在');
   const user=(await authenticate(request,env)).id;await rate(env,'user:'+user);const db=new DB(env);
