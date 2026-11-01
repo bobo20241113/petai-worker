@@ -5,7 +5,11 @@ Cloudflare Workers + Supabase + 学校 FastGPT。实现《宠AI后端设计 v2�
 本次已加入云端前端 `public/index.html`，部署后直接打开Worker根地址即可使用。旧的 `6137-12.html`仍是历史版本，不会自动变成云端版。新页面通过Worker API访问会话和档案，访客只用页面内存。
 
 
-## v21 FastGPT 原文直通（当前版本）
+## v22 后台记忆与消息时间（当前版本）
+
+移除聊天中的记忆同步提示及按钮，Cron自动处理有限重试。历史消息读取实际保存时间，新消息显示发送/完成时间，时间标签会自动刷新。新版前端已包含在public/index.html中，更新并部署本目录即可。health版本1.6.0，无新增SQL，FastGPT工作流不变。说明见 [SILENT_MEMORY_TIME.md](SILENT_MEMORY_TIME.md)。
+
+## v21 FastGPT 原文直通（保留的基础功能）
 
 按要求移除Worker对主聊天答案的全部来源审查、改写和兜底替换，直接返回FastGPT的原始 `message.content`，不截断文本。主聊天不再请求detail，也不覆盖工作流回答长度。回答质量优化只在FastGPT工作流中进行。本次无需重新导入JSON。
 

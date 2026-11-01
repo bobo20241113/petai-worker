@@ -1,5 +1,12 @@
 # 本地验证记录
 
+## 2026-11-01 v22 后台记忆与消息时间（当前）
+
+- 前端16项DOM/Markdown交互测试、后端50项测试全部通过，无跳过。前端覆盖静默处理三种记忆状态、历史created_at、缺失/无效时间、跨日跨年、实际定时回调/窗口恢复、云端提交及完成时间。
+- 后端覆盖Cron选择completed/pending/未完成记忆/次数小于3/等待两分钟的任务，队列投递失败后的恢复，无配置不消耗次数，重复投递不执行提取；真实SQL测试确认三次上限。原文直通相关9项回归继续通过。
+- 生成6137-22.html、petai-frontend/index.html、Worker public/index.html；源码不再有前端sync-memory请求、手动按钮或memoryOnly轮询。
+- JavaScript语法及Wrangler dry-run打包通过；没有修改FastGPT JSON、SQL结构或实际线上服务。health版本1.6.0。
+
 ## 2026-11-01 v21 原文直通（当前）
 
 - 完整后端47项测试通过，无跳过；旧Worker来源检查模块及其测试已删除，新增9项原文直通测试。JavaScript语法检查通过。

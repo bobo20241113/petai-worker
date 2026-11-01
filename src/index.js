@@ -25,7 +25,7 @@ async function guest(request,env) {
   try {
     const messages=guestMessages(body);
     const answer = await fastgpt(env,messages,{...conversationHints(body.text,messages.slice(0,-1)),petProfile:'',petRecords:'[]',clarificationState:'{}',memoryStatus:'{"mode":"guest","persistent":false}'});
-    return response({answer,mode:'guest',persistent:false});
+    return response({answer,mode:'guest',persistent:false,answered_at:new Date().toISOString()});
   } catch(e) { if(e instanceof ApiError) throw e; throw new ApiError(502,'UPSTREAM_FAILED','本次回答失败，访客对话未保存'); }
 }
 async function upload(db,env,user,body) {
@@ -55,7 +55,7 @@ export async function route(request,env,ctx) {
     return response({supabaseUrl:env.SUPABASE_URL||'',supabasePublishableKey:key,turnstileSiteKey:env.TURNSTILE_SITE_KEY||'',guestEnabled:env.GUEST_ENABLED==='true'});
   }
   if(method==='GET'&&!p.startsWith('/api/')&&p!=='/health'&&env.ASSETS)return env.ASSETS.fetch(request);
-  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.5.0'});
+  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.6.0'});
   if(p==='/api/guest/chat'&&method==='POST')return guest(request,env);
   if(!p.startsWith('/api/'))throw new ApiError(404,'NOT_FOUND','接口不存在');
   const user=(await authenticate(request,env)).id;await rate(env,'user:'+user);const db=new DB(env);
@@ -95,7 +95,7 @@ export async function route(request,env,ctx) {
     if(attachment){const a=await db.own('attachments',user,attachment);if(a.conversation_id!==cid)throw new ApiError(404,'NOT_FOUND','附件不存在');}
     const turn=await db.rpc('petai_submit_turn',{p_owner:user,p_conversation:cid,p_request:client,p_text:input,p_attachment:attachment,p_hash:await hash(JSON.stringify({input,attachment})),p_daily_limit:Number(env.MAX_USER_TURNS_PER_DAY)||100});
     if(turn.status==='pending'){try{await enqueue(db,env,turn.id);}catch{/* cron replays outbox */}}
-    return response({turn_id:turn.id,status:turn.status},202);
+    return response({turn_id:turn.id,status:turn.status,created_at:turn.created_at},202);
   }
   if((m=p.match(/^\/api\/turns\/([^/]+)$/))&&method==='GET'){
     const turn=await db.own('chat_turns',user,id(m[1]));const {context_snapshot,lease_token,...safe}=turn;return response(safe);

@@ -38,7 +38,7 @@ export async function runTurn(env, turnId) {
     }
     let ctx = await petContext(db,owner,conv.pet_id); let memoryStatus = 'saved';
     const priorState = await db.rows('conversation_states',{conversation_id:'eq.'+conversationId,owner_id:'eq.'+owner,limit:'1'});
-    // Urgent handling must not wait for extraction; extraction can be retried explicitly.
+    // Urgent handling must not wait for extraction; Cron retries it in the background.
     const urgent = /(?:呼吸困难|失去意识|昏迷|持续抽搐|血流不止|误食.{0,8}老鼠药|尿不出来)/.test(current.content);
     if (!claimed.memory_done && !urgent) {
       try {
@@ -79,8 +79,14 @@ export async function recover(env) {
   await db.rpc('petai_recover',{});
   const rows = await db.rows('outbox',{delivered_at:'is.null',order:'created_at.asc',limit:'30'});
   for (const row of rows) { try { await enqueue(db,env,row.turn_id); } catch { /* leave durable outbox pending */ } }
-  const memoryRetries=await db.rows('chat_turns',{memory_status:'eq.retry_pending',status:'eq.completed',limit:'20'});
-  for(const t of memoryRetries)try{await env.CHAT_QUEUE.send({turn_id:t.id,memory_only:true});}catch{}
+  // Retry only completed replies whose extraction is still pending. The existing RPC
+  // atomically checks owner/status/attempts; duplicate Cron/queue deliveries are safe.
+  if(env.MEMORY_API_URL?.startsWith('https://')&&env.MEMORY_API_KEY){
+    const pendingMemory=await db.rows('chat_turns',{select:'id,owner_id',status:'eq.completed',memory_done:'eq.false',memory_status:'eq.pending',memory_attempts:'lt.3',updated_at:'lte.'+new Date(Date.now()-120000).toISOString(),order:'updated_at.asc',limit:'20'});
+    for(const t of pendingMemory)try{await db.rpc('petai_request_memory_retry',{p_owner:t.owner_id,p_turn:t.id});}catch{/* another recovery run may have claimed it */}
+    const memoryRetries=await db.rows('chat_turns',{memory_status:'eq.retry_pending',status:'eq.completed',limit:'20'});
+    for(const t of memoryRetries)try{await env.CHAT_QUEUE.send({turn_id:t.id,memory_only:true});}catch{}
+  }
   const removals = await db.rows('storage_deletions',{limit:'30'});
   for (const row of removals) {
     try {

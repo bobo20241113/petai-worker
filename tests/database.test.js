@@ -102,6 +102,13 @@ test('actual Postgres migrations: ownership, RLS, atomic tasks, memory, correcti
  await db.query("update chat_turns set lease_until=now()-interval '1 minute' where id=$1",[tid]);
  await one('select petai_recover()');
  assert.equal((await one('select memory_status from chat_turns where id=$1',[tid])).memory_status,'pending');
+ // The same RPCs used by automatic Cron retry enforce a total of three retries.
+ for(let i=0;i<2;i++){
+  await one('select petai_request_memory_retry($1,$2)',[A,tid]);const retry=(await one('select petai_claim_memory_retry($1) t',[tid])).t;
+  await one('select petai_memory_pending($1,$2)',[tid,retry.lease_token]);
+ }
+ assert.equal((await one('select memory_attempts from chat_turns where id=$1',[tid])).memory_attempts,3);
+ await assert.rejects(one('select petai_request_memory_retry($1,$2)',[A,tid]),/CONFLICT/);
  // Conversation deletion keeps established pet records, data wipe removes them.
  await one('select petai_delete_conversation($1,$2)',[A,c]);
  assert.equal((await one('select count(*)::int n from pets')).n,1);

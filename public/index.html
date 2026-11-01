@@ -141,7 +141,40 @@ details.right.help-drawer{display:block;position:absolute;right:40px;top:8px;pad
 'use strict';
 (() => {
 function removeWelcome(){const w=$('welcome');if(w)w.remove()}
-function addMessage(role,text,imageUrl){removeWelcome();const outer=document.createElement('article');outer.className='message '+role;const avatar=document.createElement('div');avatar.className='avatar';avatar.innerHTML=role==='user'?"<svg aria-hidden=\"true\" focusable=\"false\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" fill=\"currentColor\"><path d=\"M168,112a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,112Zm-8,24H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16Zm72-8A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z\"/></svg>":"<svg aria-hidden=\"true\" focusable=\"false\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" fill=\"currentColor\"><path d=\"M212,80a28,28,0,1,0,28,28A28,28,0,0,0,212,80Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,212,120ZM72,108a28,28,0,1,0-28,28A28,28,0,0,0,72,108ZM44,120a12,12,0,1,1,12-12A12,12,0,0,1,44,120ZM92,88A28,28,0,1,0,64,60,28,28,0,0,0,92,88Zm0-40A12,12,0,1,1,80,60,12,12,0,0,1,92,48Zm72,40a28,28,0,1,0-28-28A28,28,0,0,0,164,88Zm0-40a12,12,0,1,1-12,12A12,12,0,0,1,164,48Zm23.12,100.86a35.3,35.3,0,0,1-16.87-21.14,44,44,0,0,0-84.5,0A35.25,35.25,0,0,1,69,148.82,40,40,0,0,0,88,224a39.48,39.48,0,0,0,15.52-3.13,64.09,64.09,0,0,1,48.87,0,40,40,0,0,0,34.73-72ZM168,208a24,24,0,0,1-9.45-1.93,80.14,80.14,0,0,0-61.19,0,24,24,0,0,1-20.71-43.26,51.22,51.22,0,0,0,24.46-30.67,28,28,0,0,1,53.78,0,51.27,51.27,0,0,0,24.53,30.71A24,24,0,0,1,168,208Z\"/></svg>";const body=document.createElement('div');body.className='message-body';const meta=document.createElement('div');meta.className='message-meta';meta.textContent=role==='user'?'你 · 刚刚':'宠AI · 智能助手';const bubble=document.createElement('div');bubble.className='bubble';if(imageUrl){const image=document.createElement('img');image.src=imageUrl;image.alt='本轮上传的宠物图片';bubble.append(image)}if(text){if(role==='assistant')renderMarkdown(bubble,text);else bubble.append(document.createTextNode(text))}body.append(meta,bubble);outer.append(avatar,body);chat.append(outer);scrollDown();return bubble}
+function messageTimeMillis(value){
+ if(value===null||value===undefined||value===''||!['string','number'].includes(typeof value))return NaN;
+ return new Date(value).getTime();
+}
+function formatMessageTime(value,now=Date.now()){
+ const ms=messageTimeMillis(value);if(!Number.isFinite(ms))return '时间未知';
+ const d=new Date(ms),current=new Date(now),elapsed=now-ms;
+ const hhmm=new Intl.DateTimeFormat('zh-CN',{hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(d);
+ const sameDay=(a,b)=>a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
+ if(elapsed>=0&&elapsed<60000)return '刚刚';
+ if(elapsed>=60000&&elapsed<3600000)return Math.floor(elapsed/60000)+'分钟前';
+ if(elapsed>=0&&sameDay(d,current))return '今天 '+hhmm;
+ const yesterday=new Date(now);yesterday.setDate(yesterday.getDate()-1);
+ if(elapsed>=0&&sameDay(d,yesterday))return '昨天 '+hhmm;
+ const date=new Intl.DateTimeFormat('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
+ return date+' '+hhmm;
+}
+function updateTimeLabel(time,now=Date.now()){
+ const value=time.getAttribute('datetime');const label=formatMessageTime(value,now);
+ if(time.textContent!==label)time.textContent=label;
+}
+function setMessageTime(bubble,value){
+ const time=bubble?.closest('.message')?.querySelector('time.message-time');if(!time)return;
+ const ms=messageTimeMillis(value);
+ if(Number.isFinite(ms)){
+  time.dateTime=new Date(ms).toISOString();
+  time.title=new Intl.DateTimeFormat('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).format(new Date(ms));
+ }else{time.removeAttribute('datetime');time.title='没有可用的消息时间'}
+ updateTimeLabel(time);
+}
+function refreshMessageTimes(now=Date.now()){
+ for(const time of chat.querySelectorAll('time.message-time'))updateTimeLabel(time,now);
+}
+function addMessage(role,text,imageUrl,createdAt=Date.now()){removeWelcome();const outer=document.createElement('article');outer.className='message '+role;const avatar=document.createElement('div');avatar.className='avatar';avatar.innerHTML=role==='user'?"<svg aria-hidden=\"true\" focusable=\"false\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" fill=\"currentColor\"><path d=\"M168,112a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,112Zm-8,24H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16Zm72-8A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z\"/></svg>":"<svg aria-hidden=\"true\" focusable=\"false\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" fill=\"currentColor\"><path d=\"M212,80a28,28,0,1,0,28,28A28,28,0,0,0,212,80Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,212,120ZM72,108a28,28,0,1,0-28,28A28,28,0,0,0,72,108ZM44,120a12,12,0,1,1,12-12A12,12,0,0,1,44,120ZM92,88A28,28,0,1,0,64,60,28,28,0,0,0,92,88Zm0-40A12,12,0,1,1,80,60,12,12,0,0,1,92,48Zm72,40a28,28,0,1,0-28-28A28,28,0,0,0,164,88Zm0-40a12,12,0,1,1-12,12A12,12,0,0,1,164,48Zm23.12,100.86a35.3,35.3,0,0,1-16.87-21.14,44,44,0,0,0-84.5,0A35.25,35.25,0,0,1,69,148.82,40,40,0,0,0,88,224a39.48,39.48,0,0,0,15.52-3.13,64.09,64.09,0,0,1,48.87,0,40,40,0,0,0,34.73-72ZM168,208a24,24,0,0,1-9.45-1.93,80.14,80.14,0,0,0-61.19,0,24,24,0,0,1-20.71-43.26,51.22,51.22,0,0,0,24.46-30.67,28,28,0,0,1,53.78,0,51.27,51.27,0,0,0,24.53,30.71A24,24,0,0,1,168,208Z\"/></svg>";const body=document.createElement('div');body.className='message-body';const meta=document.createElement('div');meta.className='message-meta';meta.append(document.createTextNode(role==='user'?'你 · ':'宠AI · 智能助手 · '));const time=document.createElement('time');time.className='message-time';meta.append(time);const bubble=document.createElement('div');bubble.className='bubble';if(imageUrl){const image=document.createElement('img');image.src=imageUrl;image.alt='本轮上传的宠物图片';bubble.append(image)}if(text){if(role==='assistant')renderMarkdown(bubble,text);else bubble.append(document.createTextNode(text))}body.append(meta,bubble);outer.append(avatar,body);chat.append(outer);setMessageTime(bubble,createdAt);scrollDown();return bubble}
 // 安全的文本 Markdown 渲染：仅构造文本和经过 URL 校验的链接，不注入 HTML。
 function inline(parent,s){const re=/\[([^\]\n]{1,180})\]\((https?:\/\/[^\s)]+)\)|\*\*([^*\n]+)\*\*/g;let pos=0,m;while((m=re.exec(s))){if(m.index>pos)parent.append(document.createTextNode(s.slice(pos,m.index)));if(m[3]){const b=document.createElement('strong');b.textContent=m[3];parent.append(b)}else{try{const u=new URL(m[2]);if(!['https:','http:'].includes(u.protocol))throw 0;const a=document.createElement('a');a.href=u.href;a.target='_blank';a.rel='noopener noreferrer';a.textContent=m[1];parent.append(a)}catch{parent.append(document.createTextNode(m[0]))}}pos=re.lastIndex}if(pos<s.length)parent.append(document.createTextNode(s.slice(pos)))}
 function renderMarkdown(parent,s){
@@ -313,7 +346,7 @@ function newConversation(){stopWait();if(!identity)resetVerification();clearView
 function renderMessages(){
  chat.replaceChildren();if(!messages.length){restoreWelcome();return}
  if(firstSequence!==null){const more=element('button','加载更早消息','cloud-button older-messages');more.id='load-older';more.type='button';chat.append(more)}
- for(const m of messages){const b=addMessage(m.role,m.content);if(m.attachment_id)b.append(element('small','本轮包含已上传图片。','task-status'));if(m.role==='user'&&m.status==='failed')addAction(b,'查看状态 / 重试',()=>inspectFailed(m.turn_id));}
+ for(const m of messages){const b=addMessage(m.role,m.content,undefined,m.created_at??null);if(m.attachment_id)b.append(element('small','本轮包含已上传图片。','task-status'));if(m.role==='user'&&m.status==='failed')addAction(b,'查看状态 / 重试',()=>inspectFailed(m.turn_id));}
  scrollDown();
 }
 async function openConversation(id){
@@ -327,19 +360,17 @@ async function openConversation(id){
 }
 async function olderMessages(){if(!active||!firstSequence)return;const stamp=epoch;const rows=await request('/api/conversations/'+active.id+'/messages?before='+firstSequence,{stamp});assertEpoch(stamp);messages=[...rows.slice().reverse(),...messages];firstSequence=rows.length===50?Math.min(...rows.map(m=>Number(m.sequence))):null;renderMessages();if(!rows.length)toast('已载入全部消息')}
 function addAction(parent,label,fn){const b=element('button',label,'task-action');b.type='button';b.addEventListener('click',guarded(async()=>{b.disabled=true;try{await fn()}finally{b.disabled=false}}));parent.append(b);return b}
-function taskNote(b,textValue){const n=element('div',textValue,'task-status');b.append(n);return n}
 function wait(ms,stamp){return new Promise(resolve=>setTimeout(resolve,ms)).then(()=>assertEpoch(stamp))}
-async function pollTurn(turnId,bubble,stamp=epoch,{memoryOnly=false}={}){
- assertEpoch(stamp);if(!memoryOnly){setBusy(true);activeTask={id:turnId,bubble}}
+async function pollTurn(turnId,bubble,stamp=epoch){
+ assertEpoch(stamp);setBusy(true);activeTask={id:turnId,bubble};
  const start=Date.now();let failures=0;
  try{
   while(Date.now()-start<10*60*1000){
    assertEpoch(stamp);let task;
    try{task=await request('/api/turns/'+turnId,{stamp});failures=0;}catch(e){assertEpoch(stamp);if(e.status===401)throw e;if(++failures>=3)throw e;setStatus(e.status===429?'请求较多，稍后继续查询…':'连接中断，正在恢复任务查询…');await wait(e.status===429?12000:6000,stamp);continue}
-   if(memoryOnly){if(task.memory_status==='saved'){bubble.textContent='档案信息已同步。';await reloadLists(stamp);return}if(task.memory_status==='pending'){bubble.textContent='记忆仍未同步成功，可稍后重试。';return}}
-   else if(task.status==='completed'){
+   if(task.status==='completed'){
     renderMarkdown(bubble,task.answer||'任务已完成。');
-    if(task.memory_status==='pending'){taskNote(bubble,'本轮回答已完成，档案记忆尚未同步。');addAction(bubble,'重试记忆同步',async()=>{await request('/api/turns/'+turnId+'/sync-memory',{method:'POST',body:{}});const n=taskNote(bubble,'正在同步记忆…');await pollTurn(turnId,n,epoch,{memoryOnly:true})})}
+    setMessageTime(bubble,task.updated_at??null);
     await reloadLists(stamp);if(active){const c=conversations.find(c=>c.id===active.id);if(c){active=c;$('active-session-title').textContent=c.title;renderShell()}}setStatus('回复已保存到云端。');pendingSubmit=null;return;
    }else if(['failed','needs_review','cancelled'].includes(task.status)){
     bubble.textContent=task.status==='needs_review'?'上游可能已处理，但回复未能确认。重试可能产生重复调用。':task.status==='cancelled'?'已请求取消；已开始的上游调用不保证停止。':'本次处理失败，问题已保存在云端。';
@@ -349,7 +380,7 @@ async function pollTurn(turnId,bubble,stamp=epoch,{memoryOnly=false}={}){
   }
   bubble.textContent='后台尚未返回结果。你可以稍后继续查询，或在会话列表重新打开。';addAction(bubble,'继续查询',()=>pollTurn(turnId,bubble,epoch));
  }catch(e){if(e.code==='STALE_VIEW'||e.name==='AbortError')return;showError(e);bubble.textContent='暂时无法查询结果，后台任务仍可能继续。';addAction(bubble,'继续查询',()=>pollTurn(turnId,bubble,epoch));}
- finally{if(stamp===epoch&&!memoryOnly){activeTask=null;setBusy(false)}}
+ finally{if(stamp===epoch){activeTask=null;setBusy(false)}}
 }
 async function retryTurn(turnId,bubble){const task=await request('/api/turns/'+turnId);let accept=false;if(task.status==='needs_review'){accept=await confirmChoice('确认重试','上一次上游调用可能已经执行。继续重试可能重复调用或计费，是否继续？');if(!accept)return}await request('/api/turns/'+turnId+'/retry',{method:'POST',body:{accept_possible_duplicate:accept}});bubble.textContent='已提交重试…';await pollTurn(turnId,bubble,epoch)}
 async function inspectFailed(turnId){const b=addMessage('assistant','正在查看任务状态…');await pollTurn(turnId,b,epoch)}
@@ -362,7 +393,7 @@ async function send(){
  try{
   if(!active){const selected=$('session-pet').value;active=await request('/api/conversations',{method:'POST',body:selected?{pet_id:selected}:{},stamp});assertEpoch(stamp);conversations.unshift(active);renderShell()}
   const descriptor={client_request_id:crypto.randomUUID(),text:input,image:photo?{...photo}:null,conversation_id:active.id,attachment_id:null};
-  pendingSubmit=descriptor;addMessage('user',input,photo?.dataUrl);const bubble=addMessage('assistant','正在提交问题…');descriptor.bubble=bubble;
+  pendingSubmit=descriptor;descriptor.userBubble=addMessage('user',input,photo?.dataUrl);const bubble=addMessage('assistant','正在提交问题…');descriptor.bubble=bubble;
   $('question').value='';clearPhoto();fitQuestion();await submitCloud(descriptor,stamp);
  }catch(e){if(stamp!==epoch)return;showError(e);if(!pendingSubmit)setStatus('创建会话失败，请重试。')}
  finally{if(stamp===epoch)setBusy(false)}
@@ -372,7 +403,7 @@ async function submitCloud(d,stamp=epoch){
  try{
   if(d.image&&!d.attachment_id){const attachment=await request('/api/attachments',{method:'POST',body:{conversation_id:d.conversation_id,image:d.image.dataUrl},stamp});d.attachment_id=attachment.id}
   const task=await request('/api/conversations/'+d.conversation_id+'/turns',{method:'POST',body:{client_request_id:d.client_request_id,text:d.text,...(d.attachment_id?{attachment_id:d.attachment_id}:{})},stamp});
-  assertEpoch(stamp);d.turn_id=task.turn_id;await pollTurn(task.turn_id,d.bubble,stamp);
+  assertEpoch(stamp);d.turn_id=task.turn_id;if(task.created_at)setMessageTime(d.userBubble,task.created_at);await pollTurn(task.turn_id,d.bubble,stamp);
  }catch(e){if(stamp!==epoch)return;showError(e);d.bubble.textContent='未能确认本次提交结果。点击重试会复用同一请求编号，避免重复建立消息。';addAction(d.bubble,'确认 / 重试本次提交',()=>submitCloud(d,epoch));}
  finally{if(stamp===epoch)setBusy(false)}
 }
@@ -383,7 +414,7 @@ async function sendGuest(input){
  if(!turnstileToken){toast('请先完成输入框下方的人机验证。');renderVerification();return}
  const stamp=epoch,token=turnstileToken,history=guestHistory(),image=photo?.dataUrl;turnstileToken='';
  setBusy(true);addMessage('user',input,image);const bubble=addMessage('assistant','正在等待回复…');$('question').value='';clearPhoto();fitQuestion();
- try{const data=await request('/api/guest/chat',{method:'POST',guest:true,timeout:125000,stamp,body:{text:input,history,turnstile_token:token,...(image?{image}:{})}});assertEpoch(stamp);renderMarkdown(bubble,data.answer);guestTurns.push({text:input,answer:data.answer});setStatus('访客回复仅保留在当前页面。');}
+ try{const data=await request('/api/guest/chat',{method:'POST',guest:true,timeout:125000,stamp,body:{text:input,history,turnstile_token:token,...(image?{image}:{})}});assertEpoch(stamp);renderMarkdown(bubble,data.answer);setMessageTime(bubble,data.answered_at??Date.now());guestTurns.push({text:input,answer:data.answer});setStatus('访客回复仅保留在当前页面。');}
  catch(e){if(stamp!==epoch)return;showError(e);bubble.textContent='访客请求失败，本次未写入云端。你可以重新填写问题后发送。';if(!$('question').value)$('question').value=input;fitQuestion();}
  finally{if(stamp===epoch){setBusy(false);if(widget!==null&&window.turnstile)window.turnstile.reset(widget)}}
 }
@@ -521,8 +552,11 @@ document.addEventListener('click',event=>{
  const help=$('help-drawer');if(help.open&&!help.contains(event.target))help.open=false;
 });
 window.addEventListener('pageshow',event=>{if(event.persisted&&!identity)newConversation()});
+setInterval(()=>{if(!document.hidden)refreshMessageTimes()},30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshMessageTimes()});
+window.addEventListener('focus',()=>refreshMessageTimes());
 window.addEventListener('pagehide',()=>{if(!identity){stopWait();clearView();resetVerification()}});
-if(window.__PETAI_TEST__)window.__petai={bootstrap,useSession,newConversation,send,openConversation,openProfiles,request,validateConfig,guestHistory,cancelRequest,config:()=>config,changeConfig:c=>Object.assign(config,c),snapshot:()=>({userId,guestTurns:guestTurns.length,activeId:active?.id,busy,pendingRequest:pendingSubmit?.client_request_id}),setToken:t=>turnstileToken=t,setPhoto:p=>{photo=p}};
+if(window.__PETAI_TEST__)window.__petai={formatMessageTime,refreshMessageTimes,bootstrap,useSession,newConversation,send,openConversation,openProfiles,request,validateConfig,guestHistory,cancelRequest,config:()=>config,changeConfig:c=>Object.assign(config,c),snapshot:()=>({userId,guestTurns:guestTurns.length,activeId:active?.id,busy,pendingRequest:pendingSubmit?.client_request_id}),setToken:t=>turnstileToken=t,setPhoto:p=>{photo=p}};
 window.addEventListener('DOMContentLoaded',()=>bootstrap().catch(showError));
 })();
 
