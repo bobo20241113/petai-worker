@@ -100,6 +100,73 @@ body{background:#EFEEE8}.shell{max-width:1800px;background:#F9FAF5;border-color:
 .bubble img{max-width:100%;height:auto;max-height:288px;margin:0 0 8px;object-fit:contain}
 .bubble hr{margin:12px 0}
 @media(max-width:700px){.chat{padding:12px 8px}.message{margin:8px auto 12px}.bubble{padding:8px 12px;font-size:14px;line-height:20px}.bubble h1,.bubble h2{font-size:16px;line-height:24px}.bubble h3,.bubble h4,.bubble h5,.bubble h6{font-size:14px;line-height:20px}.bubble ul,.bubble ol{padding-left:24px}.bubble pre{padding:8px}.message-meta{font-size:12px;line-height:16px}.bubble blockquote{padding:8px}.bubble img{max-height:224px}}
+
+/* v33: one hierarchy across navigation, chat, prompts and dialogs. */
+:root{
+ --type-display:30px;--line-display:36px;
+ --type-dialog:20px;--line-dialog:28px;
+ --type-section:16px;--line-section:24px;
+ --type-body:14px;--line-body:20px;
+ --type-meta:12px;--line-meta:16px;
+ --text-title:#263C35;--text-body:#405448;--text-meta:#68766D;
+}
+/* Titles carry identity; dates and utility copy provide context. */
+.nav-label,.local-section-head{font-size:var(--type-meta);line-height:var(--line-meta);font-weight:600;color:var(--text-meta);letter-spacing:0}
+.local-section-head{margin-bottom:8px}
+.session-open{padding:8px}
+.session-name{text-wrap:balance;font-size:var(--type-body);line-height:var(--line-body);font-weight:500;color:var(--text-body)}
+.session-date{display:block;font-size:var(--type-meta);line-height:var(--line-meta);font-weight:400;color:var(--text-meta);margin-top:4px;font-variant-numeric:tabular-nums;letter-spacing:0}
+.session-row.selected .session-name{font-weight:600;color:var(--text-title)}
+.session-row.selected{background:#EAF2E5;border-color:#DCE7D4}
+.session-row:hover:not(.selected){background:#F1F5EC}
+.session-more{color:var(--text-meta)}
+.session-empty,.local-storage-note{font-size:var(--type-meta);line-height:var(--line-meta);font-weight:400;color:var(--text-meta)}
+.side-note strong{font-size:var(--type-meta);line-height:var(--line-meta);font-weight:500;color:#526A55}
+/* Application heading, supporting status, and primary action. */
+.brand h1{font-size:var(--type-dialog);line-height:var(--line-dialog);font-weight:700;color:var(--text-title)}
+.top-context{font-size:var(--type-meta);line-height:var(--line-meta);font-weight:400;color:var(--text-meta)}
+.top-context strong{font-weight:500;color:var(--text-body)}
+.top-actions button{font-size:var(--type-body);line-height:var(--line-body);font-weight:500}
+.top-actions #new-mobile{font-weight:600}
+.cloud-strip,.cloud-strip p,.cloud-strip button{font-size:var(--type-meta);line-height:var(--line-meta);font-weight:400;color:var(--text-meta)}
+.cloud-strip button{font-weight:500;color:#42674C}
+.conversation-title{font-size:var(--type-section);line-height:var(--line-section);font-weight:600;color:var(--text-title)}
+.pet-memory,.help-drawer>summary{font-size:var(--type-meta);line-height:var(--line-meta);font-weight:500}
+.welcome-title{font-size:var(--type-display);line-height:var(--line-display);font-weight:600}
+.welcome-description{font-size:var(--type-body);line-height:var(--line-body);font-weight:400;color:var(--text-meta)}
+.suggestion-card strong{font-size:var(--type-body);line-height:var(--line-body);font-weight:600;color:var(--text-title);margin-bottom:4px}
+.suggestion-card small{font-size:var(--type-meta);line-height:var(--line-meta);font-weight:400;color:var(--text-meta)}
+.photo-prompt strong{font-size:var(--type-body);line-height:var(--line-body);font-weight:500;color:var(--text-body)}
+.photo-prompt button{font-size:var(--type-meta);line-height:var(--line-meta);font-weight:500}
+/* Keep reply content readable while timestamps recede a level. */
+.message-meta{font-size:var(--type-meta);line-height:var(--line-meta);font-weight:500;color:#52675B}
+.message-time{font-size:var(--type-meta);line-height:var(--line-meta);font-weight:400;color:var(--text-meta);font-variant-numeric:tabular-nums}
+.bubble{font-size:var(--type-body);line-height:var(--line-body);font-weight:400;color:var(--text-body)}
+.bubble strong{font-weight:600;color:var(--text-title)}
+.bubble h1,.bubble h2{font-size:18px;line-height:28px;font-weight:600;color:var(--text-title)}
+.bubble h3,.bubble h4,.bubble h5,.bubble h6{font-size:var(--type-section);line-height:var(--line-section);font-weight:600;color:var(--text-title)}
+.composer textarea{font-size:var(--type-body);line-height:var(--line-body);font-weight:400;color:var(--text-title)}
+.composer textarea::placeholder{color:var(--text-meta);font-weight:400}
+.composer .send{font-size:var(--type-body);line-height:var(--line-body);font-weight:600}
+.request-row,.hint,.guest-check p{font-size:var(--type-meta);line-height:var(--line-meta);font-weight:400;color:var(--text-meta)}
+/* Dialogs use the same title, value, field-label and annotation levels. */
+.cloud-dialog h2{font-size:var(--type-dialog);line-height:var(--line-dialog);font-weight:600;color:var(--text-title)}
+.cloud-dialog p{font-size:var(--type-body);line-height:var(--line-body);font-weight:400;color:var(--text-body)}
+.cloud-dialog label{font-size:var(--type-meta);line-height:var(--line-meta);font-weight:500;color:var(--text-meta);margin:16px 0 8px}
+.cloud-dialog input,.cloud-dialog select{font-size:var(--type-body);line-height:var(--line-body);font-weight:400;color:var(--text-title)}
+.cloud-dialog .profile-intro,.cloud-dialog .profile-library-note,.cloud-dialog .profile-empty,.cloud-dialog .profile-missing{font-size:var(--type-meta);line-height:var(--line-meta);font-weight:400}
+.profile-library-title,.records-heading{font-size:var(--type-section);line-height:var(--line-section);font-weight:600;color:var(--text-title)}
+.profile-library-card>summary strong{font-size:var(--type-body);line-height:var(--line-body);font-weight:600;color:var(--text-title)}
+.profile-grid{align-items:baseline;gap:12px 16px}
+.profile-grid dt{font-size:var(--type-meta);line-height:var(--line-meta);font-weight:400;color:var(--text-meta)}
+.profile-grid dd{font-size:var(--type-body);line-height:var(--line-body);font-weight:500;color:var(--text-title)}
+.record-card strong{font-size:var(--type-body);line-height:var(--line-body);font-weight:600;color:var(--text-title)}
+.record-card small,.record-card blockquote,.fact-sources,.fact-sources p,.profile-context-badge{font-size:var(--type-meta);line-height:var(--line-meta);font-weight:400;color:var(--text-meta)}
+.cloud-actions button,.cloud-button,.cloud-tabs button{font-size:var(--type-body);line-height:var(--line-body);font-weight:500}
+.cloud-actions .primary,.cloud-button.primary{font-weight:600}
+.cloud-dialog .cloud-status{font-size:var(--type-meta);line-height:var(--line-meta)}
+@media(max-width:900px){.welcome-title{font-size:24px;line-height:32px}}
+@media(max-width:700px){.top-actions button{font-size:var(--type-meta);line-height:var(--line-meta)}.conversation-title{font-size:var(--type-body);line-height:var(--line-body)}.composer textarea,.cloud-dialog input,.cloud-dialog select{font-size:16px;line-height:24px}.bubble h1,.bubble h2{font-size:var(--type-section);line-height:var(--line-section)}.bubble h3,.bubble h4,.bubble h5,.bubble h6{font-size:var(--type-body);line-height:var(--line-body)}.photo-prompt strong{font-size:var(--type-meta);line-height:var(--line-meta)}}
 </style>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head><body>
