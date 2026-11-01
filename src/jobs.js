@@ -1,6 +1,6 @@
 import {DB} from './db.js';
 import {fastgpt, content, today} from './core.js';
-import {isGenericPetName,explicitlyNamed} from './memory.js';
+import {identityMeta,petSummaries,ownershipReplyPet} from './pet-identity.js';
 import {resolvePetMatch,preparePetMemory,memoryPetFromSnapshot} from './pet-matching.js';
 import {signedImageUrl} from './images.js';
 import {conversationHints,successfulHistory} from './conversation.js';
@@ -16,14 +16,14 @@ export async function petContext(db, owner, petId) {
     db.rows('pet_records',{pet_id:'eq.'+petId,owner_id:'eq.'+owner,status:'eq.active',order:'created_at.desc',limit:'30'}),
     db.rows('memory_issues',{pet_id:'eq.'+petId,owner_id:'eq.'+owner,status:'eq.open',limit:'10'})]);
   const profile = {id:pet.id,name:pet.name,source:'用户聊天陈述', ...Object.fromEntries(facts.map(f=>[f.field,f.value]))};
-  const nameConfirmed=!isGenericPetName(profile.name)||facts.some(f=>explicitlyNamed(f.quote||'',String(profile.name)));
+  const meta=identityMeta(pet,facts);const nameConfirmed=meta.name_confirmed;
   if(!nameConfirmed)delete profile.name;
   const birth = profile.birth_date;
   if (typeof birth === 'string' && /^\d{4}-\d{2}/.test(birth)) {
     const [y,m] = birth.split('-').map(Number); const [cy,cm] = today().split('-').map(Number); const months=(cy-y)*12+cm-m;
     if (months >= 0) profile.computed_age=`约${Math.floor(months/12)}岁${months%12}个月（按出生年月计算）`;
   }
-  return {profile, facts, records, issues, name_confirmed:nameConfirmed};
+  return {profile, facts, records, issues, name_confirmed:nameConfirmed,display_name:meta.display_name,ownership_confirmed:meta.ownership_confirmed};
 }
 export async function runTurn(env, turnId) {
   const db = new DB(env); const claimed = await db.rpc('petai_claim_turn',{p_turn:turnId});
@@ -34,9 +34,10 @@ export async function runTurn(env, turnId) {
     const current = (await db.rows('messages',{owner_id:'eq.'+owner,turn_id:'eq.'+turnId,role:'eq.user',limit:'1'}))[0]; if (!current) throw new Error('MESSAGE_MISSING');
     const rows = await db.rows('messages',{owner_id:'eq.'+owner,conversation_id:'eq.'+conversationId,sequence:'lt.'+current.sequence,order:'sequence.desc',limit:'24'});
     const history = successfulHistory(rows.filter(m=>m.turn_id!==turnId));
-    const pets = await db.rows('pets',{owner_id:'eq.'+owner,order:'created_at.asc',limit:'100'});
+    const rawPets=await db.rows('pets',{owner_id:'eq.'+owner,order:'created_at.asc',limit:'100'});
+    const pets=(await petSummaries(db,owner,rawPets)).map((p,i)=>({...p,name:rawPets[i].name}));
     let ctx=await petContext(db,owner,conv.pet_id);
-    const match=resolvePetMatch(pets,current.content,conv.pet_id,ctx.profile);
+    const match=resolvePetMatch(pets,current.content,conv.pet_id,ctx.profile,{allowDefault:history.length===0,confirmedOwnershipId:ownershipReplyPet(current.content,history,pets,conv.pet_id)});
     if((conv.pet_id||null)!==match.id){
       await db.rpc('petai_set_turn_pet',{p_turn:turnId,p_lease:lease,p_pet:match.id});
       conv=await db.own('conversations',owner,conversationId);ctx=await petContext(db,owner,conv.pet_id);
@@ -47,7 +48,7 @@ export async function runTurn(env, turnId) {
     const urgent = /(?:呼吸困难|失去意识|昏迷|持续抽搐|血流不止|误食.{0,8}老鼠药|尿不出来)/.test(current.content);
     if (!claimed.memory_done && !urgent) {
       try {
-        const answer = await fastgpt(env,[{role:'user',content:JSON.stringify({message:current.content,current_pet:conv.pet_id,pets:pets.map(p=>({id:p.id,name:p.name})),profile:ctx.profile,records:ctx.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:history.slice(-8).map(m=>({role:m.role,content:m.content})),previous_state:priorState[0]?.state||{},received_at:current.created_at})}],{},true);
+        const answer = await fastgpt(env,[{role:'user',content:JSON.stringify({message:current.content,current_pet:conv.pet_id,pets:pets.map(p=>({id:p.id,name:p.name_confirmed?p.name:null,label:p.display_name,ownership_confirmed:p.ownership_confirmed})),profile:ctx.profile,records:ctx.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:history.slice(-8).map(m=>({role:m.role,content:m.content})),previous_state:priorState[0]?.state||{},received_at:current.created_at})}],{},true);
         const parsed = preparePetMemory(answer,current.content,pets,conv.pet_id,!match.ambiguous,history);
         await db.rpc('petai_apply_memory',{p_turn:turnId,p_lease:lease,p_data:parsed});
       } catch {
@@ -106,11 +107,12 @@ export async function syncMemory(env, turnId) {
   try {
     const conv=await db.own('conversations',turn.owner_id,turn.conversation_id);
     const current=(await db.rows('messages',{turn_id:'eq.'+turnId,role:'eq.user',owner_id:'eq.'+turn.owner_id,limit:'1'}))[0];
-    const pets=await db.rows('pets',{owner_id:'eq.'+turn.owner_id,limit:'100'});
+    const rawPets=await db.rows('pets',{owner_id:'eq.'+turn.owner_id,limit:'100'});
+    const pets=(await petSummaries(db,turn.owner_id,rawPets)).map((p,i)=>({...p,name:rawPets[i].name}));
     const history=await db.rows('messages',{conversation_id:'eq.'+conv.id,owner_id:'eq.'+turn.owner_id,sequence:'lt.'+current.sequence,status:'eq.complete',memory_excluded:'eq.false',order:'sequence.desc',limit:'8'});
     const target=memoryPetFromSnapshot(turn.context_snapshot);
     const context=await petContext(db,turn.owner_id,target);
-    const output=await fastgpt(env,[{role:'user',content:JSON.stringify({message:current.content,current_pet:target,pets:pets.map(p=>({id:p.id,name:p.name})),profile:context.profile,records:context.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:successfulHistory(history,4).map(m=>({role:m.role,content:m.content})),received_at:current.created_at})}],{},true);
+    const output=await fastgpt(env,[{role:'user',content:JSON.stringify({message:current.content,current_pet:target,pets:pets.map(p=>({id:p.id,name:p.name_confirmed?p.name:null,label:p.display_name,ownership_confirmed:p.ownership_confirmed})),profile:context.profile,records:context.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:successfulHistory(history,4).map(m=>({role:m.role,content:m.content})),received_at:current.created_at})}],{},true);
     await db.rpc('petai_apply_memory',{p_turn:turnId,p_lease:turn.lease_token,p_data:preparePetMemory(output,current.content,pets,target,turn.context_snapshot?.auto_binding_allowed!==false,history)});
   }catch{await db.rpc('petai_memory_pending',{p_turn:turnId,p_lease:turn.lease_token});}
 }

@@ -34,6 +34,9 @@ details.help-drawer{position:relative;flex:none;z-index:20}.help-drawer>summary{
 @media(max-width:700px){.pet-memory{max-width:112px;padding:8px}.profile-intro{margin-bottom:16px!important}}
 
 .fact-sources{margin-top:24px;padding-top:16px;border-top:1px solid #e2e9e5;color:#68736d;font-size:12px;line-height:20px}.fact-sources summary{cursor:pointer}.fact-sources p{font-size:12px;line-height:20px;margin:12px 0}
+
+/* v25: an account library; opening a profile never picks the chat subject. */
+.profile-library-note{font-size:12px!important;line-height:20px!important;margin-bottom:16px!important}.profile-library-title{font-size:18px;line-height:28px;margin:16px 0}.profile-library-card{border:1px solid #e0e9e3;border-radius:12px;margin:12px 0;overflow:hidden}.profile-library-card>summary{padding:16px;display:flex;align-items:center;gap:12px;justify-content:space-between;cursor:pointer;background:#f5f9f6;list-style:none}.profile-library-card>summary::-webkit-details-marker{display:none}.profile-library-card>summary::after{content:'＋';font-size:16px;line-height:20px;color:#65796a}.profile-library-card[open]>summary::after{content:'−'}.profile-library-card>summary strong{font-size:14px;line-height:20px;flex:1;min-width:0;overflow-wrap:anywhere}.profile-library-detail{padding:0 16px 16px}.profile-context-badge{font-size:12px;line-height:16px;padding:4px 8px;background:#e5f1e8;color:#42644c;border-radius:9999px;white-space:nowrap}.profile-library-card summary:focus-visible{outline:2px solid #52765e;outline-offset:-4px}
 </style>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head><body>
@@ -56,7 +59,7 @@ details.help-drawer{position:relative;flex:none;z-index:20}.help-drawer>summary{
       <div class="side-bottom"><div class="side-note"><strong>多一点了解，<br>多一份安心。</strong><span>从日常小事，照顾它的每一天。</span></div><p class="side-footer">宠AI · 智能宠物助手</p></div>
     </aside>
     <main class="center" aria-label="宠物咨询"><div class="cloud-strip" id="cloud-strip" data-mode="guest"><span class="mode-dot" aria-hidden="true"></span><p id="mode-copy">正在初始化连接…</p><button type="button" id="mode-action">登录保存记录</button><button type="button" id="refresh-cloud">刷新云端</button></div><div class="connection-banner" id="connection-banner" role="status" hidden></div>
-      <div class="conversation-top"><div class="conversation-title intro" style="--order:1"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M168,112a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,112Zm-8,24H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16Zm72-8A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z"/></svg><span id="active-session-title" class="active-session-name">新对话</span></div><small class="intro" style="--order:1">文字咨询 · 图片观察</small><button type="button" id="manage-pets" class="pet-memory" aria-label="查看当前对话的宠物档案" aria-haspopup="dialog"><span id="pet-summary">宠物记忆</span></button><details class="right help-drawer" id="help-drawer"><summary>提问提示</summary><div class="help-content" aria-label="提问引导与温馨提示">
+      <div class="conversation-top"><div class="conversation-title intro" style="--order:1"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M168,112a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,112Zm-8,24H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16Zm72-8A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z"/></svg><span id="active-session-title" class="active-session-name">新对话</span></div><small class="intro" style="--order:1">文字咨询 · 图片观察</small><button type="button" id="manage-pets" class="pet-memory" aria-label="查看账号宠物档案" aria-describedby="pet-summary" aria-haspopup="dialog"><span id="pet-summary">宠物记忆</span></button><details class="right help-drawer" id="help-drawer"><summary>提问提示</summary><div class="help-content" aria-label="提问引导与温馨提示">
       <section class="panel intro" style="--order:3"><p class="panel-kicker"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M197.58,129.06,146,110l-19-51.62a15.92,15.92,0,0,0-29.88,0L78,110l-51.62,19a15.92,15.92,0,0,0,0,29.88L78,178l19,51.62a15.92,15.92,0,0,0,29.88,0L146,178l51.62-19a15.92,15.92,0,0,0,0-29.88ZM137,164.22a8,8,0,0,0-4.74,4.74L112,223.85,91.78,169A8,8,0,0,0,87,164.22L32.15,144,87,123.78A8,8,0,0,0,91.78,119L112,64.15,132.22,119a8,8,0,0,0,4.74,4.74L191.85,144ZM144,40a8,8,0,0,1,8-8h16V16a8,8,0,0,1,16,0V32h16a8,8,0,0,1,0,16H184V64a8,8,0,0,1-16,0V48H152A8,8,0,0,1,144,40ZM248,88a8,8,0,0,1-8,8h-8v8a8,8,0,0,1-16,0V96h-8a8,8,0,0,1,0-16h8V72a8,8,0,0,1,16,0v8h8A8,8,0,0,1,248,88Z"/></svg>给你的小提示</p><h3>多说一点，<br>更懂它一点。</h3>
         <div class="guide-step"><span class="step-number">01</span><div><strong>它是谁？</strong><p>猫还是狗？多大了？<br>体重和日常情况也有帮助。</p></div></div>
         <div class="guide-step"><span class="step-number">02</span><div><strong>发生了什么？</strong><p>描述具体表现、持续时间，<br>以及最近有没有变化。</p></div></div>
@@ -94,7 +97,7 @@ details.help-drawer{position:relative;flex:none;z-index:20}.help-drawer>summary{
 
 <dialog id="sessions-dialog" class="cloud-dialog" aria-labelledby="sessions-title"><header><h2 id="sessions-title">云端会话</h2><button type="button" data-close-dialog="sessions-dialog" aria-label="关闭会话列表">×</button></header><p>登录后可在不同设备继续查看。访客不会保存历史会话。</p><div id="sessions-dialog-list" class="session-list"></div><button type="button" id="sessions-more" class="cloud-button" hidden>加载更多会话</button></dialog>
 <dialog id="rename-dialog" class="cloud-dialog" aria-labelledby="rename-heading"><header><h2 id="rename-heading">重命名会话</h2><button type="button" data-close-dialog="rename-dialog" aria-label="关闭窗口">×</button></header><form id="rename-form"><label for="rename-title">会话名称</label><input id="rename-title" maxlength="100" required><div class="cloud-actions"><button class="primary" type="submit">保存名称</button></div></form></dialog>
-<dialog id="pets-dialog" class="cloud-dialog" aria-labelledby="pets-title"><header><h2 id="pets-title">宠物档案</h2><button type="button" data-close-dialog="pets-dialog" aria-label="关闭档案">×</button></header><p class="profile-intro">从聊天中记住你明确提供的资料，补充或纠正也直接在聊天中说。</p><div id="profile-content" class="readonly-records" aria-live="polite"></div></dialog>
+<dialog id="pets-dialog" class="cloud-dialog" aria-labelledby="pets-title"><header><h2 id="pets-title">宠物档案</h2><button type="button" data-close-dialog="pets-dialog" aria-label="关闭档案">×</button></header><p class="profile-intro">资料来自聊天中的明确陈述，补充或纠正也直接在聊天中说。</p><div id="profile-content" class="readonly-records" aria-live="polite"></div></dialog>
 <dialog id="auth-dialog" class="cloud-dialog" aria-labelledby="auth-title"><header><h2 id="auth-title">和它的故事，接着聊</h2><button type="button" data-close-dialog="auth-dialog" aria-label="关闭账号窗口">×</button></header><div id="auth-entry"><p>登录后保存云端会话，聊天中明确提供的宠物信息会自动补充到档案，并用于之后的咨询。</p><div class="cloud-tabs" role="tablist" aria-label="账号操作"><button type="button" data-auth-mode="login" role="tab" aria-selected="true">登录</button><button type="button" data-auth-mode="signup" role="tab" aria-selected="false">注册</button><button type="button" data-auth-mode="reset" role="tab" aria-selected="false">重置密码</button></div><form id="auth-form"><div id="auth-email-wrap"><label for="auth-email">邮箱</label><input id="auth-email" type="email" autocomplete="email" required></div><div id="auth-password-wrap"><label for="auth-password">密码</label><input id="auth-password" type="password" autocomplete="current-password" required maxlength="200"></div><p id="auth-status" class="cloud-status" role="status" aria-live="polite"></p><div class="cloud-actions"><button type="button" id="continue-guest">暂不登录</button><button type="submit" id="auth-submit" class="primary">登录</button></div></form></div><div id="auth-logged-in" hidden><div class="auth-account"><p>当前账号</p><strong id="account-email"></strong><p>宠物档案通过聊天自动补充。退出会清空当前页面数据，云端记录仍保留。</p></div><div class="cloud-actions"><button type="button" id="export-data">导出我的记录</button><button type="button" id="sign-out">退出登录</button><button type="button" id="delete-cloud-data" class="danger">删除全部云端数据</button></div></div></dialog>
 <dialog id="confirm-dialog" class="cloud-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-description"><header><h2 id="confirm-title">确认操作</h2></header><p id="confirm-description"></p><div class="cloud-actions"><button type="button" id="confirm-no">取消</button><button type="button" id="confirm-yes" class="primary">继续</button></div></dialog>
 <dialog id="settings-dialog" class="cloud-dialog" aria-labelledby="settings-title"><header><h2 id="settings-title">连接设置</h2><button type="button" data-close-dialog="settings-dialog" aria-label="关闭连接设置">×</button></header><p class="settings-public-note">页面会从 Worker 自动读取公开登录配置。下面不需要、也不允许填写 Supabase Secret Key、service_role 或 FastGPT 密钥。</p><p id="config-origin"></p><form id="settings-form"><label for="config-worker">Worker 后端地址</label><input id="config-worker" type="url" required autocomplete="off"><label for="config-supabase">Supabase 项目 URL（公开）</label><input id="config-supabase" type="url" autocomplete="off" placeholder="https://项目标识.supabase.co"><label for="config-publishable">Supabase Publishable Key（公开）</label><input id="config-publishable" autocomplete="off" spellcheck="false" placeholder="sb_publishable_… 或旧版 anon key"><label for="config-turnstile">Turnstile Site Key（公开）</label><input id="config-turnstile" autocomplete="off" placeholder="访客模式使用"><p>若 Worker 已配置这些公开值，请点“重新读取”。手工填写只作为兼容旧后端的方式，公开配置可保存到当前浏览器。</p><p id="config-status" class="cloud-status" role="status"></p><div class="cloud-actions"><button type="button" id="check-connection">检查连接</button><button type="button" id="reload-config">重新读取</button><button type="submit" class="primary">保存公开配置</button></div></form></dialog>
@@ -217,7 +220,7 @@ function fitQuestion(){const q=$('question');q.style.height='40px';q.style.heigh
 function scrollDown(){chat.scrollTop=chat.scrollHeight}
 function restoreWelcome(){chat.innerHTML=welcomeMarkup}
 function clearPhoto(){photoEpoch++;photo=null;$('file').value='';$('preview').hidden=true;$('preview-img').removeAttribute('src')}
-function clearView(){active=null;messages=[];guestTurns=[];pendingSubmit=null;firstSequence=null;clearPhoto();$('question').value='';$('active-session-title').textContent='新对话';restoreWelcome();fitQuestion()}
+function clearView(){profileRequest++;$('profile-content').replaceChildren();$('pets-dialog').close();active=null;messages=[];guestTurns=[];pendingSubmit=null;firstSequence=null;clearPhoto();$('question').value='';$('active-session-title').textContent='新对话';restoreWelcome();fitQuestion()}
 function readConfig(){try{const c=JSON.parse(localStorage.getItem(CONFIG_KEY)||'{}');for(const k of Object.keys(DEFAULT_CONFIG))if(typeof c[k]==='string'&&c[k])config[k]=c[k]}catch{}}
 function validateConfig(c){
  const api=new URL(c.apiBase);if(api.protocol!=='https:'&&!(api.protocol==='http:'&&['localhost','127.0.0.1'].includes(api.hostname)))throw new ClientError('Worker 地址需要使用 HTTPS');
@@ -251,7 +254,9 @@ async function request(path,{method='GET',body,guest=false,stamp=epoch,timeout=2
 function expireSession(){stopWait();identity=null;userId=null;conversations=[];pets=[];clearView();renderShell();notice('登录已失效，已清空当前账号的页面数据。重新登录后可恢复云端会话；不会自动转为访客发送。');if(auth)auth.auth.signOut({scope:'local'}).catch(()=>{});openDialog('auth-dialog')}
 function openDialog(id){const d=$(id);if(!d.open)d.showModal()}
 function setStatus(value){$('request-status').textContent=value}
-function genericPetName(name){return !name||/^(?:猫|狗|猫咪|狗狗|宠物|动物|小猫|小狗|这只猫|这只狗|它|未知|未命名|未命名宠物|cat|dog|pet)$/i.test(name)}
+function genericPetName(name){return !name||/^(?:猫|狗|猫咪|狗狗|宠物|动物|小猫|小狗|这只猫|这只狗|它|未知|未命名|未命名宠物|cat|dog|pet|英短|美短|布偶|金毛|拉布拉多|(?:橘|白|黑|灰|蓝|三花|狸花|短毛|长毛)+(?:猫|狗|犬)?)$/i.test(name)}
+function petDisplay(p){return p.display_name||(p.name&&!genericPetName(p.name)&&p.name_confirmed!==false?p.name:p.species&&p.species!=='其他'?'未命名的'+p.species:'未命名宠物')}
+function accountDefault(){const eligible=pets.filter(p=>p.default_eligible===true);return pets.length<100&&eligible.length===1?eligible[0]:null}
 function renderShell(){
  $('account-button').textContent=identity?'我的账号':'登录 / 注册';
  $('cloud-strip').dataset.mode=identity?'cloud':'guest';
@@ -259,8 +264,10 @@ function renderShell(){
  $('mode-action').textContent=identity?'查看档案':'登录保存记录';
  $('storage-status').textContent=identity?'云端会话 · 档案从聊天中自动补充':'临时对话不保存到浏览器或云端';
  const matched=identity&&pets.find(p=>p.id===active?.pet_id);
- $('pet-summary').textContent=matched&&!genericPetName(matched.name)?matched.name+' · 档案':'宠物记忆';
- $('manage-pets').title=!identity?'登录后可保存宠物档案':matched?'查看本轮自动匹配的宠物资料':'根据聊天内容自动匹配，点击查看';
+ const implicit=identity&&(!active||!chat.querySelector('.message'))?accountDefault():null;
+ const shown=matched||implicit;
+ $('pet-summary').textContent=!identity?'宠物档案':shown?petDisplay(shown)+' · 档案':'宠物档案'+(pets.length?' · '+pets.length:'');
+ $('manage-pets').title=!identity?'登录后可保存宠物档案':matched?'查看账号档案；本轮咨询：'+petDisplay(matched):implicit?'查看账号档案；新会话默认：'+petDisplay(implicit):'查看账号保存的全部宠物档案，聊天中自动确定本轮对象';
  $('mode-action').hidden=!!identity;
  for(const name of ['session-list','sessions-dialog-list']){
   const target=$(name);target.replaceChildren();
@@ -305,7 +312,7 @@ async function setupAuth(){
  if(recoveryLink){recovery=true;setAuthMode('recovery');openDialog('auth-dialog')}
  await useSession(initial.data.session);
 }
-function newConversation(){stopWait();if(!identity)resetVerification();clearView();renderShell();setStatus(identity?'新对话将读取关联宠物的云端档案。':'新的访客对话，之前的临时上下文已清空。');$('question').focus()}
+function newConversation(){stopWait();if(!identity)resetVerification();clearView();renderShell();setStatus(identity?'账号档案会保留，本轮对象根据聊天自动确定。':'新的访客对话，之前的临时上下文已清空。');$('question').focus()}
 function renderMessages(){
  chat.replaceChildren();if(!messages.length){restoreWelcome();return}
  if(firstSequence!==null){const more=element('button','加载更早消息','cloud-button older-messages');more.id='load-older';more.type='button';chat.append(more)}
@@ -407,19 +414,32 @@ async function moreSessions(){if(!identity||!conversations.length)return;const s
 let profileRequest=0;
 async function openProfiles(){
  if(!identity){toast('登录后聊天会自动完善档案。');openDialog('auth-dialog');return}
- openDialog('pets-dialog');
- if(active?.id){
-  const stamp=epoch,cid=active.id;$('profile-content').textContent='正在读取云端档案…';
-  try{const [latest,list]=await Promise.all([request('/api/conversations/'+cid,{stamp}),request('/api/pets',{stamp})]);assertEpoch(stamp);if(active?.id!==cid)return;active=latest;pets=list;renderShell()}catch(e){$('profile-content').textContent='暂时无法读取档案，请稍后再打开。';throw e}
- }
- if(!active?.pet_id){profileRequest++;$('profile-content').replaceChildren(element('p','当前对话还没有明确匹配到宠物。','profile-empty-title'),element('p','直接在聊天中介绍它，例如“我家豆豆是猫，2024年5月出生”。如果有多只宠物，说出这次要聊的名字即可。','profile-empty'));return}
- await renderProfile(active.pet_id);
+ openDialog('pets-dialog');const stamp=epoch,view=++profileRequest,cid=active?.id;
+ const area=$('profile-content');area.textContent='正在读取账号档案…';
+ try{
+  const [list,latest]=await Promise.all([request('/api/pets',{stamp}),cid?request('/api/conversations/'+cid,{stamp}):Promise.resolve(null)]);
+  assertEpoch(stamp);if(view!==profileRequest)return;
+  pets=list;if(latest&&active?.id===cid)active=latest;renderShell();area.replaceChildren();
+  if(!pets.length){area.append(element('p','账号里还没有宠物档案。','profile-empty-title'),element('p','直接在聊天中介绍你养的宠物，明确的资料会逐步记下来。','profile-empty'));return}
+  const preferred=active?.pet_id||(!chat.querySelector('.message')?accountDefault()?.id:null);
+  area.append(element('p','以下档案保存在你的账号中，新会话也能查看。展开资料只用于查看，不会改变本轮咨询对象。','profile-library-note'));
+  if(pets.length===1){const p=pets[0];area.append(element('h3',petDisplay(p),'profile-library-title'));if(p.ownership_confirmed===false)area.append(element('p','历史资料的归属还需在聊天中确认，不会自动作为默认宠物。','profile-empty'));if(p.legacy_label)area.append(element('p','历史标签：'+p.legacy_label+'（不作为已确认名字）','profile-empty'));const detail=element('section');area.append(detail);await renderProfile(p.id,detail,view);return}
+  if(!active?.pet_id)area.append(element('p','本轮尚未确定要聊哪只，说出名字或具体情况即可。','profile-empty'));
+  for(const p of pets){
+   const card=element('details',undefined,'profile-library-card'),summary=element('summary');
+   summary.append(element('strong',petDisplay(p)));if(p.id===preferred)summary.append(element('span',active?.pet_id?'本轮咨询':'新会话默认','profile-context-badge'));else if(p.ownership_confirmed===false)summary.append(element('span','归属待确认','profile-context-badge'));
+   const detail=element('section',undefined,'profile-library-detail');card.append(summary,detail);area.append(card);
+   const load=async()=>{if(!card.open||card.dataset.loaded)return;card.dataset.loaded='loading';try{await renderProfile(p.id,detail,view);card.dataset.loaded='yes'}catch(e){card.dataset.loaded='';detail.textContent='暂时无法读取，可稍后重新展开。';throw e}};
+   card.addEventListener('toggle',guarded(load));
+   if(p.id===preferred){card.open=true;await load()}
+  }
+ }catch(e){if(view===profileRequest&&stamp===epoch)area.textContent='暂时无法读取账号档案，请稍后再打开。';throw e}
 }
 const FIELD_NAMES={name:'名字',species:'种类',birth_date:'出生日期',sex:'性别',neutered:'绝育情况',breed_description:'品种或外观',age_note:'年龄原文',computed_age:'按生日计算年龄'};
 const CATEGORY_NAMES={deworming:'驱虫记录',vaccine:'疫苗记录',weight:'体重记录',diagnosis_report:'主人转述诊断',care_plan:'照护计划'};
-async function renderProfile(id){
- const stamp=epoch,view=++profileRequest;$('profile-content').textContent='正在读取…';const data=await request('/api/pets/'+id,{stamp});assertEpoch(stamp);if(view!==profileRequest||active?.pet_id!==id)return;
- const area=$('profile-content');area.replaceChildren();const p=data.profile||{};const dl=element('dl',undefined,'profile-grid');
+async function renderProfile(id,area=$('profile-content'),view=++profileRequest){
+ const stamp=epoch;area.textContent='正在读取…';const data=await request('/api/pets/'+id,{stamp});assertEpoch(stamp);if(view!==profileRequest||!area.isConnected)return;
+ area.replaceChildren();const p=data.profile||{};const dl=element('dl',undefined,'profile-grid');
  for(const [key,label]of Object.entries(FIELD_NAMES)){if(p[key]===undefined||p[key]===null||p[key]===''||(key==='name'&&genericPetName(p[key])&&!data.name_confirmed&&!(data.facts||[]).some(f=>f.field==='name'&&/(?:名字叫|名字是|叫做|名叫)/.test(f.quote||''))))continue;dl.append(element('dt',label),element('dd',typeof p[key]==='boolean'?(p[key]?'已绝育':'未绝育'):String(p[key])))}area.append(dl);
  const missing=[];if(!p.name||(genericPetName(p.name)&&!data.name_confirmed))missing.push('名字');if(!p.birth_date&&!p.age_note)missing.push('年龄或出生日期');if(!(data.records||[]).some(r=>r.category==='weight'))missing.push('最近体重');
  if(missing.length)area.append(element('p','还可以在聊天中补充：'+missing.join('、')+'。','profile-missing'));

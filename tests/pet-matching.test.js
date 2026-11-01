@@ -34,9 +34,9 @@ test('late memory retries use the original snapshot including explicit no-match'
 
 test('real turn runner uses the switched target and preserves upstream answer verbatim',async()=>{
  const {runTurn}=await import('../src/jobs.js');
- for(const [text,target]of [['团团需要驱虫吗',B],['豆豆和团团需要驱虫吗',null]]){
+ for(const [text,target,useDefault]of [['团团需要驱虫吗',B,false],['豆豆和团团需要驱虫吗',null,false],['它多大了',B,true]]){
   const previous=globalThis.fetch,owner='33333333-3333-4333-8333-333333333333',turn='44444444-4444-4444-8444-444444444444',lease='55555555-5555-4555-8555-555555555555';
-  const conv={id:'66666666-6666-4666-8666-666666666666',pet_id:A};let snapshot,completed,fail;
+  const conv={id:'66666666-6666-4666-8666-666666666666',pet_id:useDefault?null:A};const available=useDefault?[{...pets[1],ownership_confirmed:true,name_confirmed:true}]:pets;let snapshot,completed,fail;
   const raw='  **FastGPT原文**\r\n保留尾部空白 \t\n';
   globalThis.fetch=async(url,init={})=>{
    const u=new URL(url),path=u.pathname,b=init.body?JSON.parse(init.body):{};
@@ -48,7 +48,7 @@ test('real turn runner uses the switched target and preserves upstream answer ve
    if(path.endsWith('/rpc/petai_fail_turn')){fail=b;return Response.json(null)}
    if(path.endsWith('/conversations'))return Response.json([conv]);
    if(path.endsWith('/messages'))return Response.json(u.searchParams.get('turn_id')?[{content:text,sequence:3}]:[]);
-   if(path.endsWith('/pets'))return Response.json(u.searchParams.has('id')?pets.filter(p=>'eq.'+p.id===u.searchParams.get('id')):pets);
+   if(path.endsWith('/pets'))return Response.json(u.searchParams.has('id')?available.filter(p=>'eq.'+p.id===u.searchParams.get('id')):available);
    if(['/pet_facts','/pet_records','/memory_issues','/conversation_states'].some(p=>path.endsWith(p)))return Response.json([]);
    throw Error('Unexpected turn route '+path);
   };

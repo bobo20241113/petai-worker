@@ -1,3 +1,4 @@
+import {petSummaries} from './pet-identity.js';
 import {ApiError,id,text,jsonBody,hash,allowed,guestMessages,fastgpt,imageData} from './core.js';
 import {DB,authenticate} from './db.js';
 import {imageObjectPath} from './images.js';
@@ -55,12 +56,12 @@ export async function route(request,env,ctx) {
     return response({supabaseUrl:env.SUPABASE_URL||'',supabasePublishableKey:key,turnstileSiteKey:env.TURNSTILE_SITE_KEY||'',guestEnabled:env.GUEST_ENABLED==='true'});
   }
   if(method==='GET'&&!p.startsWith('/api/')&&p!=='/health'&&env.ASSETS)return env.ASSETS.fetch(request);
-  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.7.0'});
+  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.8.0'});
   if(p==='/api/guest/chat'&&method==='POST')return guest(request,env);
   if(!p.startsWith('/api/'))throw new ApiError(404,'NOT_FOUND','接口不存在');
   const user=(await authenticate(request,env)).id;await rate(env,'user:'+user);const db=new DB(env);
   const list=async(table,query={})=>response(await db.rows(table,{...query,owner_id:'eq.'+user}));
-  if(p==='/api/pets'&&method==='GET')return list('pets',{order:'created_at.asc',limit:'100'});
+  if(p==='/api/pets'&&method==='GET')return response(await petSummaries(db,user));
   let m;
   if((m=p.match(/^\/api\/pets\/([^/]+)$/))&&method==='GET')return response(await petContext(db,user,id(m[1])));
   if((m=p.match(/^\/api\/pets\/([^/]+)\/records$/))&&method==='GET'){
