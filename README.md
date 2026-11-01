@@ -5,7 +5,13 @@ Cloudflare Workers + Supabase + 学校 FastGPT。实现《宠AI后端设计 v2�
 本次已加入云端前端 `public/index.html`，部署后直接打开Worker根地址即可使用。旧的 `6137-12.html`仍是历史版本，不会自动变成云端版。新页面通过Worker API访问会话和档案，访客只用页面内存。
 
 
-## v20 检索恢复更新
+## v21 FastGPT 原文直通（当前版本）
+
+按要求移除Worker对主聊天答案的全部来源审查、改写和兜底替换，直接返回FastGPT的原始 `message.content`，不截断文本。主聊天不再请求detail，也不覆盖工作流回答长度。回答质量优化只在FastGPT工作流中进行。本次无需重新导入JSON。
+
+**先在Supabase追加执行 `004_answer_passthrough.sql`，再更新部署Worker**，否则旧数据库仍会截断24,000字符以上的云端答案。health版本为1.5.0。完整步骤和无法恢复旧原文的限制见 [RAW_ANSWER.md](RAW_ANSWER.md)。以下v19/v20的Worker来源检查仅为历史说明，当前已删除。
+
+## v20 检索恢复更新（历史）
 
 新增一次换词重查、URL-only候选正文读取、检索格式适配和具体原因诊断；有证据先回答核心问题。请同时更新学校主工作流和Worker；health版本1.4.0，无数据库变更。升级和排查见 [SEARCH_RECOVERY.md](SEARCH_RECOVERY.md)。
 
@@ -51,6 +57,7 @@ npm run deploy:link -- https://github.com/你的用户名/你的仓库 main peta
    - `001_schema.sql`
    - `002_jobs.sql`
    - `003_memory_and_privacy.sql`
+   - `004_answer_passthrough.sql`（已有001–003的项目只需追加这一份）
 3. 开启邮箱密码登录，配置 Site URL、允许的认证回调地址及邮件发送。生产演示使用你自己的测试账号，**不要把密码提交到仓库**。
 4. 取得 Project URL、浏览器使用的 publishable key、后端使用的 secret key。也兼容旧版 `service_role` JWT key。
 5. SQL创建 `petai-private` 私有bucket。不要改成public，也不要给匿名用户添加公开读写策略。

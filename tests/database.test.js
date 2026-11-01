@@ -40,6 +40,22 @@ test('actual Postgres migrations: ownership, RLS, atomic tasks, memory, correcti
  await one('select petai_complete_turn($1,$2,$3)',[tid,claim.lease_token,'明白，豆豆是猫']);
  await one('select petai_complete_turn($1,$2,$3)',[tid,claim.lease_token,'不重复']);
  assert.equal((await one("select count(*)::int n from messages where role='assistant'")).n,1);
+ // Upgrade an existing 001-003 database. Existing history remains unchanged.
+ await db.exec(await readFile(resolve(SQL_DIR,'004_answer_passthrough.sql'),'utf8'));
+ assert.equal((await one('select answer from chat_turns where id=$1',[tid])).answer,'明白，豆豆是猫');
+ await db.exec(await readFile(resolve(SQL_DIR,'../tests/permissions.sql'),'utf8'));
+ const rawConv=(await one('insert into conversations(owner_id) values($1) returning id',[A])).id;
+ const rawTurn=(await one('select petai_submit_turn($1,$2,$3,$4,null,$5,100) t',[A,rawConv,crypto.randomUUID(),'原文保存测试','raw'])).t;
+ const rawClaim=(await one('select petai_claim_turn($1) t',[rawTurn.id])).t;
+ await one('select petai_start_answer($1,$2,$3)',[rawTurn.id,rawClaim.lease_token,{}]);
+ await assert.rejects(one('select petai_complete_turn($1,$2,$3)',[rawTurn.id,rawClaim.lease_token,'x'.repeat(5242881)]),/ANSWER_TOO_LARGE/);
+ await assert.rejects(one('select petai_complete_turn($1,$2,$3)',[rawTurn.id,rawClaim.lease_token,'  ']),/UPSTREAM_EMPTY/);
+ assert.equal((await one('select status from chat_turns where id=$1',[rawTurn.id])).status,'processing');
+ const rawAnswer='  **FastGPT原文**\r\n'+('猫🐾'.repeat(10000))+'\n必须保留的结尾 \t\n';
+ await one('select petai_complete_turn($1,$2,$3)',[rawTurn.id,rawClaim.lease_token,rawAnswer]);
+ assert.equal((await one('select answer from chat_turns where id=$1',[rawTurn.id])).answer,rawAnswer);
+ assert.equal((await one("select content from messages where turn_id=$1 and role='assistant'",[rawTurn.id])).content,rawAnswer);
+ await assert.rejects(db.query("update messages set content=repeat('x',24001) where turn_id=$1 and role='user'",[rawTurn.id]),/check constraint/);
  // Auto-bind a uniquely named existing pet in a new conversation, without a new fact.
  const newc=(await one('insert into conversations(owner_id) values($1) returning id',[A])).id;
  const named=(await one('select petai_submit_turn($1,$2,$3,$4,null,$5,100) t',[A,newc,crypto.randomUUID(),'豆豆多大了','named'])).t;

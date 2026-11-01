@@ -1,4 +1,3 @@
-import {auditLegalAnswer} from './evidence.js';
 export class ApiError extends Error {
   constructor(status, code, message) { super(message); this.status = status; this.code = code; }
 }
@@ -47,12 +46,11 @@ export async function fastgpt(env, messages, variables = {}, memory = false) {
   const key = memory ? env.MEMORY_API_KEY : env.FASTGPT_API_KEY;
   if (!target || !key || !target.startsWith('https://')) throw new ApiError(503, 'CONFIG_MISSING', '模型接口尚未配置');
   const response = await fetch(target, {method:'POST', headers:{'Content-Type':'application/json',Authorization:'Bearer ' + key},
-    body:JSON.stringify({stream:false,detail:!memory,messages,variables,max_tokens: memory ? 2500 : 1400}), signal:AbortSignal.timeout(Math.min(120000, Number(env.FASTGPT_TIMEOUT_MS) || 90000))});
+    body:JSON.stringify({stream:false,detail:false,messages,variables,...(memory?{max_tokens:2500}:{})}), signal:AbortSignal.timeout(Math.min(120000, Number(env.FASTGPT_TIMEOUT_MS) || 90000))});
   if (!response.ok) throw new Error('UPSTREAM_HTTP_' + response.status);
   const data = await boundedJson(response, memory ? 2*1024*1024 : 5*1024*1024); const answer = data.choices?.[0]?.message?.content;
   if (typeof answer !== 'string' || !answer.trim()) throw new Error('UPSTREAM_EMPTY');
-  if(memory)return answer.slice(0,24000);
-  const audited=auditLegalAnswer(answer.slice(0,24000),data,variables);
-  if(env.LEGAL_AUDIT_LOG==='true'&&audited.checked)console.info(JSON.stringify({event:'legal_audit',version:20,...audited.diagnostic}));
-  return audited.answer;
+  // Relay exactly the upstream content. Quality checks belong in FastGPT, not here.
+  // Validation above detects a missing answer; it does not trim, rewrite or truncate it.
+  return answer;
 }
