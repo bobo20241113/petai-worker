@@ -113,5 +113,29 @@ test('actual Postgres migrations: ownership, RLS, atomic tasks, memory, correcti
  await one('select petai_delete_conversation($1,$2)',[A,c]);
  assert.equal((await one('select count(*)::int n from pets')).n,1);
  await one('select petai_delete_data($1)',[A]);assert.equal((await one('select count(*)::int n from pets')).n,0);
+ // Upgrade existing data without destructive cleanup. Validate server-only matching,
+ // ambiguous multi-pet facts and a late retry after the conversation has switched.
+ await db.exec(await readFile(resolve(SQL_DIR,'005_automatic_pet_matching.sql'),'utf8'));
+ await db.exec(await readFile(resolve(SQL_DIR,'../tests/permissions.sql'),'utf8'));
+ const pa=(await one("insert into pets(owner_id,name) values($1,'豆豆') returning id",[A])).id;
+ const pb=(await one("insert into pets(owner_id,name) values($1,'团团') returning id",[A])).id;
+ const foreign=(await one("insert into pets(owner_id,name) values($1,'外人宠物') returning id",[B])).id;
+ const mc=(await one('insert into conversations(owner_id,pet_id) values($1,$2) returning id',[A,pa])).id;
+ const mt=(await one('select petai_submit_turn($1,$2,$3,$4,null,$5,100) t',[A,mc,crypto.randomUUID(),'豆豆和团团','m'])).t;
+ const ml=(await one('select petai_claim_turn($1) t',[mt.id])).t;
+ await assert.rejects(one('select petai_set_turn_pet($1,$2,$3)',[mt.id,ml.lease_token,foreign]),/NOT_FOUND/);
+ await one('select petai_set_turn_pet($1,$2,$3)',[mt.id,ml.lease_token,null]);
+ await one('select petai_apply_memory($1,$2,$3)',[mt.id,ml.lease_token,{current_pet:null,allow_binding:false,operations:[{type:'fact',pet:'豆豆',field:'species',value:'猫',quote:'豆豆'},{type:'fact',pet:'团团',field:'species',value:'狗',quote:'团团'}]}]);
+ assert.equal((await one('select pet_id from conversations where id=$1',[mc])).pet_id,null);
+ await one('select petai_complete_turn($1,$2,$3)',[mt.id,ml.lease_token,'原样回复']);
+ const later=(await one('select petai_submit_turn($1,$2,$3,$4,null,$5,100) t',[A,mc,crypto.randomUUID(),'团团怎么了','l'])).t;
+ const ll=(await one('select petai_claim_turn($1) t',[later.id])).t;
+ await one('select petai_set_turn_pet($1,$2,$3)',[later.id,ll.lease_token,pb]);
+ await one('select petai_complete_turn($1,$2,$3)',[later.id,ll.lease_token,'新答复']);
+ // Emulate a pending earlier extraction using its original target, not live pb.
+ await db.query('delete from memory_operations where turn_id=$1',[mt.id]);
+ await one('select petai_apply_memory($1,$2,$3)',[mt.id,ml.lease_token,{current_pet:pa,allow_binding:true,operations:[{type:'fact',pet:'@current',field:'age_note',value:'成年',quote:'豆豆'}]}]);
+ assert.equal((await one("select pet_id from pet_facts where field='age_note'")).pet_id,pa);
+ assert.equal((await one('select pet_id from conversations where id=$1',[mc])).pet_id,pb);
  }finally{await db.close();}
 });

@@ -1,10 +1,10 @@
 import {uuid, today} from './core.js';
 const fields = new Set(['name','species','birth_date','sex','neutered','breed_description','age_note']);
 const categories = new Set(['deworming','vaccine','weight','diagnosis_report','care_plan']);
-const GENERIC_PET_NAMES=new Set(['猫','狗','猫咪','狗狗','宠物','动物','小猫','小狗','这只猫','这只狗','这只','它','未知','未命名','cat','dog','pet']);
+const GENERIC_PET_NAMES=new Set(['猫','狗','猫咪','狗狗','宠物','动物','小猫','小狗','这只猫','这只狗','这只','它','未知','未命名','cat','dog','pet','另一只猫','另一只狗','一只猫','一只狗','我的猫','我的狗','我家猫','我家狗']);
 export function isGenericPetName(name){return GENERIC_PET_NAMES.has(String(name).trim().toLowerCase())}
 export function autoPetCandidate(pets,message){const matches=pets.filter(p=>message.includes(p.name));return matches.length===1&&!isGenericPetName(matches[0].name)?matches[0]:null}
-function explicitlyNamed(message,name){
+export function explicitlyNamed(message,name){
  const escaped=name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
  return new RegExp('(?:名字(?:是|叫)|名叫|叫做|取名(?:为|叫)?|改名为|叫)\\s*[“"「]?'+escaped+'[”"」]?(?:[，,。!！?？;；\\s]|$)').test(message);
 }
@@ -78,4 +78,4 @@ export const EXTRACTION_PROMPT = `你是宠AI的用户事实提取器。输入�
 operations可以为空，最多12项。仅问‘这是什么猫/这是什么品种’时operations必须为空。猫、狗、宠物、它等类别或指代词不能当作名字，除非用户明确说‘名字叫猫’。不要根据图片本身生成用户陈述或新档案。每项quote必须逐字摘自当前message。新宠物仅在用户明确称是自己养的且给出名字时使用名字建档；朋友的宠物不建档。pet不明确时不要猜，留operations空并在state.missing说明。明确纠正才能correction=true，冲突不能擅改。fact.field限name/species/birth_date/sex/neutered/breed_description/age_note；species值猫/狗/其他；sex公/母/未知；neutered布尔；birthday仅用户明确年份月份才birth_date=YYYY-MM或YYYY-MM-DD，否则年龄原文age_note。
 记录格式：{"type":"record","pet":"...","category":"deworming|vaccine|weight|diagnosis_report|care_plan","quote":"原话","description":"简短用户陈述","date_text":"用户原文时间或null","route":"internal|external|both|unknown","product_name":null,"kg":4.5}。route/product_name仅驱虫，kg仅体重。不要把问是否该驱虫写成已驱虫；计划用care_plan。药名不清为null，不编有效期或下次日期。只记录与照护有关的必要信息，诊断是用户转述。时间保留原文，不补年份/日期。单说“没有”且指代不清不要替所有条件填否定。
 用户明确要求忘记字段时可{"type":"forget_fact","pet":"...","field":"...","quote":"..."}；忘记某事件仅能引用输入已有的record_id，格式{"type":"forget_record","pet":"...","record_id":"UUID","quote":"..."}，对象不明确先澄清。用户说不要记录本次信息则operations为空。
-用户换话题时state更新为新目标；普通问候state为空。不要声称你保存了任何东西；这里只生成供后端校验的操作。`;
+同一轮提到多只宠物时逐项标明明确对象，不能把它们的资料写到@current；@current只指输入current_pet，current_pet为空时不要用@current替代新宠物名字。不要把猫、狗等占位名称视为已确认身份，也不要根据仅有一份档案就自动认领。需要区分时在state.missing提出具体缺口。用户换话题时state更新为新目标；普通问候state为空。不要声称你保存了任何东西；这里只生成供后端校验的操作。`;

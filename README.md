@@ -1,3 +1,9 @@
+# v24 升级提示 · Worker 1.7.0
+
+本版增加每轮自动匹配、避免延迟记忆串档，前端取消手工选择。**先执行 Supabase 的 005 增量 SQL，再部署 Worker（含 public），不要仅替换 HTML。**详见 [自动匹配升级说明](AUTO_PET_MEMORY_V24.md)。主聊天 FastGPT 原文返回机制不变。
+
+---
+
 # 宠AI Worker 后端
 
 Cloudflare Workers + Supabase + 学校 FastGPT。实现《宠AI后端设计 v2》的后端：已登录云端会话、从聊天自动建档、跨会话事实读取、只读档案 API、临时访客、持久任务与重试。**此目录可单独作为 GitHub 仓库上传。** Supabase 建表文件位于并列的 `petai-supabase/` 目录。

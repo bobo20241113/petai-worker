@@ -55,7 +55,7 @@ export async function route(request,env,ctx) {
     return response({supabaseUrl:env.SUPABASE_URL||'',supabasePublishableKey:key,turnstileSiteKey:env.TURNSTILE_SITE_KEY||'',guestEnabled:env.GUEST_ENABLED==='true'});
   }
   if(method==='GET'&&!p.startsWith('/api/')&&p!=='/health'&&env.ASSETS)return env.ASSETS.fetch(request);
-  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.6.0'});
+  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.7.0'});
   if(p==='/api/guest/chat'&&method==='POST')return guest(request,env);
   if(!p.startsWith('/api/'))throw new ApiError(404,'NOT_FOUND','接口不存在');
   const user=(await authenticate(request,env)).id;await rate(env,'user:'+user);const db=new DB(env);
@@ -75,13 +75,13 @@ export async function route(request,env,ctx) {
     return list('conversations',query);
   }
   if(p==='/api/conversations'&&method==='POST'){
-    const b=await jsonBody(request);if(b.pet_id)await db.own('pets',user,id(b.pet_id));
-    const rows=await db.insert('conversations',{owner_id:user,pet_id:b.pet_id||null,title:b.title?text(b.title,100):'新对话'});return response(rows[0],201);
+    const b=await jsonBody(request);if('pet_id'in b)throw new ApiError(400,'READ_ONLY','宠物由聊天自动匹配，不能手工指定');
+    const rows=await db.insert('conversations',{owner_id:user,pet_id:null,title:b.title?text(b.title,100):'新对话'});return response(rows[0],201);
   }
   if((m=p.match(/^\/api\/conversations\/([^/]+)$/))){
     const cid=id(m[1]);await db.own('conversations',user,cid);
     if(method==='GET')return response(await db.own('conversations',user,cid));
-    if(method==='PATCH'){const b=await jsonBody(request);if('pet_id'in b)throw new ApiError(400,'READ_ONLY','已有会话不能更换关联对象，请新建会话');return response((await db.update('conversations',{id:'eq.'+cid,owner_id:'eq.'+user},{title:text(b.title,100),updated_at:new Date().toISOString()}))[0]);}
+    if(method==='PATCH'){const b=await jsonBody(request);if('pet_id'in b)throw new ApiError(400,'READ_ONLY','关联对象由聊天自动匹配，不能手工设置');return response((await db.update('conversations',{id:'eq.'+cid,owner_id:'eq.'+user},{title:text(b.title,100),updated_at:new Date().toISOString()}))[0]);}
     if(method==='DELETE')return response(await db.rpc('petai_delete_conversation',{p_owner:user,p_conversation:cid}));
   }
   if((m=p.match(/^\/api\/conversations\/([^/]+)\/messages$/))&&method==='GET'){
