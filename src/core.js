@@ -51,5 +51,8 @@ export async function fastgpt(env, messages, variables = {}, memory = false) {
   if (!response.ok) throw new Error('UPSTREAM_HTTP_' + response.status);
   const data = await boundedJson(response, memory ? 2*1024*1024 : 5*1024*1024); const answer = data.choices?.[0]?.message?.content;
   if (typeof answer !== 'string' || !answer.trim()) throw new Error('UPSTREAM_EMPTY');
-  return memory ? answer.slice(0,24000) : auditLegalAnswer(answer.slice(0,24000),data,variables).answer;
+  if(memory)return answer.slice(0,24000);
+  const audited=auditLegalAnswer(answer.slice(0,24000),data,variables);
+  if(env.LEGAL_AUDIT_LOG==='true'&&audited.checked)console.info(JSON.stringify({event:'legal_audit',version:20,...audited.diagnostic}));
+  return audited.answer;
 }

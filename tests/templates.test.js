@@ -33,3 +33,18 @@ test('generic legal workflow has no regional policy branches and distinguishes l
  assert.equal(target('petcareScopeGateV19','IF'),'uhHSLcGctmw3yPZy');assert.equal(target('petcareScopeGateV19','ELSE'),'petcareAskRegion');
  assert.equal(target('iso6ZEoKEE8RNhKi','ELSE'),'petcareOfficialQueryV5');
 });
+test('v20 retries only after insufficient evidence and terminates after one requery',()=>{
+ const f=JSON.parse(readFileSync(new URL('../fastgpt/chat-cloud.json',import.meta.url)));const nodes=new Map(f.nodes.map(n=>[n.nodeId,n]));
+ const target=(id,h)=>f.edges.find(e=>e.source===id&&e.sourceHandle===id+'-source-'+h)?.target;
+ assert.equal(target('petcareWebEvidenceGateV19','ELSE'),'petcareRetryQueryV20');
+ assert.equal(target('petcareRetryEvidenceGateV20','ELSE'),'petcareLawFallback');
+ assert.equal(target('petcareRetryEvidenceGateV20','IF'),'petcareRetryAnswerV20');
+ for(const id of ['iso6ZEoKEE8RNhKi','petcareWebEvidenceGateV19','petcareRetryEvidenceGateV20']){
+  const pattern=nodes.get(id).inputs.find(i=>i.key==='ifElseList').value[0].list[0].value;const r=new RegExp(pattern);
+  assert.equal(r.test('{"status":"INSUFFICIENT","evidence":[{"status":"MATCHED"}]}'),false);assert.equal(r.test('{"status":"MATCHED","evidence":[]}'),true);
+ }
+ for(const id of ['petcareOfficialUrlV7','petcareRetryUrlV20'])assert.match(nodes.get(id).inputs.find(i=>i.key==='systemPrompt').value,/不要仅因没有摘要就放弃正文读取/);
+ const gate=new RegExp(nodes.get('petcareUrlGateV7').inputs.find(i=>i.key==='ifElseList').value[0].list[0].value);
+ assert.equal(gate.test('https://authority.gov'),true);assert.equal(gate.test('https://foo.internal'),false);assert.equal(gate.test('https://127.0.0.1/'),false);
+ assert.match(nodes.get('petcareLegalScopeV19').inputs.find(i=>i.key==='systemPrompt').value,/本轮明确说出的咨询对象优先/);
+});

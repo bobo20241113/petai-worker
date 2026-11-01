@@ -8,16 +8,22 @@ const template=JSON.parse(await readFile(new URL('../fastgpt/chat-cloud.json',im
 const originals=new Map(old.nodes.map(n=>[n.nodeId,n]));const known=new Set(template.nodes.map(n=>n.nodeId));
 const retired=new Set(['i4LYS9E0BvJ0Gy1C','petcareHkFetchV7','petcareHkBodyGateV7','petcareHkLiveV7','petcareHkReferenceV7','petcareSearchAnswerV7']);
 if(old.nodes.some(n=>!known.has(n.nodeId)&&!retired.has(n.nodeId)))throw Error('当前导出含额外自定义节点，请手动合并，避免覆盖自定义流程。');
+const retrySources={petcareRetryQueryV20:'petcareOfficialQueryV5',petcareRetrySearchV20:'sMnGaCpKJevxBZHb',petcareRetryUrlV20:'petcareOfficialUrlV7',petcareRetryReadV20:'petcareReadOfficialV7',petcareRetryEvidenceV20:'petcareWebEvidenceV19',petcareRetryAnswerV20:'sOUZOZrUtrZDbvrg'};
 const repairedKeys=new Set(['systemPrompt','userChatInput','history','fileUrlList','ifElseList','searchQuery']);
 for(const n of template.nodes){
- const prev=originals.get(n.nodeId);
+ const prev=originals.get(n.nodeId)||originals.get(retrySources[n.nodeId]);
+ const isReader=['petcareReadOfficialV7','petcareRetryReadV20'].includes(n.nodeId);
+ const boundedHttp=isReader||['sMnGaCpKJevxBZHb','petcareRetrySearchV20'].includes(n.nodeId);
  if(prev){
-  if(prev.position&&!['petcareAskRegion','uhHSLcGctmw3yPZy','ubZfEsLsdZMRh8Dt','iso6ZEoKEE8RNhKi','petcareLawRagAnswer','sMnGaCpKJevxBZHb','petcareOfficialUrlV7','petcareUrlGateV7','petcareReadOfficialV7','sOUZOZrUtrZDbvrg','petcareLawFallback'].includes(n.nodeId))n.position=prev.position;
+  if(originals.has(n.nodeId)&&prev.position&&!['petcareAskRegion','uhHSLcGctmw3yPZy','ubZfEsLsdZMRh8Dt','iso6ZEoKEE8RNhKi','petcareLawRagAnswer','sMnGaCpKJevxBZHb','petcareOfficialUrlV7','petcareUrlGateV7','petcareReadOfficialV7','sOUZOZrUtrZDbvrg','petcareLawFallback'].includes(n.nodeId))n.position=prev.position;
   const inputs=new Map((prev.inputs||[]).map(i=>[i.key,i]));
-  for(const i of n.inputs||[]){const p=inputs.get(i.key);if(p&&!repairedKeys.has(i.key)&&!(n.nodeId==='petcareReadOfficialV7'&&i.key==='system_httpJsonBody')){if('value'in p&&p.value!==null)i.value=p.value;else delete i.value}}
+  for(const i of n.inputs||[]){const p=inputs.get(i.key);
+   if(p&&boundedHttp&&i.key==='system_httpTimeout'){i.value=Math.min(Number(p.value)>0?Number(p.value):i.value,i.value);continue}
+   if(p&&!repairedKeys.has(i.key)&&!(isReader&&i.key==='system_httpJsonBody')){if('value'in p&&p.value!==null){i.value=p.value;if(n.nodeId==='petcareRetryReadV20'&&i.key==='system_httpReqUrl'&&typeof i.value==='string')i.value=i.value.replaceAll('petcareOfficialUrlV7','petcareRetryUrlV20')}else delete i.value}
+  }
  }
  if(n.flowNodeType==='chatNode'&&(!prev||prev.flowNodeType!=='chatNode')){
-  const source=originals.get('viGpsYsOOUgV6xbI')||originals.get('xL2dEdlDVtFIYG6n');
+  const source=prev||originals.get('viGpsYsOOUgV6xbI')||originals.get('xL2dEdlDVtFIYG6n');
   const model=source?.inputs.find(i=>i.key==='model');if(model?.value)n.inputs.find(i=>i.key==='model').value=model.value;
  }
 }

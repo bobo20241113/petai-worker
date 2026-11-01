@@ -5,7 +5,11 @@ Cloudflare Workers + Supabase + 学校 FastGPT。实现《宠AI后端设计 v2�
 本次已加入云端前端 `public/index.html`，部署后直接打开Worker根地址即可使用。旧的 `6137-12.html`仍是历史版本，不会自动变成云端版。新页面通过Worker API访问会话和档案，访客只用页面内存。
 
 
-## v19 通用法规更新
+## v20 检索恢复更新
+
+新增一次换词重查、URL-only候选正文读取、检索格式适配和具体原因诊断；有证据先回答核心问题。请同时更新学校主工作流和Worker；health版本1.4.0，无数据库变更。升级和排查见 [SEARCH_RECOVERY.md](SEARCH_RECOVERY.md)。
+
+## v19 通用法规更新（历史）
 
 已删除地区专属法规分支，统一范围规划、缺项补问、检索与证据审查。Worker 增加本次实际来源核对，阻止拼接或无依据引用；主聊天使用 `detail:true`，详细节点结果不返回浏览器。**请同时更新 Worker 和学校主工作流**；无需数据库迁移。保留学校配置的升级步骤见 [GENERIC_WORKFLOW.md](GENERIC_WORKFLOW.md)。
 
@@ -59,7 +63,7 @@ npm run deploy:link -- https://github.com/你的用户名/你的仓库 main peta
 
 | 文件 | 用途 | 密钥配置 |
 | --- | --- | --- |
-| `chat-cloud.json` | v19 通用范围、补问、法规证据审查及云端上下文 | `FASTGPT_API_KEY` |
+| `chat-cloud.json` | v20 通用范围、补问、两轮检索与证据审查 | `FASTGPT_API_KEY` |
 | `memory-extractor.json` | 独立的用户事实JSON提取器，不是普通问答 | `MEMORY_API_KEY` |
 
 导入后在学校平台选择实际可用模型，主应用自行绑定知识库。**公开模板已清空HTTP节点的隐藏鉴权头**，联网搜索所需鉴权需在学校平台自行重配；不要把带真实密钥的导出JSON上传公开仓库。记忆应用不需要知识库、联网或视觉。

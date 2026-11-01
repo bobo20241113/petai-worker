@@ -76,3 +76,21 @@ test('upgrader removes retired regional branches from v18 without restoring stal
   const read=out.nodes.find(n=>n.nodeId==='petcareReadOfficialV7').inputs.find(i=>i.key==='system_httpJsonBody').value;assert.match(read,/sourceUrl/);
  }finally{rmSync(dir,{recursive:true,force:true})}
 });
+test('v19 upgrade copies private search and reader settings into retry nodes with repaired references',()=>{
+ const dir=mkdtempSync(join(tmpdir(),'petai-v20-upgrade-'));
+ try{
+  const f=JSON.parse(readFileSync(new URL('../../6137-19.json',import.meta.url)));
+  const val=(flow,id,key)=>flow.nodes.find(n=>n.nodeId===id).inputs.find(i=>i.key===key);
+  val(f,'sMnGaCpKJevxBZHb','system_header_secret').value={Authorization:'fixture-private-search'};
+  val(f,'sMnGaCpKJevxBZHb','system_httpReqUrl').value='https://search.fixture.invalid/v1';
+  val(f,'petcareReadOfficialV7','system_header_secret').value={Authorization:'fixture-private-reader'};
+  val(f,'petcareReadOfficialV7','system_httpReqUrl').value='https://reader.fixture.invalid/{{$petcareOfficialUrlV7.answerText$}}';
+  const input=join(dir,'in.json'),output=join(dir,'out.json');writeFileSync(input,JSON.stringify(f));
+  execFileSync(process.execPath,[new URL('../scripts/upgrade-workflow.mjs',import.meta.url).pathname,input,output]);const out=JSON.parse(readFileSync(output));
+  assert.deepEqual(val(out,'petcareRetrySearchV20','system_header_secret').value,{Authorization:'fixture-private-search'});
+  assert.equal(val(out,'petcareRetrySearchV20','system_httpReqUrl').value,'https://search.fixture.invalid/v1');
+  assert.deepEqual(val(out,'petcareRetrySearchV20','searchQuery').value,['petcareRetryQueryV20','answerText']);
+  assert.deepEqual(val(out,'petcareRetryReadV20','system_header_secret').value,{Authorization:'fixture-private-reader'});
+  assert.equal(val(out,'petcareRetryReadV20','system_httpReqUrl').value,'https://reader.fixture.invalid/{{$petcareRetryUrlV20.answerText$}}');
+ }finally{rmSync(dir,{recursive:true,force:true})}
+});
