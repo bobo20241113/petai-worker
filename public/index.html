@@ -69,6 +69,37 @@ body{background:#EFEEE8}.shell{max-width:1800px;background:#F9FAF5;border-color:
 @media(max-width:700px){.shell{width:100%;height:100dvh;margin:0;border:0;border-radius:0}.top{height:56px;padding:8px 16px}.brand{width:auto}.body{display:flex;padding:0 8px 8px}.center{padding:8px}.cloud-strip{padding:4px 8px;gap:8px}.conversation-top{padding:4px;min-height:40px;gap:8px}.conversation-title{font-size:14px;line-height:20px}.help-drawer>summary,.pet-memory{padding:4px 8px;min-height:32px}.chat{padding:12px}#welcome{grid-template-columns:minmax(0,1fr);gap:12px}.welcome-copy{grid-column:1;grid-row:1;padding:0}.welcome-title{font-size:24px;line-height:32px}.welcome-description{margin-top:8px}.companion-scene{grid-column:1;grid-row:2;max-width:192px;width:100%;justify-self:center}.companion-scene .pet-illustration{max-height:96px}.suggestions{grid-row:3;gap:8px}.suggestion-card{flex-direction:row;align-items:center;padding:12px;gap:8px;min-height:80px}.category-icon{width:24px;height:24px}.category-icon svg{width:16px;height:16px}.suggestion-card strong{font-size:14px;line-height:20px}.suggestion-card small{font-size:12px;line-height:16px}.photo-prompt{grid-row:4;padding:8px;gap:8px}.photo-prompt strong{font-size:12px;line-height:16px}.photo-prompt button{padding:8px;min-height:40px}.composer{padding:8px;gap:8px}.message{margin:8px auto 16px}.bubble{padding:12px}.hint{font-size:12px;line-height:16px}}
 /* v28: titles use available width; secondary actions live in a disclosure. */
 .session-row{gap:4px;padding:4px;align-items:flex-start}.session-open{flex:1 1 0%;width:0;max-width:none;padding:8px;min-width:0}.session-name{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;white-space:normal;overflow:hidden;overflow-wrap:anywhere;line-height:20px}.session-options{flex:0 0 24px;padding-top:8px}.session-more{display:grid;place-items:center;width:24px;height:24px;border:0;border-radius:8px;background:transparent;color:#708074;font-size:20px;line-height:20px;letter-spacing:0;padding:0}.session-more:hover,.session-more[aria-expanded="true"]{background:#DDE8D8;color:#2C503A}.session-options-panel{position:fixed;z-index:90;min-width:144px;width:max-content;padding:4px;border:1px solid #DDE5D7;border-radius:12px;background:#fff;box-shadow:0 8px 24px #263c351c}.session-options-panel .session-action{display:flex;align-items:center;width:100%;max-width:none;min-height:40px;padding:8px 12px;border:0;border-radius:8px;background:transparent;opacity:1;color:#395444;text-align:left;font-size:14px;line-height:20px}.session-options-panel .session-action:hover{background:#EEF4E8}.session-options-panel [data-delete-conversation]{color:#A45342}.session-options-panel [data-delete-conversation]:hover{background:#FCF0EB}.local-section-head #new-session-side{width:32px;height:32px;border:1px solid #DAE4D2;border-radius:8px;background:#F2F6EC;color:#446C4D;padding:4px;flex:none}.local-section-head #new-session-side:hover{background:#E4EEDB;color:#295440}.local-section-head #new-session-side svg{width:20px;height:20px;fill:none}.top-actions #new-mobile svg{fill:none}.session-row:has(.session-more[aria-expanded="true"]){background:#EDF4E7}
+
+/* v31: compact chat typography and bounded Markdown overflow. Display only. */
+.chat{padding:12px 16px}
+.message{width:100%;max-width:1040px;gap:8px;margin:8px auto 16px;min-width:0}
+.message .avatar{width:24px;height:24px}
+.message .avatar svg{width:16px;height:16px}
+.message-body{flex:0 1 auto;min-width:0;max-width:calc(100% - 32px)}
+.message.assistant .message-body{flex:1 1 0%;width:0;max-width:calc(100% - 32px)}
+.message-meta{font-size:12px;line-height:16px;margin:0 0 4px;font-weight:400}
+.bubble{min-width:0;max-width:100%;padding:12px 16px;border-radius:12px;font-size:14px;line-height:20px;font-weight:400;white-space:normal;overflow-wrap:anywhere;word-break:normal}
+.bubble p{font-size:inherit;line-height:inherit;margin:0 0 8px;text-wrap:pretty}
+.bubble p:last-child{margin-bottom:0}
+.bubble strong{font-weight:600}
+.bubble h1,.bubble h2{font-size:18px;line-height:28px;margin:12px 0 8px;font-weight:600;letter-spacing:0}
+.bubble h3,.bubble h4,.bubble h5,.bubble h6{font-size:16px;line-height:24px;margin:12px 0 8px;font-weight:600;letter-spacing:0}
+.bubble h1:first-child,.bubble h2:first-child,.bubble h3:first-child,.bubble h4:first-child,.bubble h5:first-child,.bubble h6:first-child{margin-top:0}
+.bubble ul,.bubble ol{padding-left:24px;margin:8px 0;max-width:100%}
+.bubble li{margin:4px 0;padding-left:0;overflow-wrap:anywhere}
+.bubble li>p{margin-bottom:4px}
+.bubble ul:last-child,.bubble ol:last-child{margin-bottom:0}
+.bubble blockquote{max-width:100%;margin:8px 0;padding:8px 12px;border-radius:8px;font-size:14px;line-height:20px}
+.bubble pre{display:block;min-width:0;max-width:100%;padding:12px;margin:8px 0;overflow-x:auto;overscroll-behavior-x:contain;white-space:pre;border-radius:8px;font-size:12px;line-height:16px;tab-size:2}
+.bubble code{font-family:inherit;font-size:12px;line-height:16px}
+.bubble pre code{display:block;white-space:pre;overflow-wrap:normal;word-break:normal}
+.bubble table{display:block;width:max-content;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;border-collapse:collapse;margin:8px 0;font-size:12px;line-height:16px}
+.bubble th,.bubble td{border:1px solid #DEE6D8;padding:8px;min-width:96px;max-width:320px;white-space:normal;overflow-wrap:anywhere;text-align:left}
+.bubble th{background:#EDF3E6;font-weight:600}
+.bubble a{max-width:100%;overflow-wrap:anywhere;word-break:normal}
+.bubble img{max-width:100%;height:auto;max-height:288px;margin:0 0 8px;object-fit:contain}
+.bubble hr{margin:12px 0}
+@media(max-width:700px){.chat{padding:12px 8px}.message{margin:8px auto 12px}.bubble{padding:8px 12px;font-size:14px;line-height:20px}.bubble h1,.bubble h2{font-size:16px;line-height:24px}.bubble h3,.bubble h4,.bubble h5,.bubble h6{font-size:14px;line-height:20px}.bubble ul,.bubble ol{padding-left:24px}.bubble pre{padding:8px}.message-meta{font-size:12px;line-height:16px}.bubble blockquote{padding:8px}.bubble img{max-height:224px}}
 </style>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head><body>
@@ -176,7 +207,7 @@ body{background:#EFEEE8}.shell{max-width:1800px;background:#F9FAF5;border-color:
   </div>
 </div>
 
-<dialog id="sessions-dialog" class="cloud-dialog" aria-labelledby="sessions-title"><header><h2 id="sessions-title">云端会话</h2><button type="button" data-close-dialog="sessions-dialog" aria-label="关闭会话列表">×</button></header><p>登录后可在不同设备继续查看。访客不会保存历史会话。</p><div id="sessions-dialog-list" class="session-list"></div><button type="button" id="sessions-more" class="cloud-button" hidden>加载更多会话</button></dialog>
+<dialog id="sessions-dialog" class="cloud-dialog" aria-labelledby="sessions-title"><header><h2 id="sessions-title">云端会话</h2><button type="button" data-close-dialog="sessions-dialog" aria-label="关闭会话列表">×</button></header><p id="sessions-description">登录后可在不同设备继续查看。访客会话仅在当前页面保留。</p><button type="button" id="new-session-dialog" class="cloud-button">新建会话</button><div id="sessions-dialog-list" class="session-list"></div><button type="button" id="sessions-more" class="cloud-button" hidden>加载更多会话</button></dialog>
 <dialog id="rename-dialog" class="cloud-dialog" aria-labelledby="rename-heading"><header><h2 id="rename-heading">重命名会话</h2><button type="button" data-close-dialog="rename-dialog" aria-label="关闭窗口">×</button></header><form id="rename-form"><label for="rename-title">会话名称</label><input id="rename-title" maxlength="100" required><div class="cloud-actions"><button class="primary" type="submit">保存名称</button></div></form></dialog>
 <dialog id="pets-dialog" class="cloud-dialog" aria-labelledby="pets-title"><header><h2 id="pets-title">宠物档案</h2><button type="button" data-close-dialog="pets-dialog" aria-label="关闭档案">×</button></header><p class="profile-intro">资料来自聊天中的明确陈述，补充或纠正也直接在聊天中说。</p><div id="profile-content" class="readonly-records" aria-live="polite"></div></dialog>
 <dialog id="auth-dialog" class="cloud-dialog" aria-labelledby="auth-title"><header><h2 id="auth-title">和它的故事，接着聊</h2><button type="button" data-close-dialog="auth-dialog" aria-label="关闭账号窗口">×</button></header><div id="auth-entry"><p>登录后保存云端会话，聊天中明确提供的宠物信息会自动补充到档案，并用于之后的咨询。</p><div class="cloud-tabs" role="tablist" aria-label="账号操作"><button type="button" data-auth-mode="login" role="tab" aria-selected="true">登录</button><button type="button" data-auth-mode="signup" role="tab" aria-selected="false">注册</button><button type="button" data-auth-mode="reset" role="tab" aria-selected="false">重置密码</button></div><form id="auth-form"><div id="auth-email-wrap"><label for="auth-email">邮箱</label><input id="auth-email" type="email" autocomplete="email" required></div><div id="auth-password-wrap"><label for="auth-password">密码</label><input id="auth-password" type="password" autocomplete="current-password" required maxlength="200"></div><p id="auth-status" class="cloud-status" role="status" aria-live="polite"></p><div class="cloud-actions"><button type="button" id="continue-guest">暂不登录</button><button type="submit" id="auth-submit" class="primary">登录</button></div></form></div><div id="auth-logged-in" hidden><div class="auth-account"><p>当前账号</p><strong id="account-email"></strong><p>宠物档案通过聊天自动补充。退出会清空当前页面数据，云端记录仍保留。</p></div><div class="cloud-actions"><button type="button" id="export-data">导出我的记录</button><button type="button" id="sign-out">退出登录</button><button type="button" id="delete-cloud-data" class="danger">删除全部云端数据</button></div></div></dialog>
@@ -301,6 +332,7 @@ const $=id=>document.getElementById(id);
 const chat=$('chat');
 const welcomeMarkup=$('welcome').outerHTML;
 let config={...DEFAULT_CONFIG},auth=null,authSubscription=null,authEpoch=0,identity=null,userId=null;
+let guestSessions=[],activeGuest=null;
 let conversations=[],pets=[],active=null,messages=[],guestTurns=[],photo=null,busy=false,epoch=0,photoEpoch=0;
 let activeTask=null,pendingSubmit=null,firstSequence=null,authMode='login',recovery=false,widget=null,turnstileToken='',widgetPromise=null;
 let controllers=new Set(),authTimer=null,configNotice='',serverConfigReady=false;
@@ -318,7 +350,7 @@ function fitQuestion(){const q=$('question');q.style.height='40px';q.style.heigh
 function scrollDown(){chat.scrollTop=chat.scrollHeight}
 function restoreWelcome(){chat.innerHTML=welcomeMarkup}
 function clearPhoto(){photoEpoch++;photo=null;$('file').value='';$('preview').hidden=true;$('preview-img').removeAttribute('src')}
-function clearView(){profileRequest++;$('profile-content').replaceChildren();$('pets-dialog').close();active=null;messages=[];guestTurns=[];pendingSubmit=null;firstSequence=null;clearPhoto();$('question').value='';$('active-session-title').textContent='新对话';restoreWelcome();fitQuestion()}
+function clearView(){profileRequest++;$('profile-content').replaceChildren();$('pets-dialog').close();active=null;activeGuest=null;messages=[];guestTurns=[];pendingSubmit=null;firstSequence=null;clearPhoto();$('question').value='';$('active-session-title').textContent='新对话';restoreWelcome();fitQuestion()}
 function readConfig(){try{const c=JSON.parse(localStorage.getItem(CONFIG_KEY)||'{}');for(const k of Object.keys(DEFAULT_CONFIG))if(typeof c[k]==='string'&&c[k])config[k]=c[k]}catch{}}
 function validateConfig(c){
  const api=new URL(c.apiBase);if(api.protocol!=='https:'&&!(api.protocol==='http:'&&['localhost','127.0.0.1'].includes(api.hostname)))throw new ClientError('Worker 地址需要使用 HTTPS');
@@ -349,7 +381,7 @@ async function request(path,{method='GET',body,guest=false,stamp=epoch,timeout=2
   return data;
  }finally{clearTimeout(timer);controllers.delete(ctrl)}
 }
-function expireSession(){stopWait();identity=null;userId=null;conversations=[];pets=[];clearView();renderShell();notice('登录已失效，已清空当前账号的页面数据。重新登录后可恢复云端会话；不会自动转为访客发送。');if(auth)auth.auth.signOut({scope:'local'}).catch(()=>{});openDialog('auth-dialog')}
+function expireSession(){stopWait();identity=null;userId=null;conversations=[];pets=[];discardGuestSessions();clearView();renderShell();notice('登录已失效，已清空当前账号的页面数据。重新登录后可恢复云端会话；不会自动转为访客发送。');if(auth)auth.auth.signOut({scope:'local'}).catch(()=>{});openDialog('auth-dialog')}
 function openDialog(id){const d=$(id);if(!d.open)d.showModal()}
 function setStatus(value){$('request-status').textContent=value}
 function genericPetName(name){return !name||/^(?:猫|狗|猫咪|狗狗|宠物|动物|小猫|小狗|这只猫|这只狗|它|未知|未命名|未命名宠物|cat|dog|pet|英短|美短|布偶|金毛|拉布拉多|(?:橘|白|黑|灰|蓝|三花|狸花|短毛|长毛)+(?:猫|狗|犬)?)$/i.test(name)}
@@ -358,21 +390,26 @@ function accountDefault(){const eligible=pets.filter(p=>p.default_eligible===tru
 function renderShell(){
  $('account-button').textContent=identity?'我的账号':'登录 / 注册';
  $('cloud-strip').dataset.mode=identity?'cloud':'guest';
- $('mode-copy').textContent=identity?'已登录 · 会话云端保存，聊天会自动完善宠物档案':'访客模式 · 仅当前对话有效，新对话、刷新或关闭后清空';
+ $('mode-copy').textContent=identity?'已登录 · 会话云端保存，聊天会自动完善宠物档案':'访客模式 · 可切换多个临时会话，刷新或关闭后清空';
  $('mode-action').textContent=identity?'查看档案':'登录保存记录';
- $('storage-status').textContent=identity?'云端会话 · 档案从聊天中自动补充':'临时对话不保存到浏览器或云端';
+ $('storage-status').textContent=identity?'云端会话 · 档案从聊天中自动补充':'临时会话仅在当前页面保留';
  const matched=identity&&pets.find(p=>p.id===active?.pet_id);
  const implicit=identity&&(!active||!chat.querySelector('.message'))?accountDefault():null;
  const shown=matched||implicit;
  $('pet-summary').textContent=!identity?'宠物档案':shown?petDisplay(shown)+' · 档案':'宠物档案'+(pets.length?' · '+pets.length:'');
  $('manage-pets').title=!identity?'登录后可保存宠物档案':matched?'查看账号档案；本轮咨询：'+petDisplay(matched):implicit?'查看账号档案；新会话默认：'+petDisplay(implicit):'查看账号保存的全部宠物档案，聊天中自动确定本轮对象';
  $('mode-action').hidden=!!identity;
+ document.querySelector('.local-sessions').setAttribute('aria-label',identity?'云端会话':'临时会话');
+ $('open-sessions').setAttribute('aria-label',identity?'打开云端会话列表':'打开临时会话列表');
+ $('sessions-title').textContent=identity?'云端会话':'临时会话';
+ $('sessions-description').textContent=identity?'登录后可在不同设备继续查看。':'可在此切换当前页面的临时会话。刷新或关闭页面后清空；登录可保存云端记录。';
+ document.querySelector('.local-section-head>span').textContent=identity?'我的会话':'临时会话';
  for(const name of ['session-list','sessions-dialog-list']){
   const target=$(name);target.replaceChildren();
-  if(!identity){target.append(element('p','访客仅保留当前对话。登录后可保存会话。','session-empty'));continue}
-  if(!conversations.length){target.append(element('p','还没有云端会话。说说你和宠物的情况吧。','session-empty'));continue}
-  for(const c of conversations){
-   const row=element('div',undefined,'session-row'+(c.id===active?.id?' selected':''));
+  const items=identity?conversations:guestSessions;
+  if(!items.length){target.append(element('p',identity?'还没有云端会话。说说你和宠物的情况吧。':'开始提问或新建一个临时会话，之后可在这里切换。','session-empty'));continue}
+  for(const c of items){
+   const row=element('div',undefined,'session-row'+(c.id===(identity?active?.id:activeGuest?.id)?' selected':''));
    const open=element('button',undefined,'session-open');open.type='button';open.dataset.openConversation=c.id;
    open.title=c.title||'新对话';
    open.append(element('span',c.title||'新对话','session-name'),element('small',new Date(c.updated_at).toLocaleDateString('zh-CN'),'session-date'));
@@ -408,7 +445,7 @@ async function useSession(session,event=''){
  if(event==='PASSWORD_RECOVERY'){recovery=true;setAuthMode('recovery');openDialog('auth-dialog')}
  const next=session?.user?.id||null;
  if(next===userId){identity=session;if(!session)renderShell();return}
- stopWait();clearGuestPass();resetVerification();userId=next;identity=session;conversations=[];pets=[];clearView();renderShell();
+ stopWait();clearGuestPass();resetVerification();userId=next;identity=session;conversations=[];pets=[];discardGuestSessions();clearView();renderShell();
  if(!session){setStatus('当前为访客，登录后可保存会话，让我持续了解你的宠物。');return}
  const stamp=epoch;setStatus('正在读取云端会话…');
  try{await reloadLists(stamp);assertEpoch(stamp);if(conversations.length)await openConversation(conversations[0].id);else setStatus('直接聊天即可自动完善档案。');if(!recovery)$('auth-dialog').close();}catch(e){showError(e);setStatus('云端数据读取失败，可点击“刷新云端”重试。')}
@@ -427,7 +464,34 @@ async function setupAuth(){
  if(recoveryLink){recovery=true;setAuthMode('recovery');openDialog('auth-dialog')}
  await useSession(initial.data.session);
 }
-function newConversation(){stopWait();if(!identity)resetVerification();clearView();renderShell();setStatus(identity?'账号档案会保留，本轮对象根据聊天自动确定。':'当前为访客，登录后可保存会话，让我持续了解你的宠物。');$('question').focus()}
+function discardGuestSessions(){guestSessions=[];activeGuest=null;guestTurns=[];if(renameMode==='guest'){$('rename-dialog').close();renameId=null}}
+function createGuestConversation(){
+ const c={id:'guest-'+crypto.randomUUID(),title:'新对话',manualTitle:false,updated_at:new Date().toISOString(),entries:[],turns:[],draft:'',photo:null,scrollTop:null,pending:null};
+ guestSessions.unshift(c);return c;
+}
+function saveGuestView(){
+ if(!activeGuest)return;
+ activeGuest.draft=$('question').value;activeGuest.photo=photo?{...photo}:null;activeGuest.scrollTop=chat.scrollTop;
+ if(activeGuest.pending){activeGuest.pending.content='已停止等待。切换会话前的问题可重新发送。';activeGuest.pending.status='cancelled';const bubble=chat.querySelector('.message.assistant:last-child .bubble');if(bubble)bubble.textContent=activeGuest.pending.content;activeGuest.pending=null}
+}
+function showGuestConversation(c){
+ clearView();activeGuest=c;guestTurns=c.turns;
+ for(const m of c.entries)addMessage(m.role,m.content,m.image,m.created_at);
+ $('active-session-title').textContent=c.title;$('question').value=c.draft;fitQuestion();
+ if(c.photo){photo={...c.photo};$('preview-img').src=photo.dataUrl;$('photo-name').textContent=photo.name;$('preview').hidden=false}
+ if(c.scrollTop!==null)chat.scrollTop=c.scrollTop;else scrollDown();
+ renderShell();$('sessions-dialog').close();setStatus('当前为访客，登录后可保存会话，让我持续了解你的宠物。');
+}
+function openGuestConversation(id){
+ const c=guestSessions.find(x=>x.id===id);if(!c)return;
+ if(c===activeGuest){$('sessions-dialog').close();return}
+ saveGuestView();stopWait();resetVerification();showGuestConversation(c);
+}
+function newConversation(){
+ if(!identity){saveGuestView();stopWait();resetVerification();showGuestConversation(createGuestConversation())}
+ else{stopWait();clearView();renderShell();setStatus('账号档案会保留，本轮对象根据聊天自动确定。')}
+ $('sessions-dialog').close();$('question').focus();
+}
 function renderMessages(){
  chat.replaceChildren();if(!messages.length){restoreWelcome();return}
  if(firstSequence!==null){const more=element('button','加载更早消息','cloud-button older-messages');more.id='load-older';more.type='button';chat.append(more)}
@@ -435,7 +499,7 @@ function renderMessages(){
  scrollDown();
 }
 async function openConversation(id){
- if(!identity)return;stopWait();clearPhoto();pendingSubmit=null;$('question').value='';
+ if(!identity){openGuestConversation(id);return}stopWait();clearPhoto();pendingSubmit=null;$('question').value='';
  const stamp=epoch;setStatus('正在读取会话…');const c=conversations.find(x=>x.id===id)||await request('/api/conversations/'+id,{stamp});
  const rows=await request('/api/conversations/'+id+'/messages',{stamp});assertEpoch(stamp);
  active=c;messages=rows.slice().reverse();firstSequence=rows.length===50?Math.min(...rows.map(m=>Number(m.sequence))):null;
@@ -527,15 +591,21 @@ async function sendGuest(input){
   else if(turnstileToken){try{await exchangeGuestPass(turnstileToken)}catch{return}}
   else {toast(config.turnstileSiteKey?'首次使用请完成验证，之后可在当前页面连续聊天。':'访客模式暂不可用，请登录使用。');renderVerification();return}
  }
- if(!validGuestPass()||identity)return;
- const stamp=epoch,token=guestPass.token,history=guestHistory(),image=photo?.dataUrl;
- setBusy(true);addMessage('user',input,image);const bubble=addMessage('assistant','正在等待回复…');$('question').value='';clearPhoto();fitQuestion();
- try{const data=await request('/api/guest/chat',{method:'POST',guest:true,timeout:125000,stamp,body:{text:input,history,guest_session_token:token,...(image?{image}:{})}});assertEpoch(stamp);renderMarkdown(bubble,data.answer);setMessageTime(bubble,data.answered_at??Date.now());guestTurns.push({text:input,answer:data.answer});setStatus('当前为访客，登录后可保存会话，让我持续了解你的宠物。');}
- catch(e){if(stamp!==epoch)return;if(['GUEST_SESSION_EXPIRED','GUEST_SESSION_INVALID','CHALLENGE_REQUIRED'].includes(e.code)){clearGuestPass();resetVerification();renderVerification()}showError(e);bubble.textContent='访客请求失败，本次未写入云端。你可以重新填写问题后发送。';if(!$('question').value)$('question').value=input;fitQuestion();}
+ if(!validGuestPass()||identity||busy)return;
+ if(!activeGuest){activeGuest=createGuestConversation();guestTurns=activeGuest.turns}
+ const c=activeGuest,stamp=epoch,token=guestPass.token,history=guestHistory(),image=photo?.dataUrl,createdAt=new Date().toISOString();
+ const userMessage={role:'user',content:input,image,created_at:createdAt};
+ const reply={role:'assistant',content:'正在等待回复…',created_at:createdAt,status:'pending'};
+ c.entries.push(userMessage,reply);c.pending=reply;c.updated_at=createdAt;c.draft='';c.photo=null;
+ if(c.entries.length===2&&!c.manualTitle)c.title=input.slice(0,100);
+ $('active-session-title').textContent=c.title;renderShell();
+ setBusy(true);addMessage('user',input,image,createdAt);const bubble=addMessage('assistant',reply.content,undefined,createdAt);$('question').value='';clearPhoto();fitQuestion();
+ try{const data=await request('/api/guest/chat',{method:'POST',guest:true,timeout:125000,stamp,body:{text:input,history,guest_session_token:token,...(image?{image}:{})}});assertEpoch(stamp);reply.content=data.answer;reply.created_at=data.answered_at??new Date().toISOString();reply.status='complete';c.pending=null;c.turns.push({text:input,answer:data.answer});c.updated_at=reply.created_at;renderMarkdown(bubble,data.answer);setMessageTime(bubble,reply.created_at);renderShell();setStatus('当前为访客，登录后可保存会话，让我持续了解你的宠物。');}
+ catch(e){if(stamp!==epoch)return;if(['GUEST_SESSION_EXPIRED','GUEST_SESSION_INVALID','CHALLENGE_REQUIRED'].includes(e.code)){clearGuestPass();resetVerification();renderVerification()}showError(e);reply.content='访客请求失败，本次未写入云端。你可以重新填写问题后发送。';reply.status='failed';c.pending=null;bubble.textContent=reply.content;if(!$('question').value)$('question').value=input;fitQuestion();}
  finally{if(stamp===epoch)setBusy(false)}
 }
 async function cancelRequest(){
- const task=activeTask;const wasCloud=!!identity;stopWait();
+ const task=activeTask;const wasCloud=!!identity;if(!wasCloud)saveGuestView();stopWait();
  if(wasCloud&&task){try{await request('/api/turns/'+task.id+'/cancel',{method:'POST',body:{}});task.bubble.textContent='已请求取消。已开始的上游调用不保证停止。';}catch(e){showError(e);task.bubble.textContent='已停止本页等待，但未能确认后台取消。';addAction(task.bubble,'查询后台状态',()=>pollTurn(task.id,task.bubble,epoch))}}
  else {if(!wasCloud){resetVerification();renderVerification()}setStatus(wasCloud?'已停止等待。若提交已到达后台，可重新打开会话查询。':'已停止等待，本次访客请求不会写入云端。');}
 }
@@ -551,11 +621,21 @@ async function preparePhoto(file){
   photo={name:file.name,dataUrl:output};$('preview-img').src=output;$('photo-name').textContent=file.name;$('preview').hidden=false;
  }catch(e){toast(e.message||'图片读取失败，请换一张照片。')}
 }
-let confirmResolver=null,renameId=null;
+let confirmResolver=null,renameId=null,renameMode=null;
 function confirmChoice(title,description){if(confirmResolver)confirmResolver(false);$('confirm-title').textContent=title;$('confirm-description').textContent=description;openDialog('confirm-dialog');return new Promise(resolve=>confirmResolver=resolve)}
 function finishConfirm(value){$('confirm-dialog').close();const fn=confirmResolver;confirmResolver=null;fn?.(value)}
-async function renameConversation(id){const c=conversations.find(c=>c.id===id);if(!c)return;renameId=id;$('rename-title').value=c.title;openDialog('rename-dialog')}
-async function deleteConversation(id){if(!await confirmChoice('删除云端会话','删除后聊天消息无法在本应用恢复。已形成的宠物档案和记录会保留。'))return;await request('/api/conversations/'+id,{method:'DELETE'});if(active?.id===id)newConversation();await reloadLists();toast('会话已删除，已形成的档案仍保留。')}
+async function renameConversation(id){const c=(identity?conversations:guestSessions).find(c=>c.id===id);if(!c)return;renameMode=identity?'cloud':'guest';renameId=id;$('rename-title').value=c.title;openDialog('rename-dialog')}
+async function deleteConversation(id){
+ if(!identity){
+  const c=guestSessions.find(x=>x.id===id),stamp=epoch;if(!c)return;
+  if(!await confirmChoice('删除临时会话','此会话仅保留在当前页面，删除后无法恢复。其他临时会话不受影响。'))return;
+  if(identity||stamp!==epoch)return;
+  if(activeGuest===c){saveGuestView();stopWait();clearView()}
+  guestSessions=guestSessions.filter(x=>x!==c);
+  if(!activeGuest&&guestSessions.length)showGuestConversation(guestSessions[0]);else renderShell();
+  $('sessions-dialog').close();return;
+ }
+ if(!await confirmChoice('删除云端会话','删除后聊天消息无法在本应用恢复。已形成的宠物档案和记录会保留。'))return;await request('/api/conversations/'+id,{method:'DELETE'});if(active?.id===id)newConversation();await reloadLists();toast('会话已删除，已形成的档案仍保留。')}
 async function moreSessions(){if(!identity||!conversations.length)return;const stamp=epoch;const last=conversations[conversations.length-1];const rows=await request('/api/conversations?before='+encodeURIComponent(last.updated_at),{stamp});assertEpoch(stamp);const ids=new Set(conversations.map(c=>c.id));conversations.push(...rows.filter(c=>!ids.has(c.id)));renderShell();$('sessions-more').hidden=rows.length<30}
 let profileRequest=0;
 async function openProfiles(){
@@ -620,7 +700,7 @@ async function submitAuth(event){
   else if(result.data.session)await useSession(result.data.session);
  }catch(e){$('auth-status').classList.add('cloud-error');$('auth-status').textContent=e.message||'登录失败，请检查邮箱和密码。'}finally{button.disabled=false}
 }
-async function signOut(){stopWait();identity=null;userId=null;conversations=[];pets=[];clearView();renderShell();if(auth){const {error}=await auth.auth.signOut({scope:'local'});if(error)toast('页面数据已清空，退出状态未能同步，请关闭页面后重试。')}$('auth-dialog').close();setStatus('已退出，当前为新的临时访客对话。')}
+async function signOut(){stopWait();identity=null;userId=null;conversations=[];pets=[];discardGuestSessions();clearView();renderShell();if(auth){const {error}=await auth.auth.signOut({scope:'local'});if(error)toast('页面数据已清空，退出状态未能同步，请关闭页面后重试。')}$('auth-dialog').close();setStatus('已退出，当前为新的临时访客对话。')}
 function openSettings(){for(const [id,key] of [['config-worker','apiBase'],['config-supabase','supabaseUrl'],['config-publishable','supabasePublishableKey'],['config-turnstile','turnstileSiteKey']])$(id).value=config[key]||'';$('config-origin').textContent=location.origin==='null'?'当前为本地文件，请用本地服务器或网站托管打开。':'当前页面来源：'+location.origin;openDialog('settings-dialog')}
 async function loadServerConfig(){
  const c=new AbortController();const timeout=setTimeout(()=>c.abort(),12000);try{
@@ -633,7 +713,7 @@ async function saveSettings(event){
  event.preventDefault();const next=validateConfig({...config,apiBase:$('config-worker').value.trim().replace(/\/$/,''),supabaseUrl:$('config-supabase').value.trim(),supabasePublishableKey:$('config-publishable').value.trim(),turnstileSiteKey:$('config-turnstile').value.trim()});
  const changeProject=next.supabaseUrl!==config.supabaseUrl||next.supabasePublishableKey!==config.supabasePublishableKey;
  if(identity&&!await confirmChoice('更新连接配置','这会清空当前页面的账号数据并重新读取云端状态，未发送草稿将丢失。是否继续？'))return;
- stopWait();if(changeProject&&auth)await auth.auth.signOut({scope:'local'});identity=null;userId=null;conversations=[];pets=[];clearView();config=next;clearGuestPass();
+ stopWait();if(changeProject&&auth)await auth.auth.signOut({scope:'local'});identity=null;userId=null;conversations=[];pets=[];discardGuestSessions();clearView();config=next;clearGuestPass();
  try{localStorage.setItem(CONFIG_KEY,JSON.stringify({apiBase:config.apiBase,supabaseUrl:config.supabaseUrl,supabasePublishableKey:config.supabasePublishableKey,turnstileSiteKey:config.turnstileSiteKey}))}catch{toast('浏览器未允许保存公开配置，刷新后需重新填写。')}
  resetVerification();$('settings-dialog').close();renderShell();notice('');configNotice='';await setupAuth();
 }
@@ -663,7 +743,7 @@ async function bootstrap(){
 $('form').addEventListener('submit',e=>{e.preventDefault();guarded(send)()});
 $('question').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();guarded(send)()}});$('question').addEventListener('input',fitQuestion);
 $('file').addEventListener('change',()=>preparePhoto($('file').files[0]));$('remove-photo').addEventListener('click',clearPhoto);
-$('new-mobile').addEventListener('click',newConversation);$('new-session-side').addEventListener('click',newConversation);
+for(const id of ['new-mobile','new-session-side','new-session-dialog'])$(id).addEventListener('click',newConversation);
 $('cancel-request').addEventListener('click',guarded(cancelRequest));
 $('open-sessions').addEventListener('click',()=>openDialog('sessions-dialog'));
 $('account-button').addEventListener('click',()=>{renderShell();openDialog('auth-dialog')});
@@ -673,7 +753,12 @@ $('reload-config').addEventListener('click',guarded(async()=>{configNotice='';aw
 $('refresh-cloud').addEventListener('click',guarded(async()=>{if(identity){await reloadLists();if(active)await openConversation(active.id)}else{await loadServerConfig();renderShell();await setupAuth()}}));
 $('manage-pets').addEventListener('click',guarded(openProfiles));
 $('sessions-more').addEventListener('click',guarded(moreSessions));
-$('rename-form').addEventListener('submit',guarded(async event=>{event.preventDefault();const title=$('rename-title').value.trim();if(!title)return;await request('/api/conversations/'+renameId,{method:'PATCH',body:{title}});$('rename-dialog').close();await reloadLists();if(active?.id===renameId){active=conversations.find(c=>c.id===renameId);$('active-session-title').textContent=active.title}}));
+$('rename-form').addEventListener('submit',guarded(async event=>{event.preventDefault();const title=$('rename-title').value.trim();if(!title)return;
+ if(renameMode==='guest'){
+  if(identity)return;const c=guestSessions.find(c=>c.id===renameId);if(!c)return;
+  c.title=title;c.manualTitle=true;$('rename-dialog').close();if(activeGuest===c)$('active-session-title').textContent=title;renderShell();return;
+ }
+ await request('/api/conversations/'+renameId,{method:'PATCH',body:{title}});$('rename-dialog').close();await reloadLists();if(active?.id===renameId){active=conversations.find(c=>c.id===renameId);$('active-session-title').textContent=active.title}}));
 $('auth-form').addEventListener('submit',guarded(submitAuth));$('sign-out').addEventListener('click',guarded(signOut));$('export-data').addEventListener('click',guarded(exportData));$('delete-cloud-data').addEventListener('click',guarded(deleteData));
 $('confirm-yes').addEventListener('click',()=>finishConfirm(true));$('confirm-no').addEventListener('click',()=>finishConfirm(false));$('confirm-dialog').addEventListener('cancel',e=>{e.preventDefault();finishConfirm(false)});
 $('continue-guest').addEventListener('click',()=>{$('auth-dialog').close();if(!identity)newConversation()});
@@ -698,8 +783,8 @@ window.addEventListener('pageshow',event=>{if(event.persisted&&!identity)newConv
 setInterval(()=>{if(!document.hidden)refreshMessageTimes()},30000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshMessageTimes()});
 window.addEventListener('focus',()=>{refreshMessageTimes();if(!identity&&!validGuestPass())renderVerification()});
-window.addEventListener('pagehide',()=>{if(!identity){stopWait();clearGuestPass();clearView();resetVerification()}});
-if(window.__PETAI_TEST__)window.__petai={formatMessageTime,refreshMessageTimes,bootstrap,useSession,newConversation,send,openConversation,openProfiles,request,validateConfig,guestHistory,cancelRequest,config:()=>config,changeConfig:c=>Object.assign(config,c),snapshot:()=>({userId,guestTurns:guestTurns.length,activeId:active?.id,busy,pendingRequest:pendingSubmit?.client_request_id,guestVerified:validGuestPass()}),setToken:t=>turnstileToken=t,setPhoto:p=>{photo=p}};
+window.addEventListener('pagehide',()=>{if(!identity){stopWait();clearGuestPass();discardGuestSessions();clearView();resetVerification()}});
+if(window.__PETAI_TEST__)window.__petai={formatMessageTime,refreshMessageTimes,bootstrap,useSession,newConversation,send,openConversation,openProfiles,request,validateConfig,guestHistory,cancelRequest,config:()=>config,changeConfig:c=>Object.assign(config,c),snapshot:()=>({userId,guestTurns:guestTurns.length,activeId:active?.id,busy,pendingRequest:pendingSubmit?.client_request_id,guestVerified:validGuestPass(),activeGuestId:activeGuest?.id,guestSessions:guestSessions.map(c=>({id:c.id,title:c.title,entries:c.entries.length}))}),setToken:t=>turnstileToken=t,setPhoto:p=>{photo=p}};
 window.addEventListener('DOMContentLoaded',()=>bootstrap().catch(showError));
 })();
 
