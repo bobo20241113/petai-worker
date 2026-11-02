@@ -206,6 +206,9 @@ body{background:#EFEEE8}.shell{max-width:1800px;background:#F9FAF5;border-color:
 @media(max-width:700px){.composer{grid-template-columns:32px minmax(0,1fr) 32px auto;gap:4px}.composer .camera-button{width:32px;height:32px;min-width:32px;padding:4px}}
 
 .composer .camera-button svg{fill:none}
+
+/* v39 visible reply controls, input feedback and waiting state. */
+.reply-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px}.reply-actions .task-action{margin:0;padding:4px 8px;font-size:12px;line-height:16px;color:#63756D;background:transparent;border:1px solid #E3E7DE;border-radius:8px}.reply-actions .task-action:hover{background:#EAF0E6;color:#295440}.reply-actions .task-action:disabled{opacity:.5;cursor:wait}.busy-banner{display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 12px;background:#F1F5EC;color:#356852;border-radius:8px;font-size:12px;line-height:16px}.busy-banner[hidden],.input-error[hidden]{display:none}.waiting-dots{font-size:20px;line-height:20px;animation:waiting-pulse 1.5s var(--ease) infinite}@keyframes waiting-pulse{0%,100%{opacity:.35}50%{opacity:1}}.input-error{font-size:12px;line-height:16px;color:#A34630;margin:8px 4px 0}.char-count{font-size:12px;line-height:16px;color:#849087;white-space:nowrap}.char-count.near-limit{color:#946332}.request-row{flex-wrap:wrap;gap:8px}.request-row #request-status{flex:1;min-width:160px}#copy-content{width:100%;font-size:14px;line-height:20px;border:1px solid #E3E7DE;border-radius:8px;padding:12px;resize:vertical}@media(prefers-reduced-motion:reduce){.waiting-dots{animation:none}}
 </style>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head><body>
@@ -377,8 +380,8 @@ body{background:#EFEEE8}.shell{max-width:1800px;background:#F9FAF5;border-color:
       <div class="composer-wrap">
         <div id="preview" class="image-previews" hidden><div id="photo-list" class="photo-list"></div><button type="button" id="remove-photo" class="cloud-button">移除全部</button></div>
         <div id="upload-status" class="upload-status" role="status" hidden><span id="upload-label"></span><progress id="upload-progress" max="100" value="0" aria-label="图片上传进度"></progress></div>
-        <form id="form" class="composer" aria-label="发送宠物咨询"><textarea id="question" rows="1" maxlength="6000" placeholder="想了解它的什么？在这里说说吧…" aria-label="输入你的宠物问题" aria-describedby="request-status"></textarea><button type="button" id="attach" class="attach" title="上传宠物图片" aria-label="上传宠物图片"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,16V158.75l-26.07-26.06a16,16,0,0,0-22.63,0l-20,20-44-44a16,16,0,0,0-22.62,0L40,149.37V56ZM40,172l52-52,80,80H40Zm176,28H194.63l-36-36,20-20L216,181.38V200ZM144,100a12,12,0,1,1,12,12A12,12,0,0,1,144,100Z"/></svg><span>添加照片</span></button><button type="button" id="take-photo" class="attach camera-button" title="拍摄照片" aria-label="拍摄宠物照片"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 5l1-2h6l1 2h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4Z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.5"/></svg></button><button type="submit" id="send" class="send"><span id="send-text">发送</span><span id="send-icon"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M205.66,117.66a8,8,0,0,1-11.32,0L136,59.31V216a8,8,0,0,1-16,0V59.31L61.66,117.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0l72,72A8,8,0,0,1,205.66,117.66Z"/></svg></span></button></form>
-        <div class="request-row"><span id="request-status" role="status" aria-live="polite">Enter 发送，Shift＋Enter 换行</span><button type="button" id="cancel-request" hidden>取消等待</button></div>
+        <form id="form" class="composer" aria-label="发送宠物咨询"><textarea id="question" rows="1" maxlength="6000" placeholder="想了解它的什么？在这里说说吧…" aria-label="输入你的宠物问题" aria-describedby="input-error char-count request-status"></textarea><button type="button" id="attach" class="attach" title="上传宠物图片" aria-label="上传宠物图片"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,16V158.75l-26.07-26.06a16,16,0,0,0-22.63,0l-20,20-44-44a16,16,0,0,0-22.62,0L40,149.37V56ZM40,172l52-52,80,80H40Zm176,28H194.63l-36-36,20-20L216,181.38V200ZM144,100a12,12,0,1,1,12,12A12,12,0,0,1,144,100Z"/></svg><span>添加照片</span></button><button type="button" id="take-photo" class="attach camera-button" title="拍摄照片" aria-label="拍摄宠物照片"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 5l1-2h6l1 2h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4Z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.5"/></svg></button><button type="submit" id="send" class="send"><span id="send-text">发送</span><span id="send-icon"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M205.66,117.66a8,8,0,0,1-11.32,0L136,59.31V216a8,8,0,0,1-16,0V59.31L61.66,117.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0l72,72A8,8,0,0,1,205.66,117.66Z"/></svg></span></button></form>
+        <div id="busy-banner" class="busy-banner" role="status" aria-live="polite" hidden><span class="waiting-dots" aria-hidden="true">···</span><span id="busy-copy"></span></div><p id="input-error" class="input-error" role="alert" hidden></p><div class="request-row"><span id="char-count" class="char-count">0 / 6000</span><span id="request-status" role="status" aria-live="polite">Enter 发送，Shift＋Enter 换行</span><button type="button" id="cancel-request" hidden>取消等待</button></div>
         <div class="guest-check" id="guest-verification"><div id="turnstile-mount"></div><p id="guest-verification-note"></p></div><p class="hint">仅供信息参考，不能替代兽医诊断。紧急情况请及时就医。</p>
       </div>
     </main>
@@ -393,6 +396,8 @@ body{background:#EFEEE8}.shell{max-width:1800px;background:#F9FAF5;border-color:
 <dialog id="confirm-dialog" class="cloud-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-description"><header><h2 id="confirm-title">确认操作</h2></header><p id="confirm-description"></p><div class="cloud-actions"><button type="button" id="confirm-no">取消</button><button type="button" id="confirm-yes" class="primary">继续</button></div></dialog>
 <dialog id="settings-dialog" class="cloud-dialog" aria-labelledby="settings-title"><header><h2 id="settings-title">连接设置</h2><button type="button" data-close-dialog="settings-dialog" aria-label="关闭连接设置">×</button></header><p class="settings-public-note">页面会从 Worker 自动读取公开登录配置。下面不需要、也不允许填写 Supabase Secret Key、service_role 或 FastGPT 密钥。</p><p id="config-origin"></p><form id="settings-form"><label for="config-worker">Worker 后端地址</label><input id="config-worker" type="url" required autocomplete="off"><label for="config-supabase">Supabase 项目 URL（公开）</label><input id="config-supabase" type="url" autocomplete="off" placeholder="https://项目标识.supabase.co"><label for="config-publishable">Supabase Publishable Key（公开）</label><input id="config-publishable" autocomplete="off" spellcheck="false" placeholder="sb_publishable_… 或旧版 anon key"><label for="config-turnstile">Turnstile Site Key（公开）</label><input id="config-turnstile" autocomplete="off" placeholder="访客模式使用"><p>若 Worker 已配置这些公开值，请点“重新读取”。手工填写只作为兼容旧后端的方式，公开配置可保存到当前浏览器。</p><p id="config-status" class="cloud-status" role="status"></p><div class="cloud-actions"><button type="button" id="check-connection">检查连接</button><button type="button" id="reload-config">重新读取</button><button type="submit" class="primary">保存公开配置</button></div></form></dialog>
 <input id="file" type="file" multiple accept="image/jpeg,image/png,image/webp" hidden><input id="camera-file" type="file" accept="image/*" capture="environment" hidden><div id="toast" class="toast cloud-toast" role="status" hidden></div>
+
+<dialog id="copy-dialog" class="cloud-dialog"><h2>复制内容</h2><p>浏览器未允许自动复制。请长按或选中下方文字复制。</p><textarea id="copy-content" readonly aria-label="待复制的原文" rows="10"></textarea><div class="cloud-actions"><button type="button" data-close-dialog="copy-dialog">关闭</button></div></dialog>
 
 <script>
 /* Decorative illustration lifecycle only. No chat, account or network handlers. */
@@ -427,6 +432,17 @@ function assessImagePixels(pixels,width,height,originalWidth=width,originalHeigh
  for(let y=1;y<height-1;y++)for(let x=1;x<width-1;x++){const i=y*width+x,v=gray[i-1]+gray[i+1]+gray[i-width]+gray[i+width]-4*gray[i];sum+=v;squares+=v*v;count++}
  const sharpness=count?Math.max(0,squares/count-(sum/count)**2):0;
  return {sharpness,warning:Math.min(originalWidth,originalHeight)<320?'图片分辨率偏低，建议靠近宠物重新拍摄。':sharpness<35?'图片可能模糊或细节较少，建议对焦、补光后重拍；也可继续发送。':''};
+}
+
+// Fast, deterministic topic summaries: no extra model call and no slicing the user's sentence.
+function summarizeTitle(value,hasImages=false){
+ const text=String(value||'').replace(/https?:\/\/\S+/g,' ').replace(/<[^>]*>/g,' ');
+ const animal=/猫|cat\b/i.test(text)&&/狗|犬|dog\b/i.test(text)?'猫狗':/猫|cat\b/i.test(text)?'猫咪':/狗|犬|dog\b/i.test(text)?'狗狗':'宠物';
+ const topics=[[/驱虫|寄生虫|跳蚤|蜱虫|deworm/i,'驱虫'],[/疫苗|免疫|vaccine/i,'疫苗'],[/登记|牌照|办证|许可|禁养|法规|法律|可以养|能养/i,'饲养规定'],[/呕吐|拉稀|腹泻|软便|vomit/i,'肠胃健康'],[/掉毛|脱毛|皮肤|瘙痒|抓痒/i,'毛发与皮肤'],[/吃|粮|喂|饮食|食欲|营养|diet|food/i,'饮食'],[/绝育|发情/i,'绝育'],[/训练|乱叫|咬人|抓人|行为|随地|猫砂/i,'行为训练'],[/年龄|多大|生日|几岁/i,'年龄'],[/体重|胖|瘦|减肥/i,'体重管理'],[/品种|什么猫|什么狗|辨认/i,'品种观察'],[/呼吸|昏迷|抽搐|出血|误食|尿不出/i,'紧急健康咨询'],[/症状|生病|医院|医生|兽医|健康/i,'健康'],[/照顾|照护|护理|养护|日常/i,'日常照护']];
+ const found=topics.filter(([re])=>re.test(text)).map(([,label])=>label);
+ const place=(text.match(/(?:北京|上海|广州|深圳|香港|澳门|台北|成都|杭州|新加坡|伦敦|东京)/)||[])[0];
+ const topic=found.length?found.slice(0,2).join('与'):(hasImages?'图片观察':'问题咨询');
+ return (place&&found.includes('饲养规定')?place+' · ':'')+animal+topic;
 }
 
 'use strict';
@@ -534,7 +550,7 @@ let conversations=[],pets=[],active=null,messages=[],guestTurns=[],photo=null,bu
 let activeTask=null,pendingSubmit=null,firstSequence=null,authMode='login',recovery=false,widget=null,turnstileToken='',widgetPromise=null;
 let controllers=new Set(),authTimer=null,configNotice='',serverConfigReady=false;
 let guestPass=null,verificationPromise=null,verificationGeneration=0;
-let preparingPhotos=false;
+let preparingPhotos=false,waitingStarted=null,waitingTimer=null;
 const photoItems=p=>p?(p.items||[p]):[];
 function renderPhotos(){const list=$('photo-list');list.replaceChildren();for(const [index,p] of photoItems(photo).entries()){const card=element('figure',undefined,'photo-card'),img=element('img');img.src=p.dataUrl;img.alt='待发送图片 '+(index+1);const caption=element('figcaption',p.name);const remove=element('button','×','photo-remove');remove.type='button';remove.disabled=busy;remove.setAttribute('aria-label','移除图片 '+(index+1));remove.onclick=()=>{if(busy||preparingPhotos)return;const items=photoItems(photo).filter((_,i)=>i!==index);photo=items.length?{items}:null;renderPhotos()};card.append(img,caption,remove);if(p.warning)card.append(element('small',p.warning,'photo-warning'));list.append(card)}$('preview').hidden=!photoItems(photo).length;}
 function uploadProgress(label,percent){$('upload-status').hidden=false;$('upload-label').textContent=label;$('upload-progress').value=percent;}
@@ -547,8 +563,27 @@ function showError(error){if(error?.name==='AbortError'||error?.code==='STALE_VI
 function guarded(fn){return (...args)=>Promise.resolve().then(()=>fn(...args)).catch(showError)}
 function assertEpoch(stamp){if(stamp!==epoch)throw new ClientError('页面已切换','STALE_VIEW')}
 function stopWait(){epoch++;$('upload-status').hidden=true;turnstileToken='';for(const c of controllers)c.abort();controllers.clear();activeTask=null;setBusy(false)}
-function setBusy(value){busy=value;$('send').disabled=value;$('question').disabled=value;$('attach').disabled=value;$('take-photo').disabled=value;document.querySelectorAll('.photo-remove').forEach(b=>b.disabled=value);$('remove-photo').disabled=value;$('manage-pets').disabled=value;$('send-text').textContent=value?'等待回复':'发送';$('send-icon').style.display=value?'none':'';$('cancel-request').hidden=!value;chat.setAttribute('aria-busy',String(value));}
-function fitQuestion(){const q=$('question');q.style.height='40px';q.style.height=Math.min(96,Math.max(40,q.scrollHeight))+'px'}
+function setBusy(value){busy=value;updateWaiting(value);document.querySelectorAll('[data-reply-retry]').forEach(b=>b.disabled=value);$('send').disabled=value;$('question').disabled=value;$('attach').disabled=value;$('take-photo').disabled=value;document.querySelectorAll('.photo-remove').forEach(b=>b.disabled=value);$('remove-photo').disabled=value;$('manage-pets').disabled=value;$('send-text').textContent=value?'等待回复':'发送';$('send-icon').style.display=value?'none':'';$('cancel-request').hidden=!value;chat.setAttribute('aria-busy',String(value));}
+function fitQuestion(){updateInputCount();const q=$('question');q.style.height='40px';q.style.height=Math.min(96,Math.max(40,q.scrollHeight))+'px'}
+function updateInputCount(){const n=$('question').value.length;$('char-count').textContent=n+' / 6000';$('char-count').classList.toggle('near-limit',n>=5400);$('question').setAttribute('aria-invalid',String(n>6000));}
+function inputError(message){$('input-error').textContent=message;$('input-error').hidden=!message;if(message)$('question').setAttribute('aria-invalid','true');}
+function updateWaiting(value){
+ $('busy-banner').hidden=!value;if(value){if(waitingStarted===null){waitingStarted=Date.now();waitingTimer=setInterval(()=>{if(busy)$('busy-copy').textContent='正在处理你的问题 · 已等待 '+Math.floor((Date.now()-waitingStarted)/1000)+' 秒，可取消等待。'},1000)}$('busy-copy').textContent='正在处理你的问题，请稍候。'}
+ else{clearInterval(waitingTimer);waitingTimer=null;waitingStarted=null;}
+}
+async function copyOriginal(value){try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(value);toast('已复制')}catch{$('copy-content').value=value;openDialog('copy-dialog');$('copy-content').focus();$('copy-content').select()}}
+function replyActions(bubble,answer,source,{failed=false}={}){
+ const body=bubble.closest('.message-body');body.querySelector('.reply-actions')?.remove();const bar=element('div',undefined,'reply-actions');bar.setAttribute('aria-label','本轮回复操作');
+ if(!failed){addAction(bar,'复制回复',()=>copyOriginal(answer));if(source)addAction(bar,'复制这一轮',()=>copyOriginal('你：'+source.text+'\n\n宠AI：'+answer));}
+ if(source){const retry=addAction(bar,'再试一次',()=>repeatQuestion(source));retry.dataset.replyRetry='';retry.disabled=busy;retry.title='保留原回答，使用同一问题和图片新增一轮请求';}
+ body.append(bar);
+}
+async function repeatQuestion(source){
+ if(busy||preparingPhotos){toast('当前问题仍在处理中，请稍候。');return}
+ if(source.cloud){if(!identity||active?.id!==source.conversation_id)return;await send({text:source.text,attachment_ids:source.attachment_ids||[],images:[]});}
+ else{if(identity||activeGuest?.id!==source.conversation_id)return;await sendGuest(source.text,{images:source.images||[]});}
+}
+function cloudSource(turnId){if(!turnId)return null;const m=messages.find(m=>m.turn_id===turnId&&m.role==='user');if(m)return {cloud:true,text:m.content,conversation_id:active?.id,attachment_ids:m.attachment_ids?.length?m.attachment_ids:m.attachment_id?[m.attachment_id]:[]};if(pendingSubmit?.turn_id===turnId)return {cloud:true,text:pendingSubmit.text,conversation_id:pendingSubmit.conversation_id,attachment_ids:pendingSubmit.attachment_ids};return null;}
 function scrollDown(){chat.scrollTop=chat.scrollHeight}
 function restoreWelcome(){chat.innerHTML=welcomeMarkup}
 function clearPhoto(){photoEpoch++;photo=null;$('file').value='';$('camera-file').value='';renderPhotos()}
@@ -686,7 +721,7 @@ function saveGuestView(){
 }
 function showGuestConversation(c){
  clearView();activeGuest=c;guestTurns=c.turns;
- for(const m of c.entries)addMessage(m.role,m.content,m.image,m.created_at);
+ for(let i=0;i<c.entries.length;i++){const m=c.entries[i],b=addMessage(m.role,m.content,m.image,m.created_at);if(m.role==='assistant'&&m.status!=='pending'){const user=c.entries[i-1];if(user?.role==='user')replyActions(b,m.content,{text:user.content,images:user.image||[],conversation_id:c.id},{failed:m.status==='failed'||m.status==='cancelled'})}}
  $('active-session-title').textContent=c.title;$('question').value=c.draft;fitQuestion();
  if(c.photo){photo={...c.photo};renderPhotos()}
  if(c.scrollTop!==null)chat.scrollTop=c.scrollTop;else scrollDown();
@@ -705,7 +740,7 @@ function newConversation(){
 function renderMessages(){
  chat.replaceChildren();if(!messages.length){restoreWelcome();return}
  if(firstSequence!==null){const more=element('button','加载更早消息','cloud-button older-messages');more.id='load-older';more.type='button';chat.append(more)}
- for(const m of messages){const b=addMessage(m.role,m.content,undefined,m.created_at??null);if(m.attachment_ids?.length||m.attachment_id)b.append(element('small','本轮包含 '+(m.attachment_ids?.length||1)+' 张已上传图片。','task-status'));if(m.role==='user'&&m.status==='failed')addAction(b,'查看状态 / 重试',()=>inspectFailed(m.turn_id));}
+ for(const m of messages){const b=addMessage(m.role,m.content,undefined,m.created_at??null);if(m.attachment_ids?.length||m.attachment_id)b.append(element('small','本轮包含 '+(m.attachment_ids?.length||1)+' 张已上传图片。','task-status'));if(m.role==='user'&&m.status==='failed')addAction(b,'查看状态 / 重试',()=>inspectFailed(m.turn_id));if(m.role==='assistant'&&m.status!=='pending'&&m.status!=='failed')replyActions(b,m.content,cloudSource(m.turn_id));}
  scrollDown();
 }
 async function openConversation(id){
@@ -728,14 +763,14 @@ async function pollTurn(turnId,bubble,stamp=epoch){
    assertEpoch(stamp);let task;
    try{task=await request('/api/turns/'+turnId,{stamp});failures=0;}catch(e){assertEpoch(stamp);if(e.status===401)throw e;if(++failures>=3)throw e;setStatus(e.status===429?'请求较多，稍后继续查询…':'连接中断，正在恢复任务查询…');await wait(e.status===429?12000:6000,stamp);continue}
    if(task.status==='completed'){
-    renderMarkdown(bubble,task.answer||'任务已完成。');
+    renderMarkdown(bubble,task.answer||'任务已完成。');replyActions(bubble,task.answer||'任务已完成。',cloudSource(turnId));
     setMessageTime(bubble,task.updated_at??null);
     await reloadLists(stamp);if(active){const c=conversations.find(c=>c.id===active.id);if(c){active=c;$('active-session-title').textContent=c.title;renderShell()}}setStatus('回复已保存到云端。');pendingSubmit=null;return;
    }else if(['failed','needs_review','cancelled'].includes(task.status)){
     bubble.textContent=task.status==='needs_review'?'上游可能已处理，但回复未能确认。重试可能产生重复调用。':task.status==='cancelled'?'已请求取消；已开始的上游调用不保证停止。':'本次处理失败，问题已保存在云端。';
-    if(task.status!=='cancelled')addAction(bubble,'重试回答',()=>retryTurn(turnId,bubble));setStatus('任务已结束，可查看提示后重试。');return;
+    if(task.status!=='cancelled')addAction(bubble,'再试一次',()=>retryTurn(turnId,bubble));setStatus('任务已结束，可查看提示后重试。');return;
    }
-   setStatus((task.status==='pending'?'后台排队中':'后台处理中')+' · '+Math.floor((Date.now()-start)/1000)+'秒');await wait(4000,stamp);
+   bubble.textContent=task.status==='pending'?'问题已提交，正在排队…':'正在处理你的问题，请稍候…';setStatus((task.status==='pending'?'后台排队中':'后台处理中')+' · '+Math.floor((Date.now()-start)/1000)+'秒');await wait(4000,stamp);
   }
   bubble.textContent='后台尚未返回结果。你可以稍后继续查询，或在会话列表重新打开。';addAction(bubble,'继续查询',()=>pollTurn(turnId,bubble,epoch));
  }catch(e){if(e.code==='STALE_VIEW'||e.name==='AbortError')return;showError(e);bubble.textContent='暂时无法查询结果，后台任务仍可能继续。';addAction(bubble,'继续查询',()=>pollTurn(turnId,bubble,epoch));}
@@ -743,17 +778,17 @@ async function pollTurn(turnId,bubble,stamp=epoch){
 }
 async function retryTurn(turnId,bubble){const task=await request('/api/turns/'+turnId);let accept=false;if(task.status==='needs_review'){accept=await confirmChoice('确认重试','上一次上游调用可能已经执行。继续重试可能重复调用或计费，是否继续？');if(!accept)return}await request('/api/turns/'+turnId+'/retry',{method:'POST',body:{accept_possible_duplicate:accept}});bubble.textContent='已提交重试…';await pollTurn(turnId,bubble,epoch)}
 async function inspectFailed(turnId){const b=addMessage('assistant','正在查看任务状态…');await pollTurn(turnId,b,epoch)}
-async function send(){
- if(busy||preparingPhotos)return;const input=$('question').value.trim()||(photo?'请描述这些宠物图片中可以观察到的内容，并按图片顺序说明。':'');if(!input)return;
- if(input.length>6000){toast('每条问题最多6000字。');return}
+async function send(repeat=null){
+ if(busy||preparingPhotos)return;const raw=repeat?repeat.text:$('question').value;const input=raw.trim()||((repeat?repeat.images?.length||repeat.attachment_ids?.length:photo)?'请描述这些宠物图片中可以观察到的内容，并按图片顺序说明。':'');if(!input){inputError('请输入问题或添加图片后再发送。');$('question').focus();return}
+ if(raw.length>6000){inputError('每条问题最多6000字，请拆分后发送。');$('question').focus();return}inputError('');
  if(location.protocol==='file:'){notice('请通过已部署的网站打开页面，或使用本地 HTTP 服务器预览。');return}
- if(!identity)return sendGuest(input);
+ if(!identity)return sendGuest(input,repeat);
  const stamp=epoch;setBusy(true);
  try{
-  if(!active){active=await request('/api/conversations',{method:'POST',body:{},stamp});assertEpoch(stamp);conversations.unshift(active);renderShell()}
-  const descriptor={client_request_id:crypto.randomUUID(),text:input,images:photoItems(photo).map(p=>({...p})),conversation_id:active.id,attachment_ids:[]};
-  pendingSubmit=descriptor;descriptor.userBubble=addMessage('user',input,photoItems(photo).map(p=>p.dataUrl));const bubble=addMessage('assistant','正在提交问题…');descriptor.bubble=bubble;
-  $('question').value='';clearPhoto();fitQuestion();await submitCloud(descriptor,stamp);
+  if(!active){$('active-session-title').textContent=summarizeTitle(input,photoItems(photo).length>0);setStatus('正在整理标题并创建会话…');active=await request('/api/conversations',{method:'POST',body:{first_message:input,has_images:photoItems(photo).length>0},stamp});assertEpoch(stamp);conversations.unshift(active);renderShell()}
+  const descriptor={client_request_id:crypto.randomUUID(),text:input,images:repeat?[]:photoItems(photo).map(p=>({...p})),conversation_id:active.id,attachment_ids:repeat?.attachment_ids||[]};
+  pendingSubmit=descriptor;descriptor.userBubble=addMessage('user',input,repeat?undefined:photoItems(photo).map(p=>p.dataUrl));if(repeat?.attachment_ids?.length)descriptor.userBubble.append(element('small','本轮复用 '+repeat.attachment_ids.length+' 张已上传图片。','task-status'));const bubble=addMessage('assistant','正在提交问题…');descriptor.bubble=bubble;
+  if(!repeat){$('question').value='';clearPhoto();fitQuestion()}await submitCloud(descriptor,stamp);
  }catch(e){if(stamp!==epoch)return;showError(e);if(!pendingSubmit)setStatus('创建会话失败，请重试。')}
  finally{if(stamp===epoch)setBusy(false)}
 }
@@ -797,7 +832,7 @@ function exchangeGuestPass(token){
  })();
  verificationPromise=task;return task;
 }
-async function sendGuest(input){
+async function sendGuest(input,repeat=null){
  if(config.guestEnabled===false){toast('访客模式暂不可用，请登录使用。');return}
  if(!validGuestPass()){
   clearGuestPass();
@@ -807,20 +842,20 @@ async function sendGuest(input){
  }
  if(!validGuestPass()||identity||busy)return;
  if(!activeGuest){activeGuest=createGuestConversation();guestTurns=activeGuest.turns}
- const c=activeGuest,stamp=epoch,token=guestPass.token,history=guestHistory(),image=photoItems(photo).map(p=>p.dataUrl),createdAt=new Date().toISOString();
+ const c=activeGuest,stamp=epoch,token=guestPass.token,history=guestHistory(),image=repeat?(repeat.images||[]):photoItems(photo).map(p=>p.dataUrl),createdAt=new Date().toISOString();
  const userMessage={role:'user',content:input,image,created_at:createdAt};
  const reply={role:'assistant',content:'正在等待回复…',created_at:createdAt,status:'pending'};
- c.entries.push(userMessage,reply);c.pending=reply;c.updated_at=createdAt;c.draft='';c.photo=null;
- if(c.entries.length===2&&!c.manualTitle)c.title=input.slice(0,100);
+ c.entries.push(userMessage,reply);c.pending=reply;c.updated_at=createdAt;if(!repeat){c.draft='';c.photo=null;}
+ if(c.entries.length===2&&!c.manualTitle)c.title=summarizeTitle(input,image.length>0);
  $('active-session-title').textContent=c.title;renderShell();
- setBusy(true);addMessage('user',input,image,createdAt);const bubble=addMessage('assistant',reply.content,undefined,createdAt);$('question').value='';clearPhoto();fitQuestion();
- try{const data=await request('/api/guest/chat',{method:'POST',guest:true,timeout:125000,stamp,...(image.length?{onUpload:p=>uploadProgress('图片上传 '+Math.round(p*100)+'%'+(p===1?'，等待回复…':''),Math.round(p*100))}:{}),body:{text:input,history,guest_session_token:token,...(image.length?{images:image}:{})}});assertEpoch(stamp);reply.content=data.answer;reply.created_at=data.answered_at??new Date().toISOString();reply.status='complete';c.pending=null;c.turns.push({text:input,answer:data.answer});c.updated_at=reply.created_at;renderMarkdown(bubble,data.answer);setMessageTime(bubble,reply.created_at);renderShell();setStatus('当前为访客，登录后可保存会话，让我持续了解你的宠物。');}
- catch(e){if(stamp!==epoch)return;if(['GUEST_SESSION_EXPIRED','GUEST_SESSION_INVALID','CHALLENGE_REQUIRED'].includes(e.code)){clearGuestPass();resetVerification();renderVerification()}showError(e);reply.content='访客请求失败，本次未写入云端。你可以重新填写问题后发送。';reply.status='failed';c.pending=null;bubble.textContent=reply.content;if(!$('question').value)$('question').value=input;fitQuestion();}
+ setBusy(true);addMessage('user',input,image,createdAt);const bubble=addMessage('assistant',reply.content,undefined,createdAt);if(!repeat){$('question').value='';clearPhoto();fitQuestion()}
+ try{const data=await request('/api/guest/chat',{method:'POST',guest:true,timeout:125000,stamp,...(image.length?{onUpload:p=>uploadProgress('图片上传 '+Math.round(p*100)+'%'+(p===1?'，等待回复…':''),Math.round(p*100))}:{}),body:{text:input,history,guest_session_token:token,...(image.length?{images:image}:{})}});assertEpoch(stamp);reply.content=data.answer;reply.created_at=data.answered_at??new Date().toISOString();reply.status='complete';c.pending=null;c.turns.push({text:input,answer:data.answer});c.updated_at=reply.created_at;renderMarkdown(bubble,data.answer);replyActions(bubble,data.answer,{text:input,images:image,conversation_id:c.id});setMessageTime(bubble,reply.created_at);renderShell();setStatus('当前为访客，登录后可保存会话，让我持续了解你的宠物。');}
+ catch(e){if(stamp!==epoch)return;if(['GUEST_SESSION_EXPIRED','GUEST_SESSION_INVALID','CHALLENGE_REQUIRED'].includes(e.code)){clearGuestPass();resetVerification();renderVerification()}showError(e);reply.content='访客请求失败，本次未写入云端。你可以重新填写问题后发送。';reply.status='failed';c.pending=null;bubble.textContent=reply.content;replyActions(bubble,'',{text:input,images:image,conversation_id:c.id},{failed:true});if(!repeat&&!$('question').value)$('question').value=input;fitQuestion();}
  finally{if(stamp===epoch){$('upload-status').hidden=true;setBusy(false)}}
 }
 async function cancelRequest(){
  const task=activeTask;const wasCloud=!!identity;if(!wasCloud)saveGuestView();stopWait();
- if(wasCloud&&task){try{await request('/api/turns/'+task.id+'/cancel',{method:'POST',body:{}});task.bubble.textContent='已请求取消。已开始的上游调用不保证停止。';}catch(e){showError(e);task.bubble.textContent='已停止本页等待，但未能确认后台取消。';addAction(task.bubble,'查询后台状态',()=>pollTurn(task.id,task.bubble,epoch))}}
+ if(wasCloud&&task){try{await request('/api/turns/'+task.id+'/cancel',{method:'POST',body:{}});task.bubble.textContent='已请求取消。已开始的上游调用不保证停止。';setStatus('已取消等待，可以继续提问。');}catch(e){showError(e);setStatus('已停止等待，后台取消状态尚未确认。');task.bubble.textContent='已停止本页等待，但未能确认后台取消。';addAction(task.bubble,'查询后台状态',()=>pollTurn(task.id,task.bubble,epoch))}}
  else {if(!wasCloud){resetVerification();renderVerification()}setStatus(wasCloud?'已停止等待。若提交已到达后台，可重新打开会话查询。':'已停止等待，本次访客请求不会写入云端。');}
 }
 async function preparePhotos(files){
@@ -961,7 +996,9 @@ async function bootstrap(){
  if(location.protocol!=='file:'&&!config.supabaseUrl&&!config.turnstileSiteKey)notice('服务配置暂不可用，请稍后刷新重试或联系管理员。');
 }
 $('form').addEventListener('submit',e=>{e.preventDefault();guarded(send)()});
-$('question').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();guarded(send)()}});$('question').addEventListener('input',fitQuestion);
+$('question').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();guarded(send)()}});$('question').addEventListener('input',()=>{inputError('');fitQuestion()});
+$('question').addEventListener('paste',event=>{const value=event.clipboardData?.getData('text')||'',q=$('question');if(q.value.length-(q.selectionEnd-q.selectionStart)+value.length>6000){event.preventDefault();inputError('粘贴后将超过6000字，请拆分内容后发送。')}});
+$('question').addEventListener('beforeinput',event=>{const q=$('question');if(!event.isComposing&&event.data&&q.value.length-(q.selectionEnd-q.selectionStart)+event.data.length>6000){event.preventDefault();inputError('已达到6000字上限，请拆分后发送。')}});
 $('file').addEventListener('change',()=>preparePhotos($('file').files));$('camera-file').addEventListener('change',()=>preparePhotos($('camera-file').files));$('take-photo').addEventListener('click',()=>{if(!busy&&!preparingPhotos)$('camera-file').click()});$('remove-photo').addEventListener('click',clearPhoto);
 for(const id of ['new-mobile','new-session-side','new-session-dialog'])$(id).addEventListener('click',newConversation);
 $('cancel-request').addEventListener('click',guarded(cancelRequest));
@@ -1004,7 +1041,7 @@ setInterval(()=>{if(!document.hidden)refreshMessageTimes()},30000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshMessageTimes()});
 window.addEventListener('focus',()=>{refreshMessageTimes();if(!identity&&!validGuestPass())renderVerification()});
 window.addEventListener('pagehide',()=>{if(!identity){stopWait();clearGuestPass();discardGuestSessions();clearView();resetVerification()}});
-if(window.__PETAI_TEST__)window.__petai={preparePhotos,photoItems,formatMessageTime,refreshMessageTimes,bootstrap,useSession,newConversation,send,openConversation,openProfiles,request,validateConfig,guestHistory,cancelRequest,config:()=>config,changeConfig:c=>Object.assign(config,c),snapshot:()=>({userId,guestTurns:guestTurns.length,activeId:active?.id,busy,pendingRequest:pendingSubmit?.client_request_id,guestVerified:validGuestPass(),activeGuestId:activeGuest?.id,guestSessions:guestSessions.map(c=>({id:c.id,title:c.title,entries:c.entries.length}))}),setToken:t=>turnstileToken=t,setPhoto:p=>{photo=p}};
+if(window.__PETAI_TEST__)window.__petai={summarizeTitle,copyOriginal,preparePhotos,photoItems,formatMessageTime,refreshMessageTimes,bootstrap,useSession,newConversation,send,openConversation,openProfiles,request,validateConfig,guestHistory,cancelRequest,config:()=>config,changeConfig:c=>Object.assign(config,c),snapshot:()=>({userId,guestTurns:guestTurns.length,activeId:active?.id,busy,pendingRequest:pendingSubmit?.client_request_id,guestVerified:validGuestPass(),activeGuestId:activeGuest?.id,guestSessions:guestSessions.map(c=>({id:c.id,title:c.title,entries:c.entries.length}))}),setToken:t=>turnstileToken=t,setPhoto:p=>{photo=p}};
 window.addEventListener('DOMContentLoaded',()=>bootstrap().catch(showError));
 })();
 

@@ -1,3 +1,4 @@
+import {summarizeTitle} from './titles.js';
 import {verifyTurnstile,issueGuestSession,verifyGuestSession} from './guest-session.js';
 import {petSummaries} from './pet-identity.js';
 import {ApiError,id,text,jsonBody,hash,allowed,guestMessages,fastgpt,imageData} from './core.js';
@@ -57,7 +58,7 @@ export async function route(request,env,ctx) {
     return response({supabaseUrl:env.SUPABASE_URL||'',supabasePublishableKey:key,turnstileSiteKey:env.TURNSTILE_SITE_KEY||'',guestEnabled:env.GUEST_ENABLED==='true'});
   }
   if(method==='GET'&&!p.startsWith('/api/')&&p!=='/health'&&env.ASSETS)return env.ASSETS.fetch(request);
-  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.11.0'});
+  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.12.0'});
   if(p==='/api/guest/session'&&method==='POST')return guest(request,env,true);
   if(p==='/api/guest/chat'&&method==='POST')return guest(request,env);
   if(!p.startsWith('/api/'))throw new ApiError(404,'NOT_FOUND','接口不存在');
@@ -79,7 +80,7 @@ export async function route(request,env,ctx) {
   }
   if(p==='/api/conversations'&&method==='POST'){
     const b=await jsonBody(request);if('pet_id'in b)throw new ApiError(400,'READ_ONLY','宠物由聊天自动匹配，不能手工指定');
-    const rows=await db.insert('conversations',{owner_id:user,pet_id:null,title:b.title?text(b.title,100):'新对话'});return response(rows[0],201);
+    const rows=await db.insert('conversations',{owner_id:user,pet_id:null,title:b.title?text(b.title,100):b.first_message?summarizeTitle(text(b.first_message),!!b.has_images):'新对话'});return response(rows[0],201);
   }
   if((m=p.match(/^\/api\/conversations\/([^/]+)$/))){
     const cid=id(m[1]);await db.own('conversations',user,cid);
