@@ -60,11 +60,12 @@ export async function runTurn(env, turnId) {
     const fresh = await db.own('conversations',owner,conversationId);
     ctx = await petContext(db,owner,fresh.pet_id);
     const states = await db.rows('conversation_states',{conversation_id:'eq.'+conversationId,owner_id:'eq.'+owner,limit:'1'});
-    let image = null;
-    if (current.attachment_id) {
-      const attachment = await db.own('attachments',owner,current.attachment_id);
+    const image = [];
+    for (const attachmentId of (current.attachment_ids?.length?current.attachment_ids:current.attachment_id?[current.attachment_id]:[])) {
+      const attachment = await db.own('attachments',owner,attachmentId);
+      if(attachment.conversation_id!==conversationId)throw new Error('ATTACHMENT_CONVERSATION_MISMATCH');
       const signed = await db.request('/storage/v1/object/sign/petai-private/'+attachment.storage_path,{method:'POST',body:{expiresIn:600}});
-      image = signedImageUrl(env.SUPABASE_URL,signed.signedURL,attachment.mime);
+      image.push(signedImageUrl(env.SUPABASE_URL,signed.signedURL,attachment.mime));
     }
     const messages = [...history.slice(-12).map(m=>({role:m.role,content:m.content})),{role:'user',content:content(current.content,image)}];
     const variables = {...conversationHints(current.content,history,ctx.profile),petProfile:ctx.profile?JSON.stringify(ctx.profile):'',petRecords:JSON.stringify(ctx.records),clarificationState:JSON.stringify(states[0]?.state||{}),currentDate:today(),memoryStatus:JSON.stringify({status:memoryStatus,issues:ctx.issues})};

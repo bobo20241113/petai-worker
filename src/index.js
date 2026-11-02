@@ -16,7 +16,7 @@ async function guest(request,env,sessionOnly=false) {
   const origin = request.headers.get('origin');
   if (!origin || !(allowed(env,origin)||origin===new URL(request.url).origin)) throw new ApiError(403,'ORIGIN_DENIED','访客来源不允许');
   await rate(env,'guest:'+(request.headers.get('CF-Connecting-IP')||'unknown'));
-  const body = await jsonBody(request,sessionOnly?8192:1500000);
+  const body = await jsonBody(request,sessionOnly?8192:5700000);
   if(sessionOnly){
     await verifyTurnstile(request,env,body.turnstile_token);
     return response(await issueGuestSession(env,origin,Date.now(),body.session_version===2));
@@ -57,7 +57,7 @@ export async function route(request,env,ctx) {
     return response({supabaseUrl:env.SUPABASE_URL||'',supabasePublishableKey:key,turnstileSiteKey:env.TURNSTILE_SITE_KEY||'',guestEnabled:env.GUEST_ENABLED==='true'});
   }
   if(method==='GET'&&!p.startsWith('/api/')&&p!=='/health'&&env.ASSETS)return env.ASSETS.fetch(request);
-  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.10.0'});
+  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.11.0'});
   if(p==='/api/guest/session'&&method==='POST')return guest(request,env,true);
   if(p==='/api/guest/chat'&&method==='POST')return guest(request,env);
   if(!p.startsWith('/api/'))throw new ApiError(404,'NOT_FOUND','接口不存在');
@@ -94,9 +94,14 @@ export async function route(request,env,ctx) {
   }
   if((m=p.match(/^\/api\/conversations\/([^/]+)\/turns$/))&&method==='POST'){
     const cid=id(m[1]);const b=await jsonBody(request);const input=text(b.text);
-    const client=id(b.client_request_id);const attachment=b.attachment_id?id(b.attachment_id):null;
-    if(attachment){const a=await db.own('attachments',user,attachment);if(a.conversation_id!==cid)throw new ApiError(404,'NOT_FOUND','附件不存在');}
-    const turn=await db.rpc('petai_submit_turn',{p_owner:user,p_conversation:cid,p_request:client,p_text:input,p_attachment:attachment,p_hash:await hash(JSON.stringify({input,attachment})),p_daily_limit:Number(env.MAX_USER_TURNS_PER_DAY)||100});
+    const client=id(b.client_request_id);
+    const ids=b.attachment_ids??(b.attachment_id?[b.attachment_id]:[]);
+    if(!Array.isArray(ids)||ids.length>4||new Set(ids).size!==ids.length)throw new ApiError(400,'INVALID_IMAGES','每轮最多4张不同图片');
+    const attachments=ids.map(id);
+    for(const attachment of attachments){const a=await db.own('attachments',user,attachment);if(a.conversation_id!==cid)throw new ApiError(404,'NOT_FOUND','附件不存在');}
+    // Single-image clients keep the original RPC; arrays use the atomic multi-image RPC.
+    const multiple=Object.hasOwn(b,'attachment_ids');
+    const turn=await db.rpc(multiple?'petai_submit_turn_images':'petai_submit_turn',{p_owner:user,p_conversation:cid,p_request:client,p_text:input,...(multiple?{p_attachments:attachments}:{p_attachment:attachments[0]||null}),p_hash:await hash(JSON.stringify(multiple?{input,attachments}:{input,attachment:attachments[0]||null})),p_daily_limit:Number(env.MAX_USER_TURNS_PER_DAY)||100});
     if(turn.status==='pending'){try{await enqueue(db,env,turn.id);}catch{/* cron replays outbox */}}
     return response({turn_id:turn.id,status:turn.status,created_at:turn.created_at},202);
   }

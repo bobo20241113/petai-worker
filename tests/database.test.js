@@ -137,5 +137,23 @@ test('actual Postgres migrations: ownership, RLS, atomic tasks, memory, correcti
  await one('select petai_apply_memory($1,$2,$3)',[mt.id,ml.lease_token,{current_pet:pa,allow_binding:true,operations:[{type:'fact',pet:'@current',field:'age_note',value:'成年',quote:'豆豆'}]}]);
  assert.equal((await one("select pet_id from pet_facts where field='age_note'")).pet_id,pa);
  assert.equal((await one('select pet_id from conversations where id=$1',[mc])).pet_id,pb);
+
+ // Upgrade and exercise multi-image ownership, atomic binding, retry and orphan cleanup.
+ await db.exec(await readFile(resolve(SQL_DIR,'007_multiple_images.sql'),'utf8'));
+ const ci=(await one('insert into conversations(owner_id) values($1) returning id',[A])).id;
+ const other=(await one('insert into conversations(owner_id) values($1) returning id',[B])).id;
+ const ids=[];for(let i=0;i<3;i++)ids.push((await one("insert into attachments(owner_id,conversation_id,storage_path,mime,size,created_at) values($1,$2,$3,'image/jpeg',100,now()-interval '2 days') returning id",[i===2?B:A,i===2?other:ci,'multi-'+i])).id);
+ const req=crypto.randomUUID();
+ await assert.rejects(one('select petai_submit_turn_images($1,$2,$3,$4,$5,$6,100)',[A,ci,req,'比较',ids,'bad']),/NOT_FOUND/);
+ assert.equal((await one('select count(*)::int n from chat_turns where conversation_id=$1',[ci])).n,0);
+ const args=[A,ci,req,'比较',ids.slice(0,2),'multi'];
+ const multiTurn=(await one('select petai_submit_turn_images($1,$2,$3,$4,$5,$6,100) t',args)).t;
+ assert.equal((await one('select cardinality(attachment_ids)::int n from messages where turn_id=$1',[multiTurn.id])).n,2);
+ assert.equal((await one('select petai_submit_turn_images($1,$2,$3,$4,$5,$6,100) t',args)).t.id,multiTurn.id);
+ await assert.rejects(one('select petai_submit_turn_images($1,$2,$3,$4,$5,$6,100)',[A,ci,crypto.randomUUID(),'x',Array(5).fill(ids[0]),'5']),/INVALID_IMAGES/);
+ await assert.rejects(one('select petai_submit_turn_images($1,$2,$3,$4,$5,$6,100)',[A,ci,crypto.randomUUID(),'x',[ids[0],ids[0]],'duplicate']),/INVALID_IMAGES/);
+ await one('select petai_recover()');assert.equal((await one('select count(*)::int n from attachments where id=any($1)',[ids.slice(0,2)])).n,2);
+ await db.exec('set role authenticated');
+ await assert.rejects(one('select petai_submit_turn_images($1,$2,$3,$4,$5,$6,100)',args),/permission denied/);await db.exec('reset role');
  }finally{await db.close();}
 });

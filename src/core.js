@@ -29,7 +29,15 @@ export function imageData(value) {
   if (typeof value !== 'string' || value.length > 1400000 || !/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(value)) throw new ApiError(400, 'INVALID_IMAGE', '请提交压缩后的JPEG/PNG/WebP图片，最大约1MB');
   return value;
 }
-export function content(message, image) { return image ? [{type:'text',text:message},{type:'image_url',image_url:{url:image}}] : message; }
+export function content(message, image) {
+  const images=Array.isArray(image)?image:image?[image]:[];
+  return images.length?[{type:'text',text:message},...images.map(url=>({type:'image_url',image_url:{url}}))]:message;
+}
+export function inputImages(body){
+  const images=body.images??(body.image?[body.image]:[]);
+  if(!Array.isArray(images)||images.length>4)throw new ApiError(400,'INVALID_IMAGES','每轮最多上传4张图片');
+  return images.map(imageData);
+}
 export function guestMessages(body) {
   const input = text(body.text); const history = body.history ?? [];
   if (!Array.isArray(history) || history.length > 12) throw new ApiError(400, 'INVALID_HISTORY', '临时历史过长');
@@ -39,7 +47,7 @@ export function guestMessages(body) {
     const c = text(m.content, 6000); size += c.length; return {role:m.role, content:c};
   });
   if (history.length % 2 || size > 24000) throw new ApiError(400, 'INVALID_HISTORY', '历史不完整或过长');
-  messages.push({role:'user',content:content(input, body.image ? imageData(body.image) : null)}); return messages;
+  messages.push({role:'user',content:content(input, inputImages(body))}); return messages;
 }
 export async function fastgpt(env, messages, variables = {}, memory = false) {
   const target = memory ? env.MEMORY_API_URL : env.FASTGPT_API_URL;

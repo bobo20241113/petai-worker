@@ -47,14 +47,16 @@ test('real turn runner uses the switched target and preserves upstream answer ve
    if(path.endsWith('/rpc/petai_complete_turn')){completed=b.p_answer;return Response.json(null)}
    if(path.endsWith('/rpc/petai_fail_turn')){fail=b;return Response.json(null)}
    if(path.endsWith('/conversations'))return Response.json([conv]);
-   if(path.endsWith('/messages'))return Response.json(u.searchParams.get('turn_id')?[{content:text,sequence:3}]:[]);
+   if(path.endsWith('/messages'))return Response.json(u.searchParams.get('turn_id')?[{content:text,sequence:3,attachment_ids:[A,B]}]:[]);
+   if(path.endsWith('/attachments'))return Response.json([{id:u.searchParams.get('id').slice(3),conversation_id:conv.id,storage_path:'owner/chat/'+u.searchParams.get('id').slice(3)+'.jpg',mime:'image/jpeg'}]);
+   if(path.includes('/storage/v1/object/sign/'))return Response.json({signedURL:path.replace('/storage/v1','')+'?token=test'});
    if(path.endsWith('/pets'))return Response.json(u.searchParams.has('id')?available.filter(p=>'eq.'+p.id===u.searchParams.get('id')):available);
    if(['/pet_facts','/pet_records','/memory_issues','/conversation_states'].some(p=>path.endsWith(p)))return Response.json([]);
    throw Error('Unexpected turn route '+path);
   };
   try{
    await runTurn({SUPABASE_URL:'https://db.invalid',SUPABASE_SECRET_KEY:'sb_secret_test',FASTGPT_API_URL:'https://school.invalid/chat',FASTGPT_API_KEY:'test'},turn);
-   assert.equal(fail,undefined);assert.equal(completed,raw);assert.equal(snapshot.memory_pet_id,target);
+   assert.equal(fail,undefined);assert.equal(completed,raw);assert.equal(snapshot.memory_pet_id,target);assert.equal(snapshot.messages.at(-1).content.length,3);assert.equal(snapshot.messages.at(-1).content[1].type,'image_url');assert.ok(snapshot.messages.at(-1).content[2].image_url.url.includes(B));
    assert.equal(snapshot.variables.petProfile?JSON.parse(snapshot.variables.petProfile).id:null,target);
   }finally{globalThis.fetch=previous}
  }

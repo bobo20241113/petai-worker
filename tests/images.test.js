@@ -51,3 +51,13 @@ test('explicit names and ordinary owner facts still work; old generic names neve
  assert.equal(autoPetCandidate([{name:'豆豆',id:'good'}],'豆豆多大了').id,'good');
  assert.equal(autoPetCandidate([{name:'猫',id:'bad'},{name:'豆豆',id:'good'}],'豆豆是什么猫'),null);
 });
+
+test('multiple image parts preserve order and guest API rejects oversize or invalid image lists',async()=>{
+ const {content,guestMessages}=await import('../src/core.js');const images=['data:image/jpeg;base64,/9j/','data:image/png;base64,aA=='];
+ const parts=content('比较',images);assert.equal(parts.length,3);assert.equal(parts[2].image_url.url,images[1]);
+ assert.equal(guestMessages({text:'比较',images}).at(-1).content.length,3);
+ assert.throws(()=>guestMessages({text:'x',images:Array(5).fill(images[0])}),/最多/);
+ assert.throws(()=>guestMessages({text:'x',images:'bad'}),/最多/);
+ assert.throws(()=>guestMessages({text:'x',images:['https://evil.invalid/a.jpg']}),/JPEG/);
+ assert.equal(guestMessages({text:'x',image:images[0]}).at(-1).content.length,2);
+});
