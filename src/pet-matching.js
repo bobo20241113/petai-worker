@@ -1,4 +1,4 @@
-import {ownedStatement,responsibilityStatement,namedEvidence,thirdParty,isDescriptionLabel,ownershipReplyPet,deniesOwnership} from './pet-identity.js';
+import {ownedAnimal,ownedStatement,responsibilityStatement,namedEvidence,thirdParty,isDescriptionLabel,ownershipReplyPet,deniesOwnership} from './pet-identity.js';
 import {uuid} from './core.js';
 import {parseExtraction,isGenericPetName,explicitlyNamed} from './memory.js';
 function mentioned(text,name){
@@ -23,6 +23,8 @@ export function resolvePetMatch(pets,message,currentId=null,profile=null,{allowD
  const named=message.match(/(?:名字叫|名字是|名叫|叫做|取名为)\s*[“"「]?([^，,。？?！!\s”"」]{1,20})/);
  const introduced=named?.[1]||intro?.[1];
  if(!hits.length&&/两只|三只|多只|(?:[2-9]|[1-9][0-9]+)只|猫.{0,8}(?:和|与|跟|还有|、).{0,8}狗|狗.{0,8}(?:和|与|跟|还有|、).{0,8}猫/.test(message))return {id:null,ambiguous:true};
+ const introduction=ownedAnimal(message);
+ if(introduction&&fallback?.species&&introduction.species!==fallback.species)return {id:null,ambiguous:false};
  const personalSpecies=message.match(/(?:我家(?:的)?|我的|问的是|说的是).{0,12}?(猫|狗)/)?.[1];
  const specific=personalSpecies?pets.filter(p=>(p.ownership_confirmed||p.default_eligible)&&p.species===personalSpecies):[];
  if(!hits.length&&specific.length===1&&!/两只|三只|多只|另一只|另外一只|又.{0,5}(?:养|领养)/.test(message))return {id:specific[0].id,ambiguous:false};
@@ -48,7 +50,7 @@ export function preparePetMemory(answer,message,pets,currentId,allowBinding=true
  const ownedRefs=new Set(),names=new Set();const declaredNames=new Set();
  parsed.operations=parsed.operations.filter(op=>{
   if(deniesOwnership(message)||(thirdParty.test(message)&&!responsibilityStatement(message)))return false;
-  if(op.pet==='@new'){if(!(ownedStatement(message)||(namingReply&&history.some(m=>m.role==='user'&&ownedStatement(m.content))))||multiple)return false;if(!currentId&&pets.length&&!/(?:又|新|再|另外|另一|刚).{0,8}(?:养|领养|收养|猫|狗|宠物)|(?:领养|收养).{0,12}(?:只|猫|狗|宠物)/.test(message))return false;if(currentId)return false;}
+  if(op.pet==='@new'){if(!(ownedStatement(message)||(namingReply&&history.some(m=>m.role==='user'&&ownedStatement(m.content))))||multiple)return false;if(!currentId&&pets.length&&!(ownedAnimal(message)&&!pets.some(p=>p.species===ownedAnimal(message).species))&&!/(?:又|新|再|另外|另一|刚).{0,8}(?:养|领养|收养|猫|狗|宠物)|(?:领养|收养).{0,12}(?:只|猫|狗|宠物)/.test(message))return false;if(currentId)return false;}
   if(!uuid(op.pet)&&!['@current','@new'].includes(op.pet)&&namedEvidence(message,op.pet)){names.add(op.pet);declaredNames.add(op.pet);}
   if(op.type==='fact'&&op.field==='name'&&message.includes(String(op.value))&&(namedEvidence(message,String(op.value))||(namingReply&&message.trim()===op.value)))names.add(String(op.value));
   if(current&&current.name_confirmed===false&&!uuid(op.pet)&&op.pet!=='@current'&&!pets.some(p=>p.name===op.pet)&&names.has(op.pet)){op.pet='@current';}

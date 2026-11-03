@@ -1,3 +1,11 @@
+# 宠AI v46：档案补充和待确认提示
+
+先执行 Supabase **011_archive_change_receipts.sql**，再部署完整 Worker **1.16.0**。回复下方新增真实补充、待确认提示，点击直达对应档案或建议区，处理后同步更新提示。FastGPT 流程不用更换。见 [ARCHIVE_V46.md](ARCHIVE_V46.md)。
+
+# 宠AI v45：混合提问建档与创建提示
+
+先执行 Supabase **010_pet_creation_receipts.sql**，再部署完整 Worker **1.15.0**（包括页面），并更新独立记忆提取流程。修复“我有一只柯基……现在还需要打吗”的漏建档问题。真实创建成功后在回复下方提示并可直接打开档案。不能只替换 HTML。见 [ARCHIVE_V45.md](ARCHIVE_V45.md)。
+
 # 宠AI v44：档案原位保存
 
 修复保存档案时弹窗缩小、重载的问题，保留展开、滚动和其他未保存草稿。已部署 v43 时只替换 `public/index.html` 后重新部署，无需更新数据库或工作流。见 [UI_V44.md](UI_V44.md)。

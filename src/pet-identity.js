@@ -7,11 +7,17 @@ export function explicitPetName(message,name){
  const escaped=String(name).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
  return new RegExp('(?:名字(?:是|叫)|名叫|叫做|取名(?:为|叫)?|改名为|叫)\\s*[“"「]?'+escaped+'[”"」]?(?:[，,。!！?？;；\\s]|$)').test(message);
 }
+export const DOG_BREEDS='柯基|拉布拉多|金毛|哈士奇|柴犬|边牧|边境牧羊犬|泰迪|贵宾|比熊|萨摩耶|德牧|杜宾|罗威纳|博美|雪纳瑞|吉娃娃|法斗|法国斗牛犬|中华田园犬';
+export const CAT_BREEDS='英短|英国短毛猫|美短|美国短毛猫|布偶|暹罗|缅因|波斯猫|橘白猫|橘猫|狸花猫|三花猫|中华田园猫';
+export function ownedAnimal(text){
+ const m=text.match(new RegExp('我(?:们)?(?:家(?:的)?|的|有|养了?|领养了?|收养了?)(?:有|养了?)?(?:一只)?('+DOG_BREEDS+'|'+CAT_BREEDS+'|猫|狗|犬|兔子|仓鼠|鹦鹉)(?=[，,。；;\\s]|$)'));
+ return m?{description:m[1],species:new RegExp('^(?:'+DOG_BREEDS+'|狗|犬)$').test(m[1])?'狗':new RegExp('^(?:'+CAT_BREEDS+'|猫)$').test(m[1])?'猫':'其他'}:null;
+}
 const owner=/(?:我(?:们)?有(?:(?:[一两二三四五六七八九十0-9]+只|只)[^，,。？?!！]{0,12}(?:猫|狗|宠物)|(?:猫|狗|宠物))|我(?:们)?家|我(?:们)?的(?!朋友|邻居|同事|客户)|我(?:们)?(?:最近|刚刚?|新|又)?(?:养|领养|收养)|自己养|我(?:们)?(?:负责|照顾|照护|照料|代养|寄养)|\bmy (?:cat|dog|pet)\b|\bi (?:have|own|adopted)\b)/i;
 export const thirdParty=/(?:朋友|邻居|同事|别人|他人|客户)(?:的|家|养|领养|收养)|\b(?:friend|neighbor|colleague)'?s\b/i;
 export function deniesOwnership(text){return /(?:不是|并非|不属于|不再是).{0,6}我(?:们)?(?:家|的|养)|不是我(?:们)?的/.test(text)}
 export function responsibilityStatement(text){return /我(?:们)?(?:正在|目前)?(?:负责|代养|寄养|照顾|照护|照料)/.test(text)&&!/(?:没有|不|并非).{0,4}(?:负责|代养|照顾|照护)/.test(text)}
-export function ownedStatement(text){return !deniesOwnership(text)&&owner.test(text)&&(!thirdParty.test(text)||responsibilityStatement(text))&&!/(?:如果|假如|假设|想要|打算|准备|计划|考虑).{0,12}(?:我有|养|领养|买)/.test(text)}
+export function ownedStatement(text){return !deniesOwnership(text)&&(owner.test(text)||!!ownedAnimal(text))&&(!thirdParty.test(text)||responsibilityStatement(text))&&!/(?:如果|假如|假设|想要|打算|准备|计划|考虑).{0,12}(?:我有|养|领养|买)/.test(text)}
 export function namedEvidence(text,name){
  if(explicitPetName(text,name))return true;if(isDescriptionLabel(name))return false;
  return ['我家','我家的','我们家','我们家的','我的'].some(prefix=>{const pos=text.indexOf(prefix+name);return pos>=0&&/^(?:是|今年|已经|最近|今天|现在|体重|出生|[，,。！？?\s]|$)/.test(text.slice(pos+prefix.length+name.length))});

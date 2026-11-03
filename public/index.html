@@ -240,6 +240,8 @@ body{background:#EFEEE8}.shell{max-width:1800px;background:#F9FAF5;border-color:
 #pets-dialog .readonly-records{max-height:none;overflow:visible}
 .profile-field-list{gap:4px}.profile-field-row{padding:4px 0}
 .profile-field-row [hidden]{display:none!important}
+.archive-created{margin-top:12px;padding:12px;background:#f1f6ef;border:1px solid #e0e9dc;border-radius:8px;color:#52705e;font-size:12px;line-height:16px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.archive-created .task-action{margin:0;font-size:12px;line-height:16px;padding:4px 8px}
 </style>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head><body>
@@ -774,10 +776,30 @@ function newConversation(){
  else{stopWait();clearView();renderShell();setStatus('账号档案会保留，本轮对象根据聊天自动确定。')}
  $('sessions-dialog').close();$('question').focus();
 }
+function archiveCreatedNotice(bubble,created=[],changes=[]){
+ const body=bubble.closest('.message-body');if(!body||!identity)return;
+ const groups=new Map();for(const pet of Array.isArray(created)?created:[])if(pet.id)groups.set(pet.id,{pet,created:true,updated:false,review:false});
+ for(const pet of Array.isArray(changes)?changes:[]){if(!pet.id)continue;const g=groups.get(pet.id)||{pet,created:false,updated:false,review:false};g.pet=pet;g.updated=!!pet.updated_fields?.length;g.review=!!pet.review_fields?.length;groups.set(pet.id,g)}
+ body.querySelectorAll('.archive-created').forEach(n=>n.remove());
+ for(const {pet,created:made,updated,review}of groups.values()){
+  if(!made&&!updated&&!review)continue;const note=element('div',undefined,'archive-created');note.setAttribute('role','status');note.dataset.petId=pet.id;note.archiveReceipt={pet,made,updated,reviewFields:[...(pet.review_fields||[])]};
+  const text=made?(review?'已建立宠物档案，另有资料需要你确认。':'已为这只宠物建立档案，可核对并补充资料。'):review?(updated?'已补充档案记录，另有资料需要你确认。':'发现可能需要更新的资料，确认后再更新。'):'已补充宠物档案，可查看并核对。';
+  note.append(element('span',groups.size>1?petDisplay(pet)+'：'+text:text));
+  const button=element('button',review?'查看待确认资料':'查看档案','task-action');button.type='button';button.onclick=guarded(()=>openProfiles(pet.id,review));note.append(button);body.append(note);
+ }
+}
+function settleArchiveReview(petId,field){
+ for(const m of messages)for(const c of m.archive_changes||[])if(c.id===petId)c.review_fields=(c.review_fields||[]).filter(f=>f!==field);
+ for(const note of chat.querySelectorAll('.archive-created')){
+  const state=note.archiveReceipt;if(note.dataset.petId!==petId||!state?.reviewFields.includes(field))continue;state.reviewFields=state.reviewFields.filter(f=>f!==field);if(state.reviewFields.length)continue;
+  if(!state.made&&!state.updated){note.remove();continue}
+  note.querySelector('span').textContent=state.made?'已为这只宠物建立档案，可核对并补充资料。':'已补充宠物档案，可查看并核对。';const button=note.querySelector('button');button.textContent='查看档案';button.onclick=guarded(()=>openProfiles(petId));
+ }
+}
 function renderMessages(){
  chat.replaceChildren();if(!messages.length){restoreWelcome();return}
  if(firstSequence!==null){const more=element('button','加载更早消息','cloud-button older-messages');more.id='load-older';more.type='button';chat.append(more)}
- for(const m of messages){const b=addMessage(m.role,m.content,undefined,m.created_at??null);if(m.attachment_ids?.length||m.attachment_id)b.append(element('small','本轮包含 '+(m.attachment_ids?.length||1)+' 张已上传图片。','task-status'));if(m.role==='user'&&m.status==='failed')addAction(b,'查看状态 / 重试',()=>inspectFailed(m.turn_id));if(m.role==='assistant'&&m.status!=='pending'&&m.status!=='failed')replyActions(b,m.content,cloudSource(m.turn_id));}
+ for(const m of messages){const b=addMessage(m.role,m.content,undefined,m.created_at??null);if(m.attachment_ids?.length||m.attachment_id)b.append(element('small','本轮包含 '+(m.attachment_ids?.length||1)+' 张已上传图片。','task-status'));if(m.role==='user'&&m.status==='failed')addAction(b,'查看状态 / 重试',()=>inspectFailed(m.turn_id));if(m.role==='assistant'&&m.status!=='pending'&&m.status!=='failed'){replyActions(b,m.content,cloudSource(m.turn_id));archiveCreatedNotice(b,m.created_pets,m.archive_changes);}}
  scrollDown();
 }
 async function openConversation(id){
@@ -801,7 +823,7 @@ async function pollTurn(turnId,bubble,stamp=epoch){
    try{task=await request('/api/turns/'+turnId,{stamp});failures=0;}catch(e){assertEpoch(stamp);if(e.status===401)throw e;if(++failures>=3)throw e;setStatus(e.status===429?'请求较多，稍后继续查询…':'连接中断，正在恢复任务查询…');await wait(e.status===429?12000:6000,stamp);continue}
    if(task.status==='completed'){
     renderMarkdown(bubble,task.answer||'任务已完成。');replyActions(bubble,task.answer||'任务已完成。',cloudSource(turnId));
-    setMessageTime(bubble,task.updated_at??null);
+    setMessageTime(bubble,task.updated_at??null);archiveCreatedNotice(bubble,task.created_pets,task.archive_changes);
     await reloadLists(stamp);if(active){const c=conversations.find(c=>c.id===active.id);if(c){active=c;$('active-session-title').textContent=c.title;renderShell()}}setStatus('回复已保存到云端。');pendingSubmit=null;return;
    }else if(['failed','needs_review','cancelled'].includes(task.status)){
     bubble.textContent=task.status==='needs_review'?'上游可能已处理，但回复未能确认。重试可能产生重复调用。':task.status==='cancelled'?'已请求取消；已开始的上游调用不保证停止。':'本次处理失败，问题已保存在云端。';
@@ -930,7 +952,7 @@ async function deleteConversation(id){
  if(!await confirmChoice('删除云端会话','删除后聊天消息无法在本应用恢复。已形成的宠物档案和记录会保留。'))return;await request('/api/conversations/'+id,{method:'DELETE'});if(active?.id===id)newConversation();await reloadLists();toast('会话已删除，已形成的档案仍保留。')}
 async function moreSessions(){if(!identity||!conversations.length)return;const stamp=epoch;const last=conversations[conversations.length-1];const rows=await request('/api/conversations?before='+encodeURIComponent(last.updated_at),{stamp});assertEpoch(stamp);const ids=new Set(conversations.map(c=>c.id));conversations.push(...rows.filter(c=>!ids.has(c.id)));renderShell();$('sessions-more').hidden=rows.length<30}
 let profileRequest=0;
-async function openProfiles(){
+async function openProfiles(focusPetId=null,focusReview=false){
  if(!identity){toast('登录后可以保存、编辑宠物档案，并在新会话中使用。');openDialog('auth-dialog');return}
  openDialog('pets-dialog');const stamp=epoch,view=++profileRequest,cid=active?.id;
  const area=$('profile-content');area.textContent='正在读取账号档案…';
@@ -949,7 +971,7 @@ async function openProfiles(){
    summary.setAttribute('aria-label','查看 '+title.textContent+' 的档案');
    const detail=element('section',undefined,'profile-library-detail');card.append(summary,detail);area.append(card);
    const load=async()=>{if(!card.open||card.dataset.loaded)return;card.dataset.loaded='loading';try{await renderProfile(p.id,detail,view);card.dataset.loaded='yes'}catch(e){card.dataset.loaded='';detail.textContent='暂时无法读取，请重新展开。';throw e}};
-   card.addEventListener('toggle',guarded(load));
+   card.addEventListener('toggle',guarded(load));if(p.id===focusPetId){card.open=true;await load();const target=focusReview?detail.querySelector('.profile-issues'):null;if(target){target.open=true;target.scrollIntoView?.({block:'nearest'})}else card.scrollIntoView?.({block:'nearest'})}
   }
  }catch(e){if(view===profileRequest&&stamp===epoch)area.textContent='暂时无法读取账号档案，请稍后再打开。';throw e}
 }
@@ -969,7 +991,7 @@ async function renderProfile(id,area=$('profile-content'),view=++profileRequest)
  // Save in place: never clear/reload the archive or destroy another field's draft.
  const rows=new Map(),issueItems=new Map();let suggestionPanel;
  const live=()=>stamp===epoch&&view===profileRequest&&area.isConnected;
- const removeIssues=field=>{for(const issue of data.issues||[])if(issue.field===field){issueItems.get(issue.id)?.remove();issueItems.delete(issue.id)}data.issues=(data.issues||[]).filter(i=>i.field!==field);updateSuggestionCount()};
+ const removeIssues=field=>{for(const issue of data.issues||[])if(issue.field===field){issueItems.get(issue.id)?.remove();issueItems.delete(issue.id)}data.issues=(data.issues||[]).filter(i=>i.field!==field);updateSuggestionCount();settleArchiveReview(id,field)};
  const updateSuggestionCount=()=>{if(!suggestionPanel)return;const count=issueItems.size;if(count)suggestionPanel.querySelector('summary').textContent='待确认建议 · '+count+' 项';else suggestionPanel.remove()};
  const applySaved=(key,value,result)=>{
   const dialog=$('pets-dialog'),top=dialog.scrollTop;data.version=result.version;values[key]=p[key]=value;locked.add(key);
@@ -1008,7 +1030,7 @@ async function renderProfile(id,area=$('profile-content'),view=++profileRequest)
    issueItems.set(issue.id,item);
    const act=async adopt=>{accept.disabled=ignore.disabled=true;status.textContent='正在保存…';try{
     if(adopt){const result=await request('/api/pets/'+id+'/fields',{method:'PATCH',body:{field:issue.field,value:issue.proposed_value,version:data.version,issue_id:issue.id},stamp});assertEpoch(stamp);if(!live())return;applySaved(issue.field,issue.proposed_value,result)}
-    else{await request('/api/pets/'+id+'/issues/'+issue.id,{method:'PATCH',body:{},stamp});assertEpoch(stamp);if(!live())return;const top=$('pets-dialog').scrollTop;item.remove();issueItems.delete(issue.id);data.issues=(data.issues||[]).filter(i=>i.id!==issue.id);updateSuggestionCount();$('pets-dialog').scrollTop=top}
+    else{await request('/api/pets/'+id+'/issues/'+issue.id,{method:'PATCH',body:{},stamp});assertEpoch(stamp);if(!live())return;const top=$('pets-dialog').scrollTop;item.remove();issueItems.delete(issue.id);data.issues=(data.issues||[]).filter(i=>i.id!==issue.id);updateSuggestionCount();if(!data.issues.some(i=>i.field===issue.field))settleArchiveReview(id,issue.field);$('pets-dialog').scrollTop=top}
     rows.get(issue.field)?.edit.focus({preventScroll:true});
    }catch(e){status.textContent=e.message||'保存失败，请重试';accept.disabled=ignore.disabled=false}};
    accept.onclick=()=>act(true);ignore.onclick=()=>act(false);item.append(accept,ignore,status);detail.append(item);
