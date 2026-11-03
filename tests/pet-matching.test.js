@@ -32,11 +32,11 @@ test('late memory retries use the original snapshot including explicit no-match'
  assert.equal(memoryPetFromSnapshot({variables:{petProfile:JSON.stringify({id:A})}}),A);assert.equal(memoryPetFromSnapshot(null),null);
 });
 
-test('real turn runner uses the switched target and preserves upstream answer verbatim',async()=>{
+test('real turn runner preserves an already-resolved subject on reply retry and upstream text verbatim',async()=>{
  const {runTurn}=await import('../src/jobs.js');
  for(const [text,target,useDefault]of [['团团需要驱虫吗',B,false],['豆豆和团团需要驱虫吗',null,false],['它多大了',B,true]]){
   const previous=globalThis.fetch,owner='33333333-3333-4333-8333-333333333333',turn='44444444-4444-4444-8444-444444444444',lease='55555555-5555-4555-8555-555555555555';
-  const conv={id:'66666666-6666-4666-8666-666666666666',pet_id:useDefault?null:A};const available=useDefault?[{...pets[1],ownership_confirmed:true,name_confirmed:true}]:pets.map(p=>({...p,ownership_confirmed:true}));let snapshot,completed,fail;
+  const conv={id:'66666666-6666-4666-8666-666666666666',pet_id:target};const available=useDefault?[{...pets[1],ownership_confirmed:true,name_confirmed:true}]:pets.map(p=>({...p,ownership_confirmed:true}));let snapshot,completed,fail;
   const raw='  **FastGPT原文**\r\n保留尾部空白 \t\n';
   globalThis.fetch=async(url,init={})=>{
    const u=new URL(url),path=u.pathname,b=init.body?JSON.parse(init.body):{};

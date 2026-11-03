@@ -1,8 +1,8 @@
-import {reliableMemory} from './explicit-memory.js';
+import {prepareSemanticMemory} from './semantic-memory.js';
 import {DB} from './db.js';
 import {fastgpt, content, today} from './core.js';
-import {identityMeta,petSummaries,ownershipReplyPet} from './pet-identity.js';
-import {resolvePetMatch,preparePetMemory,memoryPetFromSnapshot} from './pet-matching.js';
+import {identityMeta,petSummaries} from './pet-identity.js';
+import {memoryPetFromSnapshot} from './pet-matching.js';
 import {signedImageUrl} from './images.js';
 import {conversationHints,successfulHistory} from './conversation.js';
 export async function enqueue(db, env, turnId) {
@@ -41,22 +41,23 @@ export async function runTurn(env, turnId) {
     const rawPets=await db.rows('pets',{owner_id:'eq.'+owner,order:'created_at.asc',limit:'100'});
     const pets=(await petSummaries(db,owner,rawPets)).map(p=>({...p,name:rawPets.find(raw=>raw.id===p.id).name}));
     let ctx=await petContext(db,owner,conv.pet_id);
-    const match=resolvePetMatch(pets,current.content,conv.pet_id,ctx.profile,{allowDefault:history.length===0,confirmedOwnershipId:ownershipReplyPet(current.content,history,pets,conv.pet_id)});
-    if((conv.pet_id||null)!==match.id){
-      await db.rpc('petai_set_turn_pet',{p_turn:turnId,p_lease:lease,p_pet:match.id});
-      conv=await db.own('conversations',owner,conversationId);ctx=await petContext(db,owner,conv.pet_id);
-    }
+    // Identity is resolved by the semantic extractor, never by message keywords.
+    const match={id:pets.some(p=>p.id===conv.pet_id)?conv.pet_id:null,ambiguous:false};
+    if((conv.pet_id||null)!==match.id){await db.rpc('petai_set_turn_pet',{p_turn:turnId,p_lease:lease,p_pet:match.id});conv=await db.own('conversations',owner,conversationId);ctx=await petContext(db,owner,conv.pet_id)}
+    const memoryTarget=conv.pet_id||null;
     let memoryStatus='saved';
     const priorState = await db.rows('conversation_states',{conversation_id:'eq.'+conversationId,owner_id:'eq.'+owner,limit:'1'});
     // Urgent handling must not wait for extraction; Cron retries it in the background.
     const urgent = /(?:呼吸困难|失去意识|昏迷|持续抽搐|血流不止|误食.{0,8}老鼠药|尿不出来)/.test(current.content);
     if (!claimed.memory_done && !urgent) {
       try {
-        let answer='';try{answer = await fastgpt(env,[{role:'user',content:JSON.stringify({message:current.content,current_pet:conv.pet_id,pets:pets.map(p=>({id:p.id,name:p.name_confirmed?p.name:null,label:p.display_name,ownership_confirmed:p.ownership_confirmed})),profile:ctx.profile,records:ctx.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:history.slice(-8).map(m=>({role:m.role,content:m.content})),previous_state:priorState[0]?.state||{},received_at:current.created_at})}],{},true);}catch{/* explicit owner statements can still be saved without the extraction model */}
-        const parsed = reliableMemory(answer,current.content,pets,conv.pet_id,!match.ambiguous,history);
+        let answer='';try{answer = await fastgpt(env,[{role:'user',content:JSON.stringify({message:current.content,current_pet:conv.pet_id,pets:pets.map(p=>({id:p.id,name:p.name_confirmed?p.name:null,label:p.display_name,species:p.species,breed_description:p.breed_description,ownership_confirmed:p.ownership_confirmed})),profile:ctx.profile,records:ctx.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:history.slice(-8).map(m=>({role:m.role,content:m.content})),previous_state:priorState[0]?.state||{},received_at:current.created_at})}],{},true);}catch{/* No keyword fallback: unresolved semantics stays pending for retry. */}
+        const parsed = prepareSemanticMemory(answer,current.content,pets,conv.pet_id,history);
         await db.rpc('petai_apply_memory',{p_turn:turnId,p_lease:lease,p_data:parsed});
-      } catch {
+      } catch(e) {
+        console.warn('MEMORY_EXTRACTION_PENDING',e?.message==='MEMORY_SCHEMA_V2_REQUIRED'?'MEMORY_SCHEMA_V2_REQUIRED':'VALIDATION_OR_SERVICE_FAILURE');
         memoryStatus = 'pending';
+        if(conv.pet_id)await db.rpc('petai_set_turn_pet',{p_turn:turnId,p_lease:lease,p_pet:null});
         await db.rpc('petai_memory_pending',{p_turn:turnId,p_lease:lease});
       }
     } else if (urgent && !claimed.memory_done) { memoryStatus='pending'; await db.rpc('petai_memory_pending',{p_turn:turnId,p_lease:lease}); }
@@ -74,7 +75,7 @@ export async function runTurn(env, turnId) {
     const messages = [...history.slice(-12).map(m=>({role:m.role,content:m.content})),{role:'user',content:content(current.content,image)}];
     const variables = {...conversationHints(current.content,history,ctx.profile),petProfile:ctx.profile?JSON.stringify(ctx.profile):'',petRecords:JSON.stringify(ctx.records),clarificationState:JSON.stringify(states[0]?.state||{}),currentDate:today(),memoryStatus:JSON.stringify({status:memoryStatus,issues:ctx.issues})};
     // Persist before calling upstream: a lost response is not automatically safe to repeat.
-    const started = await db.rpc('petai_start_answer',{p_turn:turnId,p_lease:lease,p_context:{messages,variables,memory_pet_id:fresh.pet_id||null,auto_binding_allowed:!match.ambiguous,workflow:env.WORKFLOW_VERSION}});
+    const started = await db.rpc('petai_start_answer',{p_turn:turnId,p_lease:lease,p_context:{messages,variables,memory_pet_id:memoryTarget,auto_binding_allowed:!match.ambiguous,workflow:env.WORKFLOW_VERSION}});
     if (!started) return;
     let answer;
     try { answer = await fastgpt(env,messages,variables); }
@@ -117,7 +118,7 @@ export async function syncMemory(env, turnId) {
     const history=await db.rows('messages',{conversation_id:'eq.'+conv.id,owner_id:'eq.'+turn.owner_id,sequence:'lt.'+current.sequence,status:'eq.complete',memory_excluded:'eq.false',order:'sequence.desc',limit:'8'});
     const target=memoryPetFromSnapshot(turn.context_snapshot);
     const context=await petContext(db,turn.owner_id,target);
-    let output='';try{output=await fastgpt(env,[{role:'user',content:JSON.stringify({message:current.content,current_pet:target,pets:pets.map(p=>({id:p.id,name:p.name_confirmed?p.name:null,label:p.display_name,ownership_confirmed:p.ownership_confirmed})),profile:context.profile,records:context.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:successfulHistory(history,4).map(m=>({role:m.role,content:m.content})),received_at:current.created_at})}],{},true);}catch{/* retry can use the same strict explicit-statement backup */}
-    await db.rpc('petai_apply_memory',{p_turn:turnId,p_lease:turn.lease_token,p_data:reliableMemory(output,current.content,pets,target,turn.context_snapshot?.auto_binding_allowed!==false,history)});
+    let output='';try{output=await fastgpt(env,[{role:'user',content:JSON.stringify({message:current.content,current_pet:target,pets:pets.map(p=>({id:p.id,name:p.name_confirmed?p.name:null,label:p.display_name,species:p.species,breed_description:p.breed_description,ownership_confirmed:p.ownership_confirmed})),profile:context.profile,records:context.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:successfulHistory(history,4).map(m=>({role:m.role,content:m.content})),received_at:current.created_at})}],{},true);}catch{/* Retry only the semantic extractor, never guess a subject from keywords. */}
+    await db.rpc('petai_apply_memory',{p_turn:turnId,p_lease:turn.lease_token,p_data:prepareSemanticMemory(output,current.content,pets,target,successfulHistory(history,4))});
   }catch{await db.rpc('petai_memory_pending',{p_turn:turnId,p_lease:turn.lease_token});}
 }

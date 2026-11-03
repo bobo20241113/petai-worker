@@ -27,7 +27,7 @@ export function identityMeta(pet,facts=[]){
  const confirmed=!!n&&n!=='未命名宠物'&&(pet.name_confirmed===true||facts.some(f=>namedEvidence(f.quote||'',String(n))));
  const species=facts.find(f=>f.field==='species')?.value;
  const owned=pet.ownership_confirmed===true||facts.some(f=>ownedStatement(f.quote||''));
- return {name:confirmed?String(n):'',name_confirmed:confirmed,ownership_confirmed:owned,default_eligible:owned,species:species||null,display_name:confirmed?String(n):species&&species!=='其他'?'未命名的'+species:'未命名宠物',legacy_label:!confirmed&&pet.name!=='未命名宠物'?pet.name:null};
+ return {name:confirmed?String(n):'',name_confirmed:confirmed,ownership_confirmed:owned,default_eligible:owned,species:species||null,breed_description:facts.find(f=>f.field==='breed_description')?.value||null,display_name:confirmed?String(n):species&&species!=='其他'?'未命名的'+species:'未命名宠物',legacy_label:!confirmed&&pet.name!=='未命名宠物'?pet.name:null};
 }
 export async function petSummaries(db,owner,pets=null){
  pets??=await db.rows('pets',{owner_id:'eq.'+owner,order:'created_at.asc',limit:'100'});
@@ -35,7 +35,7 @@ export async function petSummaries(db,owner,pets=null){
  const facts=await db.rows('pet_facts',{owner_id:'eq.'+owner,pet_id:'in.('+pets.map(p=>p.id).join(',')+')',status:'eq.active',select:'pet_id,field,value,quote',limit:'1000'});
  const manual=await db.rows('pet_manual_fields',{owner_id:'eq.'+owner,pet_id:'in.('+pets.map(p=>p.id).join(',')+')',limit:'1000'});
  return pets.map(p=>{const meta=identityMeta(p,facts.filter(f=>f.pet_id===p.id));const edits=Object.fromEntries(manual.filter(f=>f.pet_id===p.id).map(f=>[f.field,f.value]));
-  if(Object.hasOwn(edits,'species'))meta.species=edits.species;
+  if(Object.hasOwn(edits,'species'))meta.species=edits.species;if(Object.hasOwn(edits,'breed_description'))meta.breed_description=edits.breed_description;
   if(Object.hasOwn(edits,'name')){meta.name=edits.name||'';meta.name_confirmed=!!edits.name}
   meta.display_name=meta.name_confirmed?meta.name:meta.species&&meta.species!=='其他'?'未命名的'+meta.species:'未命名宠物';
   return {...p,...meta};}).filter(p=>p.ownership_confirmed);

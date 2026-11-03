@@ -24,7 +24,7 @@ test('long answer beyond 24000 characters is not sliced',async()=>{
 });
 test('memory remains a separate model request, with the original JSON string retained',async()=>{
  const json=' \n{"operations":[],"state":{}}\n';
- await mocked({choices:[{message:{content:json}}]},async(reqs)=>{assert.equal(await fastgpt(env,message,{},true),json);assert.equal(reqs[0].url,env.MEMORY_API_URL);assert.equal(reqs[0].max_tokens,2500)});
+ await mocked({choices:[{message:{content:json}}]},async(reqs)=>{assert.equal(await fastgpt(env,message,{},true),json);assert.equal(reqs[0].url,env.MEMORY_API_URL);assert.equal(reqs[0].max_tokens,4000)});
 });
 test('empty/unsupported responses are errors rather than invented fallback answers',async()=>{
  for(const content of ['',null,' \n\t',[],{text:'unsupported'}])await mocked({choices:[{message:{content}}]},async()=>assert.rejects(fastgpt(env,message),/UPSTREAM_EMPTY/));

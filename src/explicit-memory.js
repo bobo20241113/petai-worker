@@ -1,3 +1,4 @@
+// Legacy regression/migration helper only. The active queue uses semantic-memory.js.
 import {ownedAnimal} from './pet-identity.js';
 import {preparePetMemory} from './pet-matching.js';
 // Conservative backup for explicit owner statements only; never infer from images or assistant replies.
