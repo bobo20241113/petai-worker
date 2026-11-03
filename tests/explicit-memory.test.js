@@ -20,3 +20,15 @@ test('question-only facts and future/uncertain vaccine claims are not persisted 
   const ops=explicitMemory(msg,[],null).operations;if(msg.includes('想要')||msg.startsWith('这'))assert.equal(ops.length,0);assert.ok(!ops.some(o=>o.category==='vaccine'));if(msg.includes('可能'))assert.ok(!ops.some(o=>o.category==='weight'));
  }
 });
+
+test('weighing statements followed by an obesity question retain actual weight, date and evidence during extractor outage',()=>{
+ const id='11111111-1111-4111-8111-111111111111',pets=[{id,name:'茄茄',name_confirmed:true,ownership_confirmed:true,species:'狗'}];
+ for(const msg of ['茄茄昨天称重15Kg了，请问是否肥胖了？','茄茄昨天称重15Kg了请问是否肥胖了？','茄茄昨天称了15公斤，请问正常吗']){
+  const p=reliableMemory('',msg,pets,id),w=p.operations.find(o=>o.category==='weight');assert.ok(w,msg);assert.equal(w.pet,'@current');assert.equal(w.details.kg,15);assert.equal(w.date_text,'昨天');assert.equal(w.occurred_on,null);assert.ok(msg.includes(w.quote));assert.ok(!p.operations.some(o=>o.field==='name'));assert.ok(!w.quote.includes('是否'));
+ }
+});
+test('weighing synonyms normalize explicit units without inferring food, human, hypothetical or uncertain weights',()=>{
+ const id='11111111-1111-4111-8111-111111111111',pets=[{id,name:'茄茄',ownership_confirmed:true}];
+ for(const [msg,kg]of [['昨天称了30斤',15],['刚称重5000克',5],['今天称重为15kg了',15],['刚称15KG',15],['昨天称了下15千克',15]])assert.equal(explicitMemory(msg,pets,id).operations.find(o=>o.category==='weight')?.details.kg,kg,msg);
+ for(const msg of ['体重15kg吗？','茄茄可能称重15kg了','如果茄茄称重15kg呢','昨天称了15kg猫粮','我昨天称了70kg','请问15kg是否肥胖','茄茄称重0kg了','茄茄称重999kg了'])assert.ok(!explicitMemory(msg,pets,id).operations.some(o=>o.category==='weight'),msg);
+});
