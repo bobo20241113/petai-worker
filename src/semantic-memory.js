@@ -1,3 +1,4 @@
+import {semanticIssues} from './memory-validation.js';
 import {parseExtraction} from './memory.js';
 import {uuid} from './core.js';
 const invalid=()=>{throw new Error('INVALID_SEMANTIC_MEMORY')};
@@ -7,6 +8,7 @@ export function prepareSemanticMemory(answer,message,pets,currentId=null,history
  if(raw.schema_version!==2)throw new Error('MEMORY_SCHEMA_V2_REQUIRED');
  if(!['allowed','declined'].includes(raw.consent)||!Array.isArray(raw.subjects)||raw.subjects.length>8||!Array.isArray(raw.operations)||raw.operations.length>12)invalid();
  if(raw.consent==='declined')return {schema_version:2,operations:[],state:{},current_pet:currentId,allow_binding:false,focus_ref:null,owned_refs:[],confirmed_names:[]};
+ const issues=semanticIssues(raw,message);if(issues.length){const error=new Error('MEMORY_VALIDATION_FAILED');error.issues=issues;throw error;}
  const refs=new Map(),owned=new Set(),names=new Set();let newCount=0;
  for(const s of raw.subjects){
   if(!s||typeof s.ref!=='string'||s.ref.length>100||refs.has(s.ref)||!['new','existing','unresolved'].includes(s.identity)||!['owned','responsible','third_party','unknown'].includes(s.relation)||!['certain','uncertain'].includes(s.certainty))invalid();

@@ -1,4 +1,4 @@
-import {prepareSemanticMemory} from './semantic-memory.js';
+import {extractSemanticMemory} from './memory-extraction.js';
 import {DB} from './db.js';
 import {fastgpt, content, today} from './core.js';
 import {identityMeta,petSummaries} from './pet-identity.js';
@@ -51,8 +51,7 @@ export async function runTurn(env, turnId) {
     const urgent = /(?:呼吸困难|失去意识|昏迷|持续抽搐|血流不止|误食.{0,8}老鼠药|尿不出来)/.test(current.content);
     if (!claimed.memory_done && !urgent) {
       try {
-        let answer='';try{answer = await fastgpt(env,[{role:'user',content:JSON.stringify({message:current.content,current_pet:conv.pet_id,pets:pets.map(p=>({id:p.id,name:p.name_confirmed?p.name:null,label:p.display_name,species:p.species,breed_description:p.breed_description,ownership_confirmed:p.ownership_confirmed})),profile:ctx.profile,records:ctx.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:history.slice(-8).map(m=>({role:m.role,content:m.content})),previous_state:priorState[0]?.state||{},received_at:current.created_at})}],{},true);}catch{/* No keyword fallback: unresolved semantics stays pending for retry. */}
-        const parsed = prepareSemanticMemory(answer,current.content,pets,conv.pet_id,history);
+        const parsed=await extractSemanticMemory(env,{message:current.content,current_pet:conv.pet_id,pets:pets.map(p=>({id:p.id,name:p.name_confirmed?p.name:null,label:p.display_name,species:p.species,breed_description:p.breed_description,ownership_confirmed:p.ownership_confirmed})),profile:ctx.profile,records:ctx.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:history.slice(-8).map(m=>({role:m.role,content:m.content})),previous_state:priorState[0]?.state||{},received_at:current.created_at},pets,conv.pet_id,history);
         await db.rpc('petai_apply_memory',{p_turn:turnId,p_lease:lease,p_data:parsed});
       } catch(e) {
         console.warn('MEMORY_EXTRACTION_PENDING',e?.message==='MEMORY_SCHEMA_V2_REQUIRED'?'MEMORY_SCHEMA_V2_REQUIRED':'VALIDATION_OR_SERVICE_FAILURE');
@@ -118,7 +117,7 @@ export async function syncMemory(env, turnId) {
     const history=await db.rows('messages',{conversation_id:'eq.'+conv.id,owner_id:'eq.'+turn.owner_id,sequence:'lt.'+current.sequence,status:'eq.complete',memory_excluded:'eq.false',order:'sequence.desc',limit:'8'});
     const target=memoryPetFromSnapshot(turn.context_snapshot);
     const context=await petContext(db,turn.owner_id,target);
-    let output='';try{output=await fastgpt(env,[{role:'user',content:JSON.stringify({message:current.content,current_pet:target,pets:pets.map(p=>({id:p.id,name:p.name_confirmed?p.name:null,label:p.display_name,species:p.species,breed_description:p.breed_description,ownership_confirmed:p.ownership_confirmed})),profile:context.profile,records:context.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:successfulHistory(history,4).map(m=>({role:m.role,content:m.content})),received_at:current.created_at})}],{},true);}catch{/* Retry only the semantic extractor, never guess a subject from keywords. */}
-    await db.rpc('petai_apply_memory',{p_turn:turnId,p_lease:turn.lease_token,p_data:prepareSemanticMemory(output,current.content,pets,target,successfulHistory(history,4))});
+    const parsed=await extractSemanticMemory(env,{message:current.content,current_pet:target,pets:pets.map(p=>({id:p.id,name:p.name_confirmed?p.name:null,label:p.display_name,species:p.species,breed_description:p.breed_description,ownership_confirmed:p.ownership_confirmed})),profile:context.profile,records:context.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:successfulHistory(history,4).map(m=>({role:m.role,content:m.content})),received_at:current.created_at},pets,target,successfulHistory(history,4));
+    await db.rpc('petai_apply_memory',{p_turn:turnId,p_lease:turn.lease_token,p_data:parsed});
   }catch{await db.rpc('petai_memory_pending',{p_turn:turnId,p_lease:turn.lease_token});}
 }
