@@ -2,8 +2,15 @@ import {semanticIssues} from './memory-validation.js';
 import {parseExtraction} from './memory.js';
 import {uuid} from './core.js';
 const invalid=()=>{throw new Error('INVALID_SEMANTIC_MEMORY')};
+// Wire-format aliases only. Subject identity, ownership, evidence and field validation
+// still decide whether any operation is eligible to write; this never creates a pet.
+export function canonicalMemoryEnvelope(raw){
+ if(!raw||typeof raw!=='object'||Array.isArray(raw)||!Array.isArray(raw.operations))return raw;
+ const aliases={new_fact:'fact',new_record:'record'};
+ return {...raw,operations:raw.operations.map(op=>op&&typeof op==='object'&&!Array.isArray(op)&&Object.hasOwn(aliases,op.type)?{...op,type:aliases[op.type]}:op)};
+}
 export function prepareSemanticMemory(answer,message,pets,currentId=null,history=[]){
- const raw=JSON.parse(answer.trim().replace(/^```(?:json)?\s*\n?/,'').replace(/\n?```$/,''));
+ const raw=canonicalMemoryEnvelope(JSON.parse(answer.trim().replace(/^```(?:json)?\s*\n?/,'').replace(/\n?```$/,'')));
  if(!raw||typeof raw!=='object'||Array.isArray(raw))invalid();
  if(raw.schema_version!==2)throw new Error('MEMORY_SCHEMA_V2_REQUIRED');
  if(!['allowed','declined'].includes(raw.consent)||!Array.isArray(raw.subjects)||raw.subjects.length>8||!Array.isArray(raw.operations)||raw.operations.length>12)invalid();
