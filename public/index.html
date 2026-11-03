@@ -796,11 +796,19 @@ function settleArchiveReview(petId,field){
   note.querySelector('span').textContent=state.made?'已为这只宠物建立档案，可核对并补充资料。':'已补充宠物档案，可查看并核对。';const button=note.querySelector('button');button.textContent='查看档案';button.onclick=guarded(()=>openProfiles(petId));
  }
 }
+async function loadArchiveNotices(targets,stamp=epoch){
+ const ready=targets.filter(t=>t.turnId&&t.bubble.isConnected);if(!ready.length)return;
+ try{for(let offset=0;offset<ready.length;offset+=50){
+  const batch=ready.slice(offset,offset+50),ids=[...new Set(batch.map(t=>t.turnId))];
+  const rows=await request('/api/archive-notices?turn_ids='+encodeURIComponent(ids.join(',')),{stamp,timeout:10000});assertEpoch(stamp);
+  if(!Array.isArray(rows))continue;for(const t of batch){if(!t.bubble.isConnected)continue;const row=rows.find(r=>r.turn_id===t.turnId);if(row)archiveCreatedNotice(t.bubble,row.created_pets,row.archive_changes)}
+ }}catch(e){if(stamp===epoch&&e.code!=='STALE_VIEW'&&e.name!=='AbortError')console.warn('ARCHIVE_NOTICES_UNAVAILABLE',e.code||'UNKNOWN')}
+}
 function renderMessages(){
  chat.replaceChildren();if(!messages.length){restoreWelcome();return}
  if(firstSequence!==null){const more=element('button','加载更早消息','cloud-button older-messages');more.id='load-older';more.type='button';chat.append(more)}
- for(const m of messages){const b=addMessage(m.role,m.content,undefined,m.created_at??null);if(m.attachment_ids?.length||m.attachment_id)b.append(element('small','本轮包含 '+(m.attachment_ids?.length||1)+' 张已上传图片。','task-status'));if(m.role==='user'&&m.status==='failed')addAction(b,'查看状态 / 重试',()=>inspectFailed(m.turn_id));if(m.role==='assistant'&&m.status!=='pending'&&m.status!=='failed'){replyActions(b,m.content,cloudSource(m.turn_id));archiveCreatedNotice(b,m.created_pets,m.archive_changes);}}
- scrollDown();
+ const archiveTargets=[];for(const m of messages){const b=addMessage(m.role,m.content,undefined,m.created_at??null);if(m.attachment_ids?.length||m.attachment_id)b.append(element('small','本轮包含 '+(m.attachment_ids?.length||1)+' 张已上传图片。','task-status'));if(m.role==='user'&&m.status==='failed')addAction(b,'查看状态 / 重试',()=>inspectFailed(m.turn_id));if(m.role==='assistant'&&m.status!=='pending'&&m.status!=='failed'){replyActions(b,m.content,cloudSource(m.turn_id));archiveCreatedNotice(b,m.created_pets,m.archive_changes);archiveTargets.push({turnId:m.turn_id,bubble:b});}}
+ void loadArchiveNotices(archiveTargets,epoch);scrollDown();
 }
 async function openConversation(id){
  if(!identity){openGuestConversation(id);return}stopWait();clearPhoto();pendingSubmit=null;$('question').value='';
@@ -824,7 +832,9 @@ async function pollTurn(turnId,bubble,stamp=epoch){
    if(task.status==='completed'){
     renderMarkdown(bubble,task.answer||'任务已完成。');replyActions(bubble,task.answer||'任务已完成。',cloudSource(turnId));
     setMessageTime(bubble,task.updated_at??null);archiveCreatedNotice(bubble,task.created_pets,task.archive_changes);
-    await reloadLists(stamp);if(active){const c=conversations.find(c=>c.id===active.id);if(c){active=c;$('active-session-title').textContent=c.title;renderShell()}}setStatus('回复已保存到云端。');pendingSubmit=null;return;
+    setStatus('回复已保存到云端。');pendingSubmit=null;
+    void loadArchiveNotices([{turnId,bubble}],stamp);
+    const cid=active?.id;void reloadLists(stamp).then(()=>{if(stamp!==epoch||active?.id!==cid)return;const c=conversations.find(c=>c.id===cid);if(c){active=c;$('active-session-title').textContent=c.title;renderShell()}}).catch(e=>{if(stamp===epoch&&e.code!=='STALE_VIEW')console.warn('CHAT_LIST_REFRESH_UNAVAILABLE',e.code||'UNKNOWN')});return;
    }else if(['failed','needs_review','cancelled'].includes(task.status)){
     bubble.textContent=task.status==='needs_review'?'上游可能已处理，但回复未能确认。重试可能产生重复调用。':task.status==='cancelled'?'已请求取消；已开始的上游调用不保证停止。':'本次处理失败，问题已保存在云端。';
     if(task.status!=='cancelled')addAction(bubble,'再试一次',()=>retryTurn(turnId,bubble));setStatus('任务已结束，可查看提示后重试。');return;

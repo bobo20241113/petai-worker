@@ -70,13 +70,21 @@ export async function route(request,env,ctx) {
     const db=new DB(env);const rows=await db.insert('feedback_messages',{owner_id:owner,category,message,contact_email:email||null});return response({id:rows[0].id,created_at:rows[0].created_at},201);
   }
   if(method==='GET'&&!p.startsWith('/api/')&&p!=='/health'&&env.ASSETS)return env.ASSETS.fetch(request);
-  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.16.0'});
+  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.17.0'});
   if(p==='/api/guest/session'&&method==='POST')return guest(request,env,true);
   if(p==='/api/guest/chat'&&method==='POST')return guest(request,env);
   if(!p.startsWith('/api/'))throw new ApiError(404,'NOT_FOUND','接口不存在');
   const user=(await authenticate(request,env)).id;await rate(env,'user:'+user);const db=new DB(env);
   const list=async(table,query={})=>response(await db.rows(table,{...query,owner_id:'eq.'+user}));
   const createdPets=async(turnIds)=>turnIds.length?petSummaries(db,user,await db.rows('pets',{owner_id:'eq.'+user,ownership_confirmed:'eq.true',created_from_turn_id:'in.('+turnIds.join(',')+')',limit:'100'})):[];
+  // Optional archive annotations have their own endpoint: never gate an answer on them.
+  if(p==='/api/archive-notices'&&method==='GET'){
+    const ids=[...new Set((url.searchParams.get('turn_ids')||'').split(',').filter(Boolean))];
+    if(!ids.length||ids.length>50)throw new ApiError(400,'INVALID_IDS','轮次查询数量不正确');ids.forEach(id);
+    const turns=await db.rows('chat_turns',{owner_id:'eq.'+user,id:'in.('+ids.join(',')+')',status:'eq.completed',select:'id',limit:'50'});
+    const valid=turns.map(t=>t.id);const [created,changes]=await Promise.all([createdPets(valid),archiveChanges(db,user,valid)]);
+    return response(valid.map(turn_id=>({turn_id,created_pets:created.filter(p=>p.created_from_turn_id===turn_id),archive_changes:changes.filter(p=>p.turn_id===turn_id)})));
+  }
   if(p==='/api/pets'&&method==='GET')return response(await petSummaries(db,user));
   let m;
   if((m=p.match(/^\/api\/pets\/([^/]+)$/))&&method==='GET')return response(await petContext(db,user,id(m[1])));
@@ -112,7 +120,7 @@ export async function route(request,env,ctx) {
   if((m=p.match(/^\/api\/conversations\/([^/]+)\/messages$/))&&method==='GET'){
     const cid=id(m[1]);await db.own('conversations',user,cid);const q={conversation_id:'eq.'+cid,order:'sequence.desc',limit:'50'};
     if(url.searchParams.has('before')){const before=url.searchParams.get('before');if(!/^\d{1,16}$/.test(before))throw new ApiError(400,'INVALID_CURSOR','无效游标');q.sequence='lt.'+before;}
-    const rows=await db.rows('messages',{...q,owner_id:'eq.'+user});const turnIds=rows.filter(m=>m.role==='assistant'&&m.status==='complete').map(m=>m.turn_id);const [receipts,changes]=await Promise.all([createdPets(turnIds),archiveChanges(db,user,turnIds)]);return response(rows.map(m=>({...m,created_pets:m.role==='assistant'?receipts.filter(p=>p.created_from_turn_id===m.turn_id):[],archive_changes:m.role==='assistant'?changes.filter(p=>p.turn_id===m.turn_id):[]})));
+    const rows=await db.rows('messages',{...q,owner_id:'eq.'+user});return response(rows);
   }
   if((m=p.match(/^\/api\/conversations\/([^/]+)\/turns$/))&&method==='POST'){
     const cid=id(m[1]);const b=await jsonBody(request);const input=text(b.text);
@@ -128,7 +136,7 @@ export async function route(request,env,ctx) {
     return response({turn_id:turn.id,status:turn.status,created_at:turn.created_at},202);
   }
   if((m=p.match(/^\/api\/turns\/([^/]+)$/))&&method==='GET'){
-    const turn=await db.own('chat_turns',user,id(m[1]));const {context_snapshot,lease_token,...safe}=turn;const [created,changes]=turn.status==='completed'?await Promise.all([createdPets([turn.id]),archiveChanges(db,user,[turn.id])]):[[],[]];return response({...safe,created_pets:created,archive_changes:changes});
+    const turn=await db.own('chat_turns',user,id(m[1]));const {context_snapshot,lease_token,...safe}=turn;return response(safe);
   }
   if((m=p.match(/^\/api\/turns\/([^/]+)\/(retry|cancel)$/))&&method==='POST'){
     const turn=id(m[1]);await db.own('chat_turns',user,turn);const b=await jsonBody(request);

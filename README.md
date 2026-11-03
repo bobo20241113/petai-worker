@@ -1,3 +1,7 @@
+# 宠AI v47：回答与档案提示解耦
+
+更新完整 Worker **1.17.0**（含 public），修复附加档案查询或列表刷新失败导致答案读不到/被覆盖的问题。没有新 SQL，FastGPT 流程不用更换；此前缺失的 011 迁移仍需补齐。见 [ANSWER_READ_V47.md](ANSWER_READ_V47.md)。
+
 # 宠AI v46：档案补充和待确认提示
 
 先执行 Supabase **011_archive_change_receipts.sql**，再部署完整 Worker **1.16.0**。回复下方新增真实补充、待确认提示，点击直达对应档案或建议区，处理后同步更新提示。FastGPT 流程不用更换。见 [ARCHIVE_V46.md](ARCHIVE_V46.md)。
