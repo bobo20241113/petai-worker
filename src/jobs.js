@@ -1,3 +1,4 @@
+import {logMemoryFailure} from './memory-diagnostics.js';
 import {extractSemanticMemory} from './memory-extraction.js';
 import {DB} from './db.js';
 import {fastgpt, content, today} from './core.js';
@@ -50,11 +51,13 @@ export async function runTurn(env, turnId) {
     // Urgent handling must not wait for extraction; Cron retries it in the background.
     const urgent = /(?:呼吸困难|失去意识|昏迷|持续抽搐|血流不止|误食.{0,8}老鼠药|尿不出来)/.test(current.content);
     if (!claimed.memory_done && !urgent) {
+      let memoryStage='extract_validate';
       try {
         const parsed=await extractSemanticMemory(env,{message:current.content,current_pet:conv.pet_id,pets:pets.map(p=>({id:p.id,name:p.name_confirmed?p.name:null,label:p.display_name,species:p.species,breed_description:p.breed_description,ownership_confirmed:p.ownership_confirmed})),profile:ctx.profile,records:ctx.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:history.slice(-8).map(m=>({role:m.role,content:m.content})),previous_state:priorState[0]?.state||{},received_at:current.created_at},pets,conv.pet_id,history);
+        memoryStage='database_apply';
         await db.rpc('petai_apply_memory',{p_turn:turnId,p_lease:lease,p_data:parsed});
       } catch(e) {
-        console.warn('MEMORY_EXTRACTION_PENDING',e?.message==='MEMORY_SCHEMA_V2_REQUIRED'?'MEMORY_SCHEMA_V2_REQUIRED':'VALIDATION_OR_SERVICE_FAILURE');
+        logMemoryFailure(e,memoryStage,turnId);
         memoryStatus = 'pending';
         if(conv.pet_id)await db.rpc('petai_set_turn_pet',{p_turn:turnId,p_lease:lease,p_pet:null});
         await db.rpc('petai_memory_pending',{p_turn:turnId,p_lease:lease});
@@ -109,6 +112,7 @@ export async function recover(env) {
 
 export async function syncMemory(env, turnId) {
   const db=new DB(env);const turn=await db.rpc('petai_claim_memory_retry',{p_turn:turnId});if(!turn)return;
+  let memoryStage='retry_extract_validate';
   try {
     const conv=await db.own('conversations',turn.owner_id,turn.conversation_id);
     const current=(await db.rows('messages',{turn_id:'eq.'+turnId,role:'eq.user',owner_id:'eq.'+turn.owner_id,limit:'1'}))[0];
@@ -118,6 +122,7 @@ export async function syncMemory(env, turnId) {
     const target=memoryPetFromSnapshot(turn.context_snapshot);
     const context=await petContext(db,turn.owner_id,target);
     const parsed=await extractSemanticMemory(env,{message:current.content,current_pet:target,pets:pets.map(p=>({id:p.id,name:p.name_confirmed?p.name:null,label:p.display_name,species:p.species,breed_description:p.breed_description,ownership_confirmed:p.ownership_confirmed})),profile:context.profile,records:context.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:successfulHistory(history,4).map(m=>({role:m.role,content:m.content})),received_at:current.created_at},pets,target,successfulHistory(history,4));
+    memoryStage='retry_database_apply';
     await db.rpc('petai_apply_memory',{p_turn:turnId,p_lease:turn.lease_token,p_data:parsed});
-  }catch{await db.rpc('petai_memory_pending',{p_turn:turnId,p_lease:turn.lease_token});}
+  }catch(error){logMemoryFailure(error,memoryStage,turnId);await db.rpc('petai_memory_pending',{p_turn:turnId,p_lease:turn.lease_token});}
 }
