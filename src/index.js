@@ -70,7 +70,7 @@ export async function route(request,env,ctx) {
     const db=new DB(env);const rows=await db.insert('feedback_messages',{owner_id:owner,category,message,contact_email:email||null});return response({id:rows[0].id,created_at:rows[0].created_at},201);
   }
   if(method==='GET'&&!p.startsWith('/api/')&&p!=='/health'&&env.ASSETS)return env.ASSETS.fetch(request);
-  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.18.0'});
+  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.19.0'});
   if(p==='/api/guest/session'&&method==='POST')return guest(request,env,true);
   if(p==='/api/guest/chat'&&method==='POST')return guest(request,env);
   if(!p.startsWith('/api/'))throw new ApiError(404,'NOT_FOUND','接口不存在');
@@ -81,9 +81,12 @@ export async function route(request,env,ctx) {
   if(p==='/api/archive-notices'&&method==='GET'){
     const ids=[...new Set((url.searchParams.get('turn_ids')||'').split(',').filter(Boolean))];
     if(!ids.length||ids.length>50)throw new ApiError(400,'INVALID_IDS','轮次查询数量不正确');ids.forEach(id);
-    const turns=await db.rows('chat_turns',{owner_id:'eq.'+user,id:'in.('+ids.join(',')+')',status:'eq.completed',select:'id',limit:'50'});
-    const valid=turns.map(t=>t.id);const [created,changes]=await Promise.all([createdPets(valid),archiveChanges(db,user,valid)]);
-    return response(valid.map(turn_id=>({turn_id,created_pets:created.filter(p=>p.created_from_turn_id===turn_id),archive_changes:changes.filter(p=>p.turn_id===turn_id)})));
+    const turns=await db.rows('chat_turns',{owner_id:'eq.'+user,id:'in.('+ids.join(',')+')',status:'eq.completed',select:'id,memory_done,memory_status',limit:'50'});
+    const valid=turns.map(t=>t.id);const [creationResult,changeResult]=await Promise.allSettled([createdPets(valid),archiveChanges(db,user,valid)]);
+    if(changeResult.status==='rejected')throw changeResult.reason;
+    const created=creationResult.status==='fulfilled'?creationResult.value:[],changes=changeResult.value;
+    if(creationResult.status==='rejected')console.warn('ARCHIVE_CREATION_READ_UNAVAILABLE',creationResult.reason?.code||'UNKNOWN');
+    return response(turns.map(t=>({turn_id:t.id,memory_pending:t.memory_done===false||['pending','retry_pending','syncing'].includes(t.memory_status),created_pets:created.filter(p=>p.created_from_turn_id===t.id),archive_changes:changes.filter(p=>p.turn_id===t.id)})));
   }
   if(p==='/api/pets'&&method==='GET')return response(await petSummaries(db,user));
   let m;

@@ -797,12 +797,25 @@ function settleArchiveReview(petId,field){
  }
 }
 async function loadArchiveNotices(targets,stamp=epoch){
- const ready=targets.filter(t=>t.turnId&&t.bubble.isConnected);if(!ready.length)return;
- try{for(let offset=0;offset<ready.length;offset+=50){
-  const batch=ready.slice(offset,offset+50),ids=[...new Set(batch.map(t=>t.turnId))];
-  const rows=await request('/api/archive-notices?turn_ids='+encodeURIComponent(ids.join(',')),{stamp,timeout:10000});assertEpoch(stamp);
-  if(!Array.isArray(rows))continue;for(const t of batch){if(!t.bubble.isConnected)continue;const row=rows.find(r=>r.turn_id===t.turnId);if(row)archiveCreatedNotice(t.bubble,row.created_pets,row.archive_changes)}
- }}catch(e){if(stamp===epoch&&e.code!=='STALE_VIEW'&&e.name!=='AbortError')console.warn('ARCHIVE_NOTICES_UNAVAILABLE',e.code||'UNKNOWN')}
+ let pending=targets.filter(t=>t.turnId&&t.bubble.isConnected);if(!pending.length)return;
+ const delays=[2000,5000,15000];
+ for(let attempt=0;pending.length&&attempt<=delays.length;attempt++){
+  const retry=[];
+  for(let offset=0;offset<pending.length;offset+=50){
+   const batch=pending.slice(offset,offset+50).filter(t=>t.bubble.isConnected);if(stamp!==epoch||!batch.length)return;
+   try{
+    const ids=[...new Set(batch.map(t=>t.turnId))],rows=await request('/api/archive-notices?turn_ids='+encodeURIComponent(ids.join(',')),{stamp,timeout:15000});assertEpoch(stamp);
+    if(!Array.isArray(rows))throw new ClientError('档案提示返回格式异常','BAD_RESPONSE');
+    for(const t of batch){if(!t.bubble.isConnected)continue;const row=rows.find(r=>r.turn_id===t.turnId);if(!row){retry.push(t);continue}archiveCreatedNotice(t.bubble,row.created_pets,row.archive_changes);if(row.memory_pending)retry.push(t)}
+   }catch(e){
+    if(stamp!==epoch||e.code==='STALE_VIEW'||e.name==='AbortError')return;
+    console.warn('ARCHIVE_NOTICES_UNAVAILABLE',e.code||'UNKNOWN');
+    if(e.code!=='SCHEMA_NOT_READY'&&(e.status===429||e.status>=500||['NETWORK','NETWORK_TIMEOUT'].includes(e.code)))retry.push(...batch);
+   }
+  }
+  pending=retry.filter(t=>t.bubble.isConnected);if(!pending.length||attempt===delays.length)return;
+  try{await wait(delays[attempt],stamp)}catch{return}
+ }
 }
 function renderMessages(){
  chat.replaceChildren();if(!messages.length){restoreWelcome();return}
