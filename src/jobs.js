@@ -1,3 +1,4 @@
+import {reliableMemory} from './explicit-memory.js';
 import {DB} from './db.js';
 import {fastgpt, content, today} from './core.js';
 import {identityMeta,petSummaries,ownershipReplyPet} from './pet-identity.js';
@@ -48,8 +49,8 @@ export async function runTurn(env, turnId) {
     const urgent = /(?:呼吸困难|失去意识|昏迷|持续抽搐|血流不止|误食.{0,8}老鼠药|尿不出来)/.test(current.content);
     if (!claimed.memory_done && !urgent) {
       try {
-        const answer = await fastgpt(env,[{role:'user',content:JSON.stringify({message:current.content,current_pet:conv.pet_id,pets:pets.map(p=>({id:p.id,name:p.name_confirmed?p.name:null,label:p.display_name,ownership_confirmed:p.ownership_confirmed})),profile:ctx.profile,records:ctx.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:history.slice(-8).map(m=>({role:m.role,content:m.content})),previous_state:priorState[0]?.state||{},received_at:current.created_at})}],{},true);
-        const parsed = preparePetMemory(answer,current.content,pets,conv.pet_id,!match.ambiguous,history);
+        let answer='';try{answer = await fastgpt(env,[{role:'user',content:JSON.stringify({message:current.content,current_pet:conv.pet_id,pets:pets.map(p=>({id:p.id,name:p.name_confirmed?p.name:null,label:p.display_name,ownership_confirmed:p.ownership_confirmed})),profile:ctx.profile,records:ctx.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:history.slice(-8).map(m=>({role:m.role,content:m.content})),previous_state:priorState[0]?.state||{},received_at:current.created_at})}],{},true);}catch{/* explicit owner statements can still be saved without the extraction model */}
+        const parsed = reliableMemory(answer,current.content,pets,conv.pet_id,!match.ambiguous,history);
         await db.rpc('petai_apply_memory',{p_turn:turnId,p_lease:lease,p_data:parsed});
       } catch {
         memoryStatus = 'pending';
@@ -113,7 +114,7 @@ export async function syncMemory(env, turnId) {
     const history=await db.rows('messages',{conversation_id:'eq.'+conv.id,owner_id:'eq.'+turn.owner_id,sequence:'lt.'+current.sequence,status:'eq.complete',memory_excluded:'eq.false',order:'sequence.desc',limit:'8'});
     const target=memoryPetFromSnapshot(turn.context_snapshot);
     const context=await petContext(db,turn.owner_id,target);
-    const output=await fastgpt(env,[{role:'user',content:JSON.stringify({message:current.content,current_pet:target,pets:pets.map(p=>({id:p.id,name:p.name_confirmed?p.name:null,label:p.display_name,ownership_confirmed:p.ownership_confirmed})),profile:context.profile,records:context.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:successfulHistory(history,4).map(m=>({role:m.role,content:m.content})),received_at:current.created_at})}],{},true);
-    await db.rpc('petai_apply_memory',{p_turn:turnId,p_lease:turn.lease_token,p_data:preparePetMemory(output,current.content,pets,target,turn.context_snapshot?.auto_binding_allowed!==false,history)});
+    let output='';try{output=await fastgpt(env,[{role:'user',content:JSON.stringify({message:current.content,current_pet:target,pets:pets.map(p=>({id:p.id,name:p.name_confirmed?p.name:null,label:p.display_name,ownership_confirmed:p.ownership_confirmed})),profile:context.profile,records:context.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:successfulHistory(history,4).map(m=>({role:m.role,content:m.content})),received_at:current.created_at})}],{},true);}catch{/* retry can use the same strict explicit-statement backup */}
+    await db.rpc('petai_apply_memory',{p_turn:turnId,p_lease:turn.lease_token,p_data:reliableMemory(output,current.content,pets,target,turn.context_snapshot?.auto_binding_allowed!==false,history)});
   }catch{await db.rpc('petai_memory_pending',{p_turn:turnId,p_lease:turn.lease_token});}
 }

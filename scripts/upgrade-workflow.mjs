@@ -9,9 +9,9 @@ const originals=new Map(old.nodes.map(n=>[n.nodeId,n]));const known=new Set(temp
 const retired=new Set(['i4LYS9E0BvJ0Gy1C','petcareHkFetchV7','petcareHkBodyGateV7','petcareHkLiveV7','petcareHkReferenceV7','petcareSearchAnswerV7']);
 if(old.nodes.some(n=>!known.has(n.nodeId)&&!retired.has(n.nodeId)))throw Error('当前导出含额外自定义节点，请手动合并，避免覆盖自定义流程。');
 const retrySources={petcareRetryQueryV20:'petcareOfficialQueryV5',petcareRetrySearchV20:'sMnGaCpKJevxBZHb',petcareRetryUrlV20:'petcareOfficialUrlV7',petcareRetryReadV20:'petcareReadOfficialV7',petcareRetryEvidenceV20:'petcareWebEvidenceV19',petcareRetryAnswerV20:'sOUZOZrUtrZDbvrg'};
-const repairedKeys=new Set(['systemPrompt','userChatInput','history','fileUrlList','ifElseList','searchQuery']);
+const repairedKeys=new Set(['systemPrompt','userChatInput','history','fileUrlList','isResponseAnswerText','ifElseList','searchQuery']);
 for(const n of template.nodes){
- const prev=originals.get(n.nodeId)||originals.get(retrySources[n.nodeId]);
+ const prev=originals.get(n.nodeId)||originals.get(({petcareNumberCareV40:'xL2dEdlDVtFIYG6n',petcareNumberHealthV40:'olkKlla3tVnpUBu5'})[n.nodeId])||originals.get(retrySources[n.nodeId]);
  const isReader=['petcareReadOfficialV7','petcareRetryReadV20'].includes(n.nodeId);
  const boundedHttp=isReader||['sMnGaCpKJevxBZHb','petcareRetrySearchV20'].includes(n.nodeId);
  if(prev){

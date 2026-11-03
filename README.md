@@ -1,3 +1,9 @@
+# 宠AI v40：档案持久化、数值复核与留言页
+
+先执行 Supabase **008_feedback.sql**，再部署完整 **Worker 1.13.0（含页面与 feedback.html）**，并更新学校 FastGPT 主流程。已完成旧迁移无需重跑。新增私密留言表单（新标签页）、明确陈述存档兜底、导出状态及下载链接、隐私/帮助和示例只填不发说明。
+
+部署、维护者查看留言的方法和验证边界见 [QUALITY_AND_FEEDBACK_V40.md](QUALITY_AND_FEEDBACK_V40.md)。
+
 # 宠AI v39：回复操作与对话反馈
 
 新增常驻复制/再次请求按钮、即时主题标题、等待计时及输入校验。请同时更新 Worker **1.12.0** 与页面；已执行 v38 的 Supabase 007 无需再执行 SQL。详情见 [CHAT_UX_V39.md](CHAT_UX_V39.md)。

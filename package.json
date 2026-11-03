@@ -1,6 +1,6 @@
 {
   "name": "petai-worker",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -10,7 +10,7 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "test": "node --test tests/*.test.js",
-    "check": "node --check src/guest-session.js && node --check src/index.js && node --check src/memory.js && node --check src/jobs.js",
+    "check": "node --check src/explicit-memory.js && node --check src/guest-session.js && node --check src/index.js && node --check src/memory.js && node --check src/jobs.js",
     "deploy:link": "node scripts/deploy-link.mjs"
   },
   "devDependencies": {

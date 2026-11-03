@@ -48,11 +48,15 @@ test('workflow upgrader retains school visual model, knowledge bindings and priv
   const visual=byId.petcareImageVision2026.inputs.find(i=>i.key==='model');visual.value='school/configured-vision';
   const datasets=byId.uhHSLcGctmw3yPZy.inputs.find(i=>i.key==='datasets');datasets.value=[{datasetId:'private-test-dataset'}];
   const header=f.nodes.flatMap(n=>n.inputs).find(i=>i.key==='system_header_secret');header.value={Authorization:'private-test-only'};
+  byId.xL2dEdlDVtFIYG6n.inputs.find(i=>i.key==='model').value='school/care';byId.olkKlla3tVnpUBu5.inputs.find(i=>i.key==='model').value='school/health';
+  for(const n of [byId.xL2dEdlDVtFIYG6n,byId.olkKlla3tVnpUBu5])n.inputs.find(i=>i.key==='isResponseAnswerText').value=true;
+  f.nodes=f.nodes.filter(n=>!n.nodeId.startsWith('petcareNumber'));f.edges=f.edges.filter(e=>!e.source.startsWith('petcareNumber')&&!e.target.startsWith('petcareNumber'));
   const input=join(dir,'in.json'),output=join(dir,'out.json');writeFileSync(input,JSON.stringify(f));
   execFileSync(process.execPath,[new URL('../scripts/upgrade-workflow.mjs',import.meta.url).pathname,input,output]);const out=JSON.parse(readFileSync(output,'utf8'));
   assert.equal(out.nodes.find(n=>n.nodeId==='petcareImageVision2026').inputs.find(i=>i.key==='model').value,'school/configured-vision');
   assert.deepEqual(out.nodes.find(n=>n.nodeId==='uhHSLcGctmw3yPZy').inputs.find(i=>i.key==='datasets').value,[{datasetId:'private-test-dataset'}]);
   assert.equal(out.nodes.flatMap(n=>n.inputs).find(i=>i.key==='system_header_secret').value.Authorization,'private-test-only');
+  for(const [draft,review,model]of [['xL2dEdlDVtFIYG6n','petcareNumberCareV40','school/care'],['olkKlla3tVnpUBu5','petcareNumberHealthV40','school/health']]){assert.equal(out.nodes.find(n=>n.nodeId===draft).inputs.find(i=>i.key==='isResponseAnswerText').value,false);assert.equal(out.nodes.find(n=>n.nodeId===review).inputs.find(i=>i.key==='model').value,model);assert.equal(out.nodes.find(n=>n.nodeId===review).inputs.find(i=>i.key==='userChatInput').selectedTypeIndex,1);}
  }finally{rmSync(dir,{recursive:true,force:true})}
 });
 test('city substitution does not rename a Pekingese breed or replace purchase location',()=>{

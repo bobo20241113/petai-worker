@@ -9,7 +9,7 @@ async function key(env){
  // A separate purpose label prevents these signatures from being used for any other token.
  return crypto.subtle.importKey('raw',encoder.encode('petai:guest-session:v1:'+secret),{name:'HMAC',hash:'SHA-256'},false,['sign','verify']);
 }
-export async function verifyTurnstile(request,env,token){
+export async function verifyTurnstile(request,env,token,expectedAction='guest_chat'){
  if(!env.TURNSTILE_SECRET_KEY)throw new ApiError(503,'CHALLENGE_CONFIG_MISSING','访客验证暂不可用，请登录使用');
  if(typeof token!=='string'||!token||token.length>2048)throw new ApiError(403,'CHALLENGE_REQUIRED','请完成人机验证');
  const form=new FormData();form.set('secret',env.TURNSTILE_SECRET_KEY);form.set('response',token);
@@ -20,7 +20,7 @@ export async function verifyTurnstile(request,env,token){
   if(!result.ok)throw Error('verify unavailable');verdict=await result.json();
  }catch{throw new ApiError(502,'CHALLENGE_UNAVAILABLE','验证服务暂不可用，请稍后重试')}
  const hosts=(env.TURNSTILE_HOSTNAMES||'').split(',').map(x=>x.trim()).filter(Boolean);
- if(!verdict.success||!hosts.includes(verdict.hostname)||verdict.action!=='guest_chat')throw new ApiError(403,'CHALLENGE_FAILED','人机验证失败，请重新验证');
+ if(!verdict.success||!hosts.includes(verdict.hostname)||verdict.action!==expectedAction)throw new ApiError(403,'CHALLENGE_FAILED','人机验证失败，请重新验证');
 }
 export async function issueGuestSession(env,origin,now=Date.now(),pageSession=false){
  const iat=Math.floor(now/1000),exp=iat+GUEST_SESSION_SECONDS;

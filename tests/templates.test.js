@@ -48,3 +48,8 @@ test('v20 retries only after insufficient evidence and terminates after one requ
  assert.equal(gate.test('https://authority.gov'),true);assert.equal(gate.test('https://foo.internal'),false);assert.equal(gate.test('https://127.0.0.1/'),false);
  assert.match(nodes.get('petcareLegalScopeV19').inputs.find(i=>i.key==='systemPrompt').value,/本轮明确说出的咨询对象优先/);
 });
+
+test('care and health draft answers are hidden and only the numerical reviewer responds',()=>{
+ const f=JSON.parse(readFileSync(new URL('../fastgpt/chat-cloud.json',import.meta.url)));const by=id=>f.nodes.find(n=>n.nodeId===id),value=(n,k)=>n.inputs.find(i=>i.key===k)?.value;
+ for(const [draft,review]of [['xL2dEdlDVtFIYG6n','petcareNumberCareV40'],['olkKlla3tVnpUBu5','petcareNumberHealthV40']]){assert.equal(value(by(draft),'isResponseAnswerText'),false);assert.equal(value(by(review),'isResponseAnswerText'),true);assert.ok(f.edges.some(e=>e.source===draft&&e.target===review));assert.match(value(by(review),'systemPrompt'),/1升=1000毫升/);assert.match(value(by(review),'systemPrompt'),/每N天一次/);assert.match(value(by(review),'systemPrompt'),/正确算术不能证明医学范围正确/);assert.ok(f.edges.some(e=>e.source===review&&e.target==='petcareNumberReviewFallbackV40'));}
+});

@@ -37,5 +37,20 @@ test('006 upgrades legacy provenance, creates one unnamed pet and renames it wit
  assert.equal((await one('select name from pets where id=$1',[legacy])).name,'小橘');assert.equal((await one("select status from pet_facts where pet_id=$1 and field='name' and value='\"橘白猫\"'",[legacy])).status,'superseded');
  await db.exec(await readFile(resolve(SQL_DIR,'../tests/permissions.sql'),'utf8'));
  await db.exec(`set role authenticated;set request.jwt.claim.sub='${B}';`);assert.equal((await one('select count(*)::int n from pets')).n,1);await assert.rejects(db.query('update pets set ownership_confirmed=true'),/permission denied/);
- }finally{await db.close()}
+ 
+ await db.exec('reset role');
+ const {reliableMemory}=await import('../src/explicit-memory.js');
+ const durableRaw='我家新养了一只猫，名字叫小满，品种是英短，年龄是2岁，体重4.5公斤，2026-10-01打了猫三联。';
+ const durableConv=(await one('insert into conversations(owner_id) values($1) returning id',[A])).id;
+ const durableTurn=(await one('select petai_submit_turn($1,$2,$3,$4,null,$5,100) t',[A,durableConv,crypto.randomUUID(),durableRaw,'durable'])).t;
+ const durableLease=(await one('select petai_claim_turn($1) t',[durableTurn.id])).t;
+ await one('select petai_apply_memory($1,$2,$3)',[durableTurn.id,durableLease.lease_token,reliableMemory('',durableRaw,[],null)]);
+ // Re-read using DB-backed profile code, as a refreshed page/new conversation would.
+ const savedPet=(await one("select id from pets where owner_id=$1 and name='小满'",[A])).id;
+ const adapter={own:async(table,owner,id)=>(await db.query('select * from '+table+' where id=$1 and owner_id=$2',[id,owner])).rows[0],rows:async(table,query)=>(await db.query('select * from '+table+' where owner_id=$1 and pet_id=$2 and status=$3',[query.owner_id.slice(3),query.pet_id.slice(3),query.status.slice(3)])).rows};
+ const {petContext}=await import('../src/jobs.js');const persisted=await petContext(adapter,A,savedPet);assert.equal(persisted.profile.name,'小满');assert.equal(persisted.profile.age_note,'2岁');assert.equal(persisted.profile.breed_description,'英短');assert.equal(persisted.records.find(r=>r.category==='weight').details.kg,4.5);assert.ok(persisted.records.some(r=>r.category==='vaccine'));
+ await db.exec(await readFile(resolve(SQL_DIR,'008_feedback.sql'),'utf8'));
+ await one("insert into feedback_messages(owner_id,category,message) values($1,'bug','测试留言持久保存')",[A]);
+ await db.exec('set role authenticated');await assert.rejects(db.query('select * from feedback_messages'),/permission denied/);await db.exec('reset role');
+}finally{await db.close()}
 });

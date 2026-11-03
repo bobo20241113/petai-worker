@@ -57,8 +57,18 @@ export async function route(request,env,ctx) {
     if(key.includes('.')){try{const claims=JSON.parse(atob(key.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));if(claims.role!=='anon')key='';}catch{key='';}}
     return response({supabaseUrl:env.SUPABASE_URL||'',supabasePublishableKey:key,turnstileSiteKey:env.TURNSTILE_SITE_KEY||'',guestEnabled:env.GUEST_ENABLED==='true'});
   }
+  if(p==='/api/feedback'&&method==='POST'){
+    const origin=request.headers.get('origin');if(!origin||!(allowed(env,origin)||origin===url.origin))throw new ApiError(403,'ORIGIN_DENIED','反馈来源不允许');
+    await rate(env,'feedback:'+(request.headers.get('CF-Connecting-IP')||'unknown'));
+    const b=await jsonBody(request,12000);let owner=null;
+    if(request.headers.has('authorization'))owner=(await authenticate(request,env)).id;else await verifyTurnstile(request,env,b.turnstile_token,'feedback');
+    const message=text(b.message,2000);if(message.length<5)throw new ApiError(400,'INVALID_FEEDBACK','请至少填写5个字，说明遇到的问题');
+    const category=['bug','answer','suggestion','other'].includes(b.category)?b.category:'other';
+    const email=typeof b.email==='string'?b.email.trim():'';if(email&&(email.length>160||!/^\S+@\S+\.\S+$/.test(email)))throw new ApiError(400,'INVALID_EMAIL','请填写有效的联系邮箱，或留空');
+    const db=new DB(env);const rows=await db.insert('feedback_messages',{owner_id:owner,category,message,contact_email:email||null});return response({id:rows[0].id,created_at:rows[0].created_at},201);
+  }
   if(method==='GET'&&!p.startsWith('/api/')&&p!=='/health'&&env.ASSETS)return env.ASSETS.fetch(request);
-  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.12.0'});
+  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.13.0'});
   if(p==='/api/guest/session'&&method==='POST')return guest(request,env,true);
   if(p==='/api/guest/chat'&&method==='POST')return guest(request,env);
   if(!p.startsWith('/api/'))throw new ApiError(404,'NOT_FOUND','接口不存在');
