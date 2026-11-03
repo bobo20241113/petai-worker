@@ -966,12 +966,26 @@ async function renderProfile(id,area=$('profile-content'),view=++profileRequest)
  area.append(element('p','手动修改的字段会保留；聊天中的不同信息作为建议，确认后才更新。','profile-edit-note'));
  const list=element('div',undefined,'profile-field-list');area.append(list);
  const format=(key,v)=>v===undefined||v===null||v===''?'未填写':typeof v==='boolean'?(v?'已绝育':'未绝育'):String(v);
- const refresh=async()=>{await renderProfile(id,area,view);const ps=await request('/api/pets',{stamp});assertEpoch(stamp);pets=ps;renderShell();const pet=ps.find(p=>p.id===id),heading=area.parentElement?.querySelector('summary strong');if(pet&&heading){heading.textContent=petDisplay(pet);heading.parentElement.setAttribute('aria-label','查看 '+petDisplay(pet)+' 的档案')}};
+ // Save in place: never clear/reload the archive or destroy another field's draft.
+ const rows=new Map(),issueItems=new Map();let suggestionPanel;
+ const live=()=>stamp===epoch&&view===profileRequest&&area.isConnected;
+ const removeIssues=field=>{for(const issue of data.issues||[])if(issue.field===field){issueItems.get(issue.id)?.remove();issueItems.delete(issue.id)}data.issues=(data.issues||[]).filter(i=>i.field!==field);updateSuggestionCount()};
+ const updateSuggestionCount=()=>{if(!suggestionPanel)return;const count=issueItems.size;if(count)suggestionPanel.querySelector('summary').textContent='待确认建议 · '+count+' 项';else suggestionPanel.remove()};
+ const applySaved=(key,value,result)=>{
+  const dialog=$('pets-dialog'),top=dialog.scrollTop;data.version=result.version;values[key]=p[key]=value;locked.add(key);
+  if(key==='birth_date'){
+   delete p.computed_age;if(value){const [y,m]=value.split('-').map(Number),[cy,cm]=new Date().toISOString().slice(0,7).split('-').map(Number),months=(cy-y)*12+cm-m;if(months>=0)p.computed_age='约'+Math.floor(months/12)+'岁'+months%12+'个月（按出生年月计算）'}
+  }
+  rows.get(key)?.paint();if(key==='birth_date')rows.get('age_note')?.paint();removeIssues(key);
+  const pet=pets.find(p=>p.id===id);if(pet){if(key==='name'){pet.name=value||'';pet.name_confirmed=!!value}if(key==='species')pet.species=value;pet.display_name=pet.name_confirmed?pet.name:pet.species&&pet.species!=='其他'?'未命名的'+pet.species:'未命名宠物';
+   const heading=area.parentElement?.querySelector('summary strong');if(heading){heading.textContent=petDisplay(pet);heading.parentElement.setAttribute('aria-label','查看 '+petDisplay(pet)+' 的档案')}
+  }
+  dialog.scrollTop=top;
+ };
  for(const [key,label]of fields){
   const row=element('div',undefined,'profile-field-row'),name=element('div',label,'profile-field-name'),body=element('div',undefined,'profile-field-value');
-  let value=values[key];if(key==='age_note'&&!locked.has(key)&&p.computed_age)value=p.computed_age;
-  body.append(element('span',format(key,value),value===undefined||value===null||value===''?'profile-unfilled':''));if(locked.has(key))body.append(element('small','手动','profile-manual-tag'));
-  const edit=element('button','编辑','profile-field-edit');edit.type='button';edit.setAttribute('aria-label','编辑'+label);row.append(name,body,edit);list.append(row);
+  const paint=()=>{let value=values[key];if(key==='age_note'&&!locked.has(key)&&p.computed_age)value=p.computed_age;body.replaceChildren(element('span',format(key,value),value===undefined||value===null||value===''?'profile-unfilled':''));if(locked.has(key))body.append(element('small','手动','profile-manual-tag'))};paint();
+  const edit=element('button','编辑','profile-field-edit');edit.type='button';edit.setAttribute('aria-label','编辑'+label);row.append(name,body,edit);list.append(row);rows.set(key,{paint,edit});
   edit.onclick=()=>{
    if(row.querySelector('form'))return;edit.hidden=true;body.hidden=true;
    const form=element('form',undefined,'profile-inline-edit');let input;
@@ -983,15 +997,20 @@ async function renderProfile(id,area=$('profile-content'),view=++profileRequest)
    cancel.onclick=()=>{form.remove();body.hidden=false;edit.hidden=false};actions.append(save,cancel);form.append(input,actions,status);row.append(form);input.focus();
    form.onsubmit=async event=>{event.preventDefault();if(!form.reportValidity())return;save.disabled=true;cancel.disabled=true;status.textContent='正在保存…';
     const raw=input.value.trim(),value=raw===''?null:key==='weight_kg'?Number(raw):key==='neutered'?raw==='true':raw;
-    try{await request('/api/pets/'+id+'/fields',{method:'PATCH',body:{field:key,value,version:data.version},stamp});assertEpoch(stamp);await refresh();toast('档案已保存')}catch(e){status.textContent=e.code==='CONFLICT'?'资料已更新，请关闭档案后重新打开。':e.message||'保存失败，请重试。';save.disabled=false;cancel.disabled=false}
+    try{const result=await request('/api/pets/'+id+'/fields',{method:'PATCH',body:{field:key,value,version:data.version},stamp});assertEpoch(stamp);if(!live())return;applySaved(key,value,result);const top=$('pets-dialog').scrollTop;form.remove();body.hidden=false;edit.hidden=false;edit.focus({preventScroll:true});$('pets-dialog').scrollTop=top;toast('档案已保存')}catch(e){status.textContent=e.code==='CONFLICT'?'资料已更新，请关闭档案后重新打开。':e.message||'保存失败，请重试。';save.disabled=false;cancel.disabled=false}
    };
   };
  }
  const suggestions=(data.issues||[]).filter(i=>fields.some(([key])=>key===i.field));
- if(suggestions.length){const detail=element('details',undefined,'profile-more profile-issues');detail.append(element('summary','待确认建议 · '+suggestions.length+' 项'));
+ if(suggestions.length){const detail=element('details',undefined,'profile-more profile-issues');suggestionPanel=detail;detail.append(element('summary','待确认建议 · '+suggestions.length+' 项'));
   for(const issue of suggestions){const item=element('div',undefined,'profile-suggestion'),label=fields.find(([key])=>key===issue.field)[1],status=element('p');status.setAttribute('role','status');item.append(element('strong',label),element('p','当前：'+format(issue.field,values[issue.field])),element('p','聊天建议：'+format(issue.field,issue.proposed_value)));
    const accept=element('button','采用建议','profile-field-save'),ignore=element('button','忽略','profile-field-edit');accept.type=ignore.type='button';
-   const act=async adopt=>{accept.disabled=ignore.disabled=true;status.textContent='正在保存…';try{if(adopt)await request('/api/pets/'+id+'/fields',{method:'PATCH',body:{field:issue.field,value:issue.proposed_value,version:data.version,issue_id:issue.id},stamp});else await request('/api/pets/'+id+'/issues/'+issue.id,{method:'PATCH',body:{},stamp});assertEpoch(stamp);await refresh()}catch(e){status.textContent=e.message||'保存失败，请重试';accept.disabled=ignore.disabled=false}};
+   issueItems.set(issue.id,item);
+   const act=async adopt=>{accept.disabled=ignore.disabled=true;status.textContent='正在保存…';try{
+    if(adopt){const result=await request('/api/pets/'+id+'/fields',{method:'PATCH',body:{field:issue.field,value:issue.proposed_value,version:data.version,issue_id:issue.id},stamp});assertEpoch(stamp);if(!live())return;applySaved(issue.field,issue.proposed_value,result)}
+    else{await request('/api/pets/'+id+'/issues/'+issue.id,{method:'PATCH',body:{},stamp});assertEpoch(stamp);if(!live())return;const top=$('pets-dialog').scrollTop;item.remove();issueItems.delete(issue.id);data.issues=(data.issues||[]).filter(i=>i.id!==issue.id);updateSuggestionCount();$('pets-dialog').scrollTop=top}
+    rows.get(issue.field)?.edit.focus({preventScroll:true});
+   }catch(e){status.textContent=e.message||'保存失败，请重试';accept.disabled=ignore.disabled=false}};
    accept.onclick=()=>act(true);ignore.onclick=()=>act(false);item.append(accept,ignore,status);detail.append(item);
   }area.append(detail);
  }
