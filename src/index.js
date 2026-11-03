@@ -1,3 +1,4 @@
+import {validatePetEdit} from './profile-edit.js';
 import {summarizeTitle} from './titles.js';
 import {verifyTurnstile,issueGuestSession,verifyGuestSession} from './guest-session.js';
 import {petSummaries} from './pet-identity.js';
@@ -68,7 +69,7 @@ export async function route(request,env,ctx) {
     const db=new DB(env);const rows=await db.insert('feedback_messages',{owner_id:owner,category,message,contact_email:email||null});return response({id:rows[0].id,created_at:rows[0].created_at},201);
   }
   if(method==='GET'&&!p.startsWith('/api/')&&p!=='/health'&&env.ASSETS)return env.ASSETS.fetch(request);
-  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.13.0'});
+  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.14.0'});
   if(p==='/api/guest/session'&&method==='POST')return guest(request,env,true);
   if(p==='/api/guest/chat'&&method==='POST')return guest(request,env);
   if(!p.startsWith('/api/'))throw new ApiError(404,'NOT_FOUND','接口不存在');
@@ -77,6 +78,14 @@ export async function route(request,env,ctx) {
   if(p==='/api/pets'&&method==='GET')return response(await petSummaries(db,user));
   let m;
   if((m=p.match(/^\/api\/pets\/([^/]+)$/))&&method==='GET')return response(await petContext(db,user,id(m[1])));
+  if((m=p.match(/^\/api\/pets\/([^/]+)\/fields$/))&&method==='PATCH'){
+    const pet=id(m[1]),edit=validatePetEdit(await jsonBody(request,8192));
+    return response(await db.rpc('petai_edit_pet_field',{p_owner:user,p_pet:pet,p_field:edit.field,p_value:edit.value,p_version:edit.version,p_issue:edit.issue_id}));
+  }
+  if((m=p.match(/^\/api\/pets\/([^/]+)\/issues\/([^/]+)$/))&&method==='PATCH'){
+    const pet=id(m[1]),issue=id(m[2]);await db.own('pets',user,pet);
+    return response(await db.update('memory_issues',{id:'eq.'+issue,pet_id:'eq.'+pet,owner_id:'eq.'+user,status:'eq.open'},{status:'resolved'}));
+  }
   if((m=p.match(/^\/api\/pets\/([^/]+)\/records$/))&&method==='GET'){
     await db.own('pets',user,id(m[1]));return list('pet_records',{pet_id:'eq.'+m[1],status:'eq.active',order:'created_at.desc',limit:'100'});
   }

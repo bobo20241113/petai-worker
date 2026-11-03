@@ -12,19 +12,22 @@ export async function enqueue(db, env, turnId) {
 export async function petContext(db, owner, petId) {
   if (!petId) return {profile:null,records:[],issues:[]};
   const pet = await db.own('pets',owner,petId);
-  const [facts,records,issues] = await Promise.all([
+  const [facts,records,issues,manual] = await Promise.all([
     db.rows('pet_facts',{pet_id:'eq.'+petId,owner_id:'eq.'+owner,status:'eq.active',order:'created_at.asc',limit:'100'}),
     db.rows('pet_records',{pet_id:'eq.'+petId,owner_id:'eq.'+owner,status:'eq.active',order:'created_at.desc',limit:'30'}),
-    db.rows('memory_issues',{pet_id:'eq.'+petId,owner_id:'eq.'+owner,status:'eq.open',limit:'10'})]);
+    db.rows('memory_issues',{pet_id:'eq.'+petId,owner_id:'eq.'+owner,status:'eq.open',limit:'30'}),
+    db.rows('pet_manual_fields',{pet_id:'eq.'+petId,owner_id:'eq.'+owner})]);
   const profile = {id:pet.id,name:pet.name,source:'用户聊天陈述', ...Object.fromEntries(facts.map(f=>[f.field,f.value]))};
   const meta=identityMeta(pet,facts);const nameConfirmed=meta.name_confirmed;
   if(!nameConfirmed)delete profile.name;
+  for(const f of manual)profile[f.field]=f.value;
+  if(manual.length){profile.source='用户聊天陈述与手动资料';profile.manually_confirmed_fields=manual.map(f=>f.field);profile.manual_policy='手动字段保持当前值，聊天中的不同信息需经用户在档案中确认；历史记录不代表已覆盖当前字段。'}
   const birth = profile.birth_date;
   if (typeof birth === 'string' && /^\d{4}-\d{2}/.test(birth)) {
     const [y,m] = birth.split('-').map(Number); const [cy,cm] = today().split('-').map(Number); const months=(cy-y)*12+cm-m;
     if (months >= 0) profile.computed_age=`约${Math.floor(months/12)}岁${months%12}个月（按出生年月计算）`;
   }
-  return {profile, facts, records, issues, name_confirmed:nameConfirmed,display_name:meta.display_name,ownership_confirmed:meta.ownership_confirmed};
+  return {profile, facts, records, issues, manual_fields:manual,version:pet.version,name_confirmed:manual.some(f=>f.field==='name')?!!profile.name:nameConfirmed,display_name:profile.name||meta.display_name,ownership_confirmed:meta.ownership_confirmed};
 }
 export async function runTurn(env, turnId) {
   const db = new DB(env); const claimed = await db.rpc('petai_claim_turn',{p_turn:turnId});
@@ -36,7 +39,7 @@ export async function runTurn(env, turnId) {
     const rows = await db.rows('messages',{owner_id:'eq.'+owner,conversation_id:'eq.'+conversationId,sequence:'lt.'+current.sequence,order:'sequence.desc',limit:'24'});
     const history = successfulHistory(rows.filter(m=>m.turn_id!==turnId));
     const rawPets=await db.rows('pets',{owner_id:'eq.'+owner,order:'created_at.asc',limit:'100'});
-    const pets=(await petSummaries(db,owner,rawPets)).map((p,i)=>({...p,name:rawPets[i].name}));
+    const pets=(await petSummaries(db,owner,rawPets)).map(p=>({...p,name:rawPets.find(raw=>raw.id===p.id).name}));
     let ctx=await petContext(db,owner,conv.pet_id);
     const match=resolvePetMatch(pets,current.content,conv.pet_id,ctx.profile,{allowDefault:history.length===0,confirmedOwnershipId:ownershipReplyPet(current.content,history,pets,conv.pet_id)});
     if((conv.pet_id||null)!==match.id){
@@ -110,7 +113,7 @@ export async function syncMemory(env, turnId) {
     const conv=await db.own('conversations',turn.owner_id,turn.conversation_id);
     const current=(await db.rows('messages',{turn_id:'eq.'+turnId,role:'eq.user',owner_id:'eq.'+turn.owner_id,limit:'1'}))[0];
     const rawPets=await db.rows('pets',{owner_id:'eq.'+turn.owner_id,limit:'100'});
-    const pets=(await petSummaries(db,turn.owner_id,rawPets)).map((p,i)=>({...p,name:rawPets[i].name}));
+    const pets=(await petSummaries(db,turn.owner_id,rawPets)).map(p=>({...p,name:rawPets.find(raw=>raw.id===p.id).name}));
     const history=await db.rows('messages',{conversation_id:'eq.'+conv.id,owner_id:'eq.'+turn.owner_id,sequence:'lt.'+current.sequence,status:'eq.complete',memory_excluded:'eq.false',order:'sequence.desc',limit:'8'});
     const target=memoryPetFromSnapshot(turn.context_snapshot);
     const context=await petContext(db,turn.owner_id,target);

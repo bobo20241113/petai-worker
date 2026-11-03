@@ -1,3 +1,7 @@
+# 宠AI v43：可编辑宠物档案
+
+**本次需要数据库和完整 Worker 升级，不能只换 HTML。** 先执行 Supabase `009_profile_editing.sql`，再部署 Worker **1.14.0**，并更新独立记忆提取流程。支持逐项编辑、手动值保护、冲突建议与有效档案数量徽标。部署顺序见 [PROFILE_V43.md](PROFILE_V43.md)。
+
 # 宠AI v42：档案入口图标
 
 档案按钮增加小爪印与右箭头，沿用绿色样式。已部署 v40/v41 时只需替换 `public/index.html` 后重新部署，无需修改数据库或工作流。见 [UI_V42.md](UI_V42.md)。

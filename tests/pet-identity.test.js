@@ -28,9 +28,9 @@ test('giving an unnamed pet a name updates that identity instead of creating a d
  const out=preparePetMemory(JSON.stringify({operations:[{type:'fact',pet:'豆豆',field:'name',value:'豆豆',quote:'它叫豆豆'}]}),'它叫豆豆',[pet],A);
  assert.equal(out.operations[0].pet,'@current');assert.deepEqual(out.confirmed_names,['豆豆']);
 });
-test('account summary reads are owner-scoped and preserve unavailable legacy provenance',async()=>{
+test('account summary reads are owner-scoped and excludes unowned legacy records',async()=>{
  const db={rows:async(table,q)=>{assert.equal(q.owner_id,'eq.'+A);if(table==='pets')return [{id:B,name:'橘白猫',ownership_confirmed:false,name_confirmed:false}];assert.equal(q.pet_id,'in.('+B+')');return [{pet_id:B,field:'species',value:'猫',quote:'这是什么猫'}]}};
- const [p]=await petSummaries(db,A);assert.equal(p.default_eligible,false);assert.equal(p.name,'');assert.equal(p.legacy_label,'橘白猫');
+ assert.deepEqual(await petSummaries(db,A),[]);
 });
 
 test('an affirmative to a clear ownership question can confirm a known historical pet, but not ambiguous or negative questions',()=>{

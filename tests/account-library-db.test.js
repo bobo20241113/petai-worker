@@ -47,7 +47,7 @@ test('006 upgrades legacy provenance, creates one unnamed pet and renames it wit
  await one('select petai_apply_memory($1,$2,$3)',[durableTurn.id,durableLease.lease_token,reliableMemory('',durableRaw,[],null)]);
  // Re-read using DB-backed profile code, as a refreshed page/new conversation would.
  const savedPet=(await one("select id from pets where owner_id=$1 and name='小满'",[A])).id;
- const adapter={own:async(table,owner,id)=>(await db.query('select * from '+table+' where id=$1 and owner_id=$2',[id,owner])).rows[0],rows:async(table,query)=>(await db.query('select * from '+table+' where owner_id=$1 and pet_id=$2 and status=$3',[query.owner_id.slice(3),query.pet_id.slice(3),query.status.slice(3)])).rows};
+ const adapter={own:async(table,owner,id)=>(await db.query('select * from '+table+' where id=$1 and owner_id=$2',[id,owner])).rows[0],rows:async(table,query)=>table==='pet_manual_fields'?[]:(await db.query('select * from '+table+' where owner_id=$1 and pet_id=$2 and status=$3',[query.owner_id.slice(3),query.pet_id.slice(3),query.status.slice(3)])).rows};
  const {petContext}=await import('../src/jobs.js');const persisted=await petContext(adapter,A,savedPet);assert.equal(persisted.profile.name,'小满');assert.equal(persisted.profile.age_note,'2岁');assert.equal(persisted.profile.breed_description,'英短');assert.equal(persisted.records.find(r=>r.category==='weight').details.kg,4.5);assert.ok(persisted.records.some(r=>r.category==='vaccine'));
  await db.exec(await readFile(resolve(SQL_DIR,'008_feedback.sql'),'utf8'));
  await one("insert into feedback_messages(owner_id,category,message) values($1,'bug','测试留言持久保存')",[A]);

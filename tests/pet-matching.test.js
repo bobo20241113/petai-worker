@@ -36,7 +36,7 @@ test('real turn runner uses the switched target and preserves upstream answer ve
  const {runTurn}=await import('../src/jobs.js');
  for(const [text,target,useDefault]of [['团团需要驱虫吗',B,false],['豆豆和团团需要驱虫吗',null,false],['它多大了',B,true]]){
   const previous=globalThis.fetch,owner='33333333-3333-4333-8333-333333333333',turn='44444444-4444-4444-8444-444444444444',lease='55555555-5555-4555-8555-555555555555';
-  const conv={id:'66666666-6666-4666-8666-666666666666',pet_id:useDefault?null:A};const available=useDefault?[{...pets[1],ownership_confirmed:true,name_confirmed:true}]:pets;let snapshot,completed,fail;
+  const conv={id:'66666666-6666-4666-8666-666666666666',pet_id:useDefault?null:A};const available=useDefault?[{...pets[1],ownership_confirmed:true,name_confirmed:true}]:pets.map(p=>({...p,ownership_confirmed:true}));let snapshot,completed,fail;
   const raw='  **FastGPT原文**\r\n保留尾部空白 \t\n';
   globalThis.fetch=async(url,init={})=>{
    const u=new URL(url),path=u.pathname,b=init.body?JSON.parse(init.body):{};
@@ -51,7 +51,7 @@ test('real turn runner uses the switched target and preserves upstream answer ve
    if(path.endsWith('/attachments'))return Response.json([{id:u.searchParams.get('id').slice(3),conversation_id:conv.id,storage_path:'owner/chat/'+u.searchParams.get('id').slice(3)+'.jpg',mime:'image/jpeg'}]);
    if(path.includes('/storage/v1/object/sign/'))return Response.json({signedURL:path.replace('/storage/v1','')+'?token=test'});
    if(path.endsWith('/pets'))return Response.json(u.searchParams.has('id')?available.filter(p=>'eq.'+p.id===u.searchParams.get('id')):available);
-   if(['/pet_facts','/pet_records','/memory_issues','/conversation_states'].some(p=>path.endsWith(p)))return Response.json([]);
+   if(['/pet_manual_fields','/pet_facts','/pet_records','/memory_issues','/conversation_states'].some(p=>path.endsWith(p)))return Response.json([]);
    throw Error('Unexpected turn route '+path);
   };
   try{

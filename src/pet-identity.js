@@ -7,10 +7,11 @@ export function explicitPetName(message,name){
  const escaped=String(name).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
  return new RegExp('(?:名字(?:是|叫)|名叫|叫做|取名(?:为|叫)?|改名为|叫)\\s*[“"「]?'+escaped+'[”"」]?(?:[，,。!！?？;；\\s]|$)').test(message);
 }
-const owner=/(?:我(?:们)?有(?:(?:[一两二三四五六七八九十0-9]+只|只)[^，,。？?!！]{0,12}(?:猫|狗|宠物)|(?:猫|狗|宠物))|我(?:们)?家|我(?:们)?的(?!朋友|邻居|同事|客户)|我(?:们)?(?:最近|刚刚?|新|又)?(?:养|领养|收养)|自己养|\bmy (?:cat|dog|pet)\b|\bi (?:have|own|adopted)\b)/i;
+const owner=/(?:我(?:们)?有(?:(?:[一两二三四五六七八九十0-9]+只|只)[^，,。？?!！]{0,12}(?:猫|狗|宠物)|(?:猫|狗|宠物))|我(?:们)?家|我(?:们)?的(?!朋友|邻居|同事|客户)|我(?:们)?(?:最近|刚刚?|新|又)?(?:养|领养|收养)|自己养|我(?:们)?(?:负责|照顾|照护|照料|代养|寄养)|\bmy (?:cat|dog|pet)\b|\bi (?:have|own|adopted)\b)/i;
 export const thirdParty=/(?:朋友|邻居|同事|别人|他人|客户)(?:的|家|养|领养|收养)|\b(?:friend|neighbor|colleague)'?s\b/i;
 export function deniesOwnership(text){return /(?:不是|并非|不属于|不再是).{0,6}我(?:们)?(?:家|的|养)|不是我(?:们)?的/.test(text)}
-export function ownedStatement(text){return !deniesOwnership(text)&&owner.test(text)&&!thirdParty.test(text)&&!/(?:如果|假如|假设|想要|打算|准备|计划|考虑).{0,12}(?:我有|养|领养|买)/.test(text)}
+export function responsibilityStatement(text){return /我(?:们)?(?:正在|目前)?(?:负责|代养|寄养|照顾|照护|照料)/.test(text)&&!/(?:没有|不|并非).{0,4}(?:负责|代养|照顾|照护)/.test(text)}
+export function ownedStatement(text){return !deniesOwnership(text)&&owner.test(text)&&(!thirdParty.test(text)||responsibilityStatement(text))&&!/(?:如果|假如|假设|想要|打算|准备|计划|考虑).{0,12}(?:我有|养|领养|买)/.test(text)}
 export function namedEvidence(text,name){
  if(explicitPetName(text,name))return true;if(isDescriptionLabel(name))return false;
  return ['我家','我家的','我们家','我们家的','我的'].some(prefix=>{const pos=text.indexOf(prefix+name);return pos>=0&&/^(?:是|今年|已经|最近|今天|现在|体重|出生|[，,。！？?\s]|$)/.test(text.slice(pos+prefix.length+name.length))});
@@ -26,7 +27,12 @@ export async function petSummaries(db,owner,pets=null){
  pets??=await db.rows('pets',{owner_id:'eq.'+owner,order:'created_at.asc',limit:'100'});
  if(!pets.length)return [];
  const facts=await db.rows('pet_facts',{owner_id:'eq.'+owner,pet_id:'in.('+pets.map(p=>p.id).join(',')+')',status:'eq.active',select:'pet_id,field,value,quote',limit:'1000'});
- return pets.map(p=>({...p,...identityMeta(p,facts.filter(f=>f.pet_id===p.id))}));
+ const manual=await db.rows('pet_manual_fields',{owner_id:'eq.'+owner,pet_id:'in.('+pets.map(p=>p.id).join(',')+')',limit:'1000'});
+ return pets.map(p=>{const meta=identityMeta(p,facts.filter(f=>f.pet_id===p.id));const edits=Object.fromEntries(manual.filter(f=>f.pet_id===p.id).map(f=>[f.field,f.value]));
+  if(Object.hasOwn(edits,'species'))meta.species=edits.species;
+  if(Object.hasOwn(edits,'name')){meta.name=edits.name||'';meta.name_confirmed=!!edits.name}
+  meta.display_name=meta.name_confirmed?meta.name:meta.species&&meta.species!=='其他'?'未命名的'+meta.species:'未命名宠物';
+  return {...p,...meta};}).filter(p=>p.ownership_confirmed);
 }
 // A short affirmative can establish ownership only when it answers a clear,
 // positive ownership question and the referenced animal can be identified.
