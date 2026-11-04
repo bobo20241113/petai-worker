@@ -313,6 +313,61 @@ html[data-style=playful] .suggestion-card:is(:first-child,:nth-child(2),:nth-chi
 .top>.pet-background{border-radius:inherit}
 .top-actions .style-options button{height:auto;min-height:64px;max-width:none;border-radius:8px;white-space:normal;justify-content:flex-start}
 .top-actions .style-options button>span{display:block}
+
+/* v57: distinct surfaces and content-driven card spacing. */
+html[data-style=playful] .center{background:#f8f7ff;border:1px solid #d6d1ec;box-shadow:0 4px 16px #44356a08}
+html[data-style=playful] .chat,html[data-style=playful] .chat:has(#welcome:not([hidden])){background:#f8f7ff}
+html[data-style=playful] .sidebar{background:#eeedff}
+html[data-style=playful] .suggestion-card{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:1fr auto;align-content:stretch;align-items:start;gap:16px;min-height:176px;padding:16px}
+html[data-style=playful] .suggestion-card>span:not(.category-icon):not(.suggestion-arrow){position:relative;z-index:2;display:block;grid-row:1;min-width:0;width:60%}
+html[data-style=playful] .suggestion-card strong,html[data-style=playful] .suggestion-card small{max-width:none;width:100%;margin:0;text-wrap:pretty}
+html[data-style=playful] .suggestion-card small{margin-top:8px}
+html[data-style=playful] .suggestion-card::after{position:static;grid-row:2;justify-self:start;align-self:end;z-index:2;display:block;left:auto;right:auto;bottom:auto;padding:4px 12px;font-size:12px;line-height:16px;white-space:nowrap}
+html[data-style=playful] .theme-animal{right:-8px;bottom:-8px;width:44%;height:112px;z-index:0;opacity:1}
+html[data-style=playful] .suggestion-card:nth-child(3){background:#20843a}
+@media(min-width:901px) and (max-height:800px){html[data-style=playful] .suggestion-card{min-height:160px}html[data-style=playful] .theme-animal{height:96px}}
+@media(max-width:700px){html[data-style=playful] .suggestion-card{padding:12px;gap:12px;min-height:176px}html[data-style=playful] .suggestion-card strong{font-size:14px;line-height:20px}html[data-style=playful] .suggestion-card small{font-size:12px;line-height:16px;margin-top:8px}html[data-style=playful] .theme-animal{width:42%;height:88px}html[data-style=playful] .center{border-radius:16px}}
+
+/* Dialogs, forms and archive controls belong to the selected visual system too. */
+html[data-style=playful] .cloud-dialog{background:#faf9ff;color:#363047;border:1px solid #d6cfee;border-radius:24px;box-shadow:0 24px 64px #34244f26;padding:24px}
+html[data-style=playful] .cloud-dialog::backdrop{background:#24203766;backdrop-filter:blur(4px)}
+html[data-style=playful] .cloud-dialog header{background:#eeebfc;border-radius:16px;padding:16px;margin-bottom:16px;gap:16px}
+html[data-style=playful] .cloud-dialog h2,html[data-style=playful] #pets-dialog h2{color:#37304f;font-size:20px;line-height:28px}
+html[data-style=playful] .cloud-dialog h3{color:#63548a}
+html[data-style=playful] .cloud-dialog p,html[data-style=playful] .cloud-dialog label,html[data-style=playful] #pets-dialog .profile-intro{color:#756d85}
+html[data-style=playful] .cloud-dialog header button{background:#fff;border:1px solid #ddd6ee;color:#6d5c8d;border-radius:9999px;flex:none}
+html[data-style=playful] .cloud-dialog :is(input,select,textarea){background:#fff;border:1px solid #d9d1e9;border-radius:12px;color:#40364f;font-size:14px;line-height:20px;padding:12px}
+html[data-style=playful] .cloud-dialog :is(input,select,textarea):focus{outline:2px solid #a396d9;outline-offset:2px}
+html[data-style=playful] .cloud-actions button,html[data-style=playful] .cloud-button,html[data-style=playful] .cloud-tabs button{background:#f0edfa;border:1px solid #dad2ec;color:#6a578c;border-radius:12px}
+html[data-style=playful] .cloud-actions button:hover,html[data-style=playful] .cloud-button:hover,html[data-style=playful] .cloud-tabs button:hover{background:#e5def5}
+html[data-style=playful] .cloud-actions .primary,html[data-style=playful] .cloud-button.primary,html[data-style=playful] .cloud-tabs button[aria-selected=true]{background:#667fdf;border-color:#667fdf;color:#fff}
+html[data-style=playful] .cloud-actions .primary:hover,html[data-style=playful] .cloud-tabs button[aria-selected=true]:hover{background:#5268c1}
+html[data-style=playful] .cloud-dialog .danger{background:#fff0f2;border-color:#efc4cf;color:#a53f58}
+html[data-style=playful] .cloud-dialog .danger:hover{background:#f9dce3}
+html[data-style=playful] #pets-dialog .profile-library-card>summary:hover,html[data-style=playful] #pets-dialog .profile-library-card[open]>summary{background:#f6e7ef}
+html[data-style=playful] #pets-dialog .profile-library-card>summary strong{color:#513b59}
+html[data-style=playful] #pets-dialog .profile-context-badge,html[data-style=playful] .profile-field-name,html[data-style=playful] #pets-dialog .profile-more>summary{color:#8b6e91}
+html[data-style=playful] .profile-field-value,html[data-style=playful] #pets-dialog .profile-grid dd{color:#44374f}
+html[data-style=playful] .profile-unfilled{color:#91879b}
+html[data-style=playful] .profile-field-edit,html[data-style=playful] .profile-options>summary{background:#f2edfa;border-color:#ded3ee;color:#71598b;border-radius:8px}
+html[data-style=playful] .profile-field-save{background:#667fdf;border-color:#667fdf;color:#fff}
+html[data-style=playful] .profile-field-edit:hover{background:#e6dff5}
+html[data-style=playful] .profile-field-save:hover{background:#5268c1}
+html[data-style=playful] .profile-manual-tag{background:#eee7f8;color:#806295}
+html[data-style=playful] #pets-dialog .profile-record-list li,html[data-style=playful] .profile-suggestion{background:#f0edfa;border:1px solid #e1d8ef;color:#635070}
+html[data-style=playful] .profile-options-menu,html[data-style=playful] .session-options-menu{background:#faf9ff;border-color:#ddd4ed;box-shadow:0 8px 24px #34244f14}
+html[data-style=playful] .help-content,html[data-style=playful] .style-options{background:#faf9ff;border:1px solid #ddd4ed;color:#584c70;border-radius:16px}
+html[data-style=playful] .style-options button[aria-pressed=true]{background:#e9e3fa}
+html[data-style=playful] .style-options button:hover{background:#f0ebfa}
+html[data-style=playful] .style-check{color:#7963a3}
+html[data-style=playful] .profile-note,html[data-style=playful] .settings-public-note,html[data-style=playful] .auth-account{background:#efebfa;border-color:#ded4ef;border-radius:12px}
+html[data-style=playful] .export-download{background:#f2edfa;border-color:#ddd3ee;color:#6d568c}
+html[data-style=playful] .cloud-toast{background:#64517e;color:#fff}
+@media(max-width:700px){html[data-style=playful] .cloud-dialog,html[data-style=playful] #pets-dialog{padding:16px;border-radius:16px}html[data-style=playful] .cloud-dialog header{padding:12px;border-radius:12px}}
+html[data-style=playful] .suggestion-card>span:not(.category-icon):not(.suggestion-arrow){width:100%}
+html[data-style=playful] .suggestion-card small{width:60%}
+html[data-style=playful] .help-content :is(h3,strong){color:#5b487b}
+html[data-style=playful] .help-content :is(p,.step-number){color:#80728f}
 </style>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head><body>
