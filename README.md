@@ -1,3 +1,11 @@
+# 宠AI v55：真实流式回复
+
+部署完整Worker **1.24.0**，连同新增ANSWER_STREAMS Durable Object绑定与Cloudflare迁移配置一起更新。登录与访客均支持真实SSE，最终原文仍保存至Supabase。本次无新Supabase SQL，FastGPT流程不变。见 [STREAMING_V55.md](STREAMING_V55.md)。
+
+# 宠AI v54：档案行布局修复
+
+修复“本轮”标签与菜单重叠。只更新页面，Worker后端仍1.23.0，无新SQL，FastGPT不变。见 [UI_V54.md](UI_V54.md)。
+
 # 宠AI v53：单个宠物档案删除
 
 先执行Supabase **013_pet_deletion.sql**，再部署完整Worker **1.23.0**（含新页面）。档案右侧“···”提供删除入口，保留聊天，并阻止相关旧消息和后台任务重建。FastGPT不变。见 [PET_DELETION_V53.md](PET_DELETION_V53.md)。

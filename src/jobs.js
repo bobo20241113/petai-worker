@@ -1,3 +1,5 @@
+import {streamStub,publishAnswer} from './answer-stream.js';
+import {fastgptStream} from './streaming.js';
 import {logMemoryFailure} from './memory-diagnostics.js';
 import {extractSemanticMemory} from './memory-extraction.js';
 import {DB} from './db.js';
@@ -81,10 +83,20 @@ export async function runTurn(env, turnId) {
     // Persist before calling upstream: a lost response is not automatically safe to repeat.
     const started = await db.rpc('petai_start_answer',{p_turn:turnId,p_lease:lease,p_context:{messages,variables,memory_pet_id:memoryTarget,auto_binding_allowed:!match.ambiguous,workflow:env.WORKFLOW_VERSION}});
     if (!started) return;
-    let answer;
-    try { answer = await fastgpt(env,messages,variables); }
-    catch { await db.rpc('petai_fail_turn',{p_turn:turnId,p_lease:lease,p_status:'needs_review',p_error:'UPSTREAM_UNCERTAIN'}); return; }
+    let answer,last=0,partial='',stream=streamStub(env,turnId,claimed.attempt);
+    const publish=async task=>{try{await publishAnswer(stream,{id:turnId,attempt:claimed.attempt,...task})}catch{stream=null;console.warn('ANSWER_STREAM_UNAVAILABLE')}};
+    await publish({status:'processing',partial_answer:''});
+    try {
+      answer=await fastgptStream(env,messages,variables,async(_delta,text)=>{
+        partial=text;if(Date.now()-last<150)return;last=Date.now();
+        await publish({status:'processing',partial_answer:text});
+      });
+    }
+    catch(error) { console.warn('ANSWER_STREAM_FAILED',/^[A-Z0-9_]+$/.test(error?.message||'')?error.message:error?.name||'UNKNOWN');await db.rpc('petai_fail_turn',{p_turn:turnId,p_lease:lease,p_status:'needs_review',p_error:'UPSTREAM_UNCERTAIN'});await publish({status:'needs_review',partial_answer:partial});return; }
     await db.rpc('petai_complete_turn',{p_turn:turnId,p_lease:lease,p_answer:answer});
+    // DB remains authoritative: cancellation may have won while the upstream was running.
+    const result=stream?await db.own('chat_turns',owner,turnId):null;
+    if(result)await publish({status:result.status,answer:result.status==='completed'?answer:null,partial_answer:partial,updated_at:result.updated_at});
   } catch {
     // The SQL function upgrades to needs_review if answer_started was already set.
     await db.rpc('petai_fail_turn',{p_turn:turnId,p_lease:lease,p_status:'failed',p_error:'PROCESSING_FAILED'});

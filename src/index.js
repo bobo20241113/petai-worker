@@ -1,3 +1,6 @@
+import {guestStream,encodeEvent,sseHeaders} from './streaming.js';
+import {streamStub,publishAnswer} from './answer-stream.js';
+export {AnswerStream} from './durable-object.js';
 import {archiveChanges} from './archive-changes.js';
 import {validatePetEdit} from './profile-edit.js';
 import {summarizeTitle} from './titles.js';
@@ -29,7 +32,9 @@ async function guest(request,env,sessionOnly=false) {
   else await verifyTurnstile(request,env,body.turnstile_token);
   try {
     const messages=guestMessages(body);
-    const answer = await fastgpt(env,messages,{...conversationHints(body.text,messages.slice(0,-1)),petProfile:'',petRecords:'[]',clarificationState:'{}',memoryStatus:'{"mode":"guest","persistent":false}'});
+    const variables={...conversationHints(body.text,messages.slice(0,-1)),petProfile:'',petRecords:'[]',clarificationState:'{}',memoryStatus:'{"mode":"guest","persistent":false}'};
+    if(body.stream===true)return guestStream(env,messages,variables,request.signal);
+    const answer = await fastgpt(env,messages,variables);
     return response({answer,mode:'guest',persistent:false,answered_at:new Date().toISOString()});
   } catch(e) { if(e instanceof ApiError) throw e; throw new ApiError(502,'UPSTREAM_FAILED','本次回答失败，访客对话未保存'); }
 }
@@ -70,7 +75,7 @@ export async function route(request,env,ctx) {
     const db=new DB(env);const rows=await db.insert('feedback_messages',{owner_id:owner,category,message,contact_email:email||null});return response({id:rows[0].id,created_at:rows[0].created_at},201);
   }
   if(method==='GET'&&!p.startsWith('/api/')&&p!=='/health'&&env.ASSETS)return env.ASSETS.fetch(request);
-  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.23.0',memory_protocol:2});
+  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.24.0',memory_protocol:2,streaming:!!env.ANSWER_STREAMS});
   if(p==='/api/guest/session'&&method==='POST')return guest(request,env,true);
   if(p==='/api/guest/chat'&&method==='POST')return guest(request,env);
   if(!p.startsWith('/api/'))throw new ApiError(404,'NOT_FOUND','接口不存在');
@@ -139,6 +144,13 @@ export async function route(request,env,ctx) {
     if(turn.status==='pending'){try{await enqueue(db,env,turn.id);}catch{/* cron replays outbox */}}
     return response({turn_id:turn.id,status:turn.status,created_at:turn.created_at},202);
   }
+  if((m=p.match(/^\/api\/turns\/([^/]+)\/stream$/))&&method==='GET'){
+    const tid=id(m[1]);const turn=await db.own('chat_turns',user,tid);
+    if(['completed','pending'].includes(turn.status))return new Response(encodeEvent('task',{id:turn.id,status:turn.status,answer:turn.answer,updated_at:turn.updated_at}),{headers:sseHeaders});
+    const stub=streamStub(env,tid,turn.attempt);if(!stub)throw new ApiError(503,'STREAM_NOT_CONFIGURED','正在等待完整回答');
+    if(turn.status!=='processing')await publishAnswer(stub,{id:tid,attempt:turn.attempt,status:turn.status});
+    return stub.fetch('https://stream.internal/subscribe?id='+tid+'&attempt='+(turn.attempt||0));
+  }
   if((m=p.match(/^\/api\/turns\/([^/]+)$/))&&method==='GET'){
     const turn=await db.own('chat_turns',user,id(m[1]));const {context_snapshot,lease_token,...safe}=turn;return response(safe);
   }
@@ -169,7 +181,7 @@ export default {
       if(origin&&!(allowed(env,origin)||origin===new URL(request.url).origin))throw new ApiError(403,'ORIGIN_DENIED','请求来源未获允许');
       if(request.method==='OPTIONS')res=new Response(null,{status:204});else res=await route(request,env,ctx);
     }catch(e){res=response({error:{code:e instanceof ApiError?e.code:'INTERNAL_ERROR',message:e instanceof ApiError?e.message:'服务暂时不可用',request_id:rid}},e instanceof ApiError?e.status:500);}
-    const headers=new Headers(res.headers);headers.set('X-Request-Id',rid);headers.set('Vary','Origin');headers.set('Cache-Control','no-store');
+    const headers=new Headers(res.headers);headers.set('X-Request-Id',rid);headers.set('Vary','Origin');headers.set('Cache-Control',(res.headers.get('content-type')||'').includes('text/event-stream')?'no-store, no-transform':'no-store');
     if(origin&&(allowed(env,origin)||origin===new URL(request.url).origin)){headers.set('Access-Control-Allow-Origin',origin);headers.set('Access-Control-Allow-Headers','Authorization, Content-Type');headers.set('Access-Control-Allow-Methods','GET, POST, PATCH, DELETE, OPTIONS');}
     return new Response(res.body,{status:res.status,headers});
   },

@@ -6,13 +6,15 @@
   "workers_dev": true,
   "keep_vars": true,
   "assets": {"directory":"./public", "binding":"ASSETS", "run_worker_first":["/api/*","/health"]},
+  "durable_objects": {"bindings":[{"name":"ANSWER_STREAMS","class_name":"AnswerStream"}]},
+  "migrations": [{"tag":"answer-stream-v1","new_sqlite_classes":["AnswerStream"]}],
   "observability": {"enabled": false},
   "vars": {
     "FASTGPT_API_URL": "https://maas.eduhk.hk/api/v1/chat/completions",
     "MEMORY_API_URL": "https://maas.eduhk.hk/api/v1/chat/completions",
     "FASTGPT_TIMEOUT_MS": "90000",
     "MAX_USER_TURNS_PER_DAY": "100",
-    "WORKFLOW_VERSION": "petai-cloud-v7-silent-memory-and-time"
+    "WORKFLOW_VERSION": "petai-cloud-v55-streaming"
   },
   "queues": {
     "producers": [{"binding": "CHAT_QUEUE", "queue": "petai-chat"}],

@@ -1,0 +1,9 @@
+import test from 'node:test';import assert from 'node:assert/strict';import worker,{route} from '../src/index.js';import {readSSE} from '../src/sse.js';
+const U='11111111-1111-4111-8111-111111111111',T='22222222-2222-4222-8222-222222222222';
+test('stream route authenticates and scopes owner before touching the private durable binding; completed payload hides internals',async()=>{
+ const previous=globalThis.fetch;let status='processing',allowed=true,touched=0;
+ globalThis.fetch=async(url)=>{const u=new URL(url);if(u.pathname==='/auth/v1/user')return Response.json({id:U});assert.equal(u.searchParams.get('owner_id'),'eq.'+U);return Response.json(allowed?[{id:T,status,attempt:2,answer:' 完整原文 ',context_snapshot:{secret:'private'},lease_token:'private'}]:[])};
+ const env={SUPABASE_URL:'https://db.invalid',SUPABASE_SECRET_KEY:'sb_secret_test',API_RATE_LIMITER:{limit:async()=>({success:true})},ANSWER_STREAMS:{idFromName:name=>{assert.equal(name,T+':2');return name},get:()=>({fetch:async()=>{touched++;return new Response('data: {}\n\n',{headers:{'Content-Type':'text/event-stream'}})}})}};
+ const req=()=>new Request('https://app/api/turns/'+T+'/stream',{headers:{Authorization:'Bearer test'}});
+ try{await assert.rejects(route(new Request('https://app/api/turns/'+T+'/stream'),env,{}),e=>e.code==='AUTH_REQUIRED');assert.equal(touched,0);allowed=false;await assert.rejects(route(req(),env,{}),e=>e.code==='NOT_FOUND');assert.equal(touched,0);allowed=true;await route(req(),env,{});assert.equal(touched,1);status='completed';const streamed=await worker.fetch(req(),env,{});assert.equal(streamed.headers.get('Cache-Control'),'no-store, no-transform');const frames=[];for await(const e of readSSE(streamed))frames.push(JSON.parse(e.data));assert.equal(frames[0].answer,' 完整原文 ');assert.equal(frames[0].context_snapshot,undefined);assert.equal(frames[0].lease_token,undefined)}finally{globalThis.fetch=previous}
+});

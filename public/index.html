@@ -39,7 +39,7 @@ details.help-drawer{position:relative;flex:none;z-index:20}.help-drawer>summary{
 .profile-library-note{font-size:12px!important;line-height:20px!important;margin-bottom:16px!important}.profile-library-title{font-size:18px;line-height:28px;margin:16px 0}.profile-library-card{border:1px solid #e0e9e3;border-radius:12px;margin:12px 0;overflow:hidden}.profile-library-card>summary{padding:16px;display:flex;align-items:center;gap:12px;justify-content:space-between;cursor:pointer;background:#f5f9f6;list-style:none}.profile-library-card>summary::-webkit-details-marker{display:none}.profile-library-card>summary::after{content:'＋';font-size:16px;line-height:20px;color:#65796a}.profile-library-card[open]>summary::after{content:'−'}.profile-library-card>summary strong{font-size:14px;line-height:20px;flex:1;min-width:0;overflow-wrap:anywhere}.profile-library-detail{padding:0 16px 16px}.profile-context-badge{font-size:12px;line-height:16px;padding:4px 8px;background:#e5f1e8;color:#42644c;border-radius:9999px;white-space:nowrap}.profile-library-card summary:focus-visible{outline:2px solid #52765e;outline-offset:-4px}
 
 /* Single-pet archive options, separate from the expand/collapse control. */
-.profile-library-item{position:relative}.profile-library-item .profile-library-card>summary{padding-right:64px}.profile-options{position:absolute;right:36px;top:8px;z-index:2}.profile-options>summary{list-style:none;cursor:pointer;display:grid;place-items:center;width:32px;height:32px;border-radius:8px;color:#65796a;font-size:20px;line-height:24px}.profile-options>summary::-webkit-details-marker{display:none}.profile-options>summary:hover,.profile-options[open]>summary{background:#e5f1e8}.profile-options>summary:focus-visible{outline:2px solid #52765e;outline-offset:2px}.profile-delete-menu{position:absolute;right:0;top:36px;min-width:128px;background:#fff;padding:4px;border:1px solid #e0e9e3;border-radius:12px;box-shadow:0 8px 24px #17251b1a}.profile-delete-button{width:100%;border:0;background:#fff8f5;border-radius:8px;padding:8px 12px;text-align:left;color:#9a5543;font-size:14px;line-height:20px;cursor:pointer}.profile-delete-button:hover{background:#f8eee9}.profile-delete-button:disabled{opacity:.5;cursor:wait}#pets-dialog .profile-delete-status{font-size:12px;line-height:20px;padding:0 12px 8px;margin:0}
+.profile-library-item{position:relative}.profile-options{position:absolute;right:36px;top:8px;z-index:2}.profile-options>summary{list-style:none;cursor:pointer;display:grid;place-items:center;width:32px;height:32px;border-radius:8px;color:#65796a;font-size:20px;line-height:24px}.profile-options>summary::-webkit-details-marker{display:none}.profile-options>summary:hover,.profile-options[open]>summary{background:#e5f1e8}.profile-options>summary:focus-visible{outline:2px solid #52765e;outline-offset:2px}.profile-delete-menu{position:absolute;right:0;top:36px;min-width:128px;background:#fff;padding:4px;border:1px solid #e0e9e3;border-radius:12px;box-shadow:0 8px 24px #17251b1a}.profile-delete-button{width:100%;border:0;background:#fff8f5;border-radius:8px;padding:8px 12px;text-align:left;color:#9a5543;font-size:14px;line-height:20px;cursor:pointer}.profile-delete-button:hover{background:#f8eee9}.profile-delete-button:disabled{opacity:.5;cursor:wait}#pets-dialog .profile-delete-status{font-size:12px;line-height:20px;padding:0 12px 8px;margin:0}
 .profile-library-item:has(.profile-options[open]){padding-bottom:48px}
 
 /* v26: warm companion workspace. Presentation only; app and renderer unchanged. */
@@ -221,7 +221,7 @@ body{background:#EFEEE8}.shell{max-width:1800px;background:#F9FAF5;border-color:
 
 /* v41: the archive is a compact checklist, with secondary information folded away. */
 #pets-dialog{width:min(560px,calc(100vw - 32px));padding:24px;border-radius:16px}#pets-dialog header{margin-bottom:8px}#pets-dialog h2{font-size:20px;line-height:28px}#pets-dialog .profile-intro{font-size:12px;line-height:16px;margin:0 0 16px;color:#748178}#pets-dialog .readonly-records{max-height:64dvh;overflow:auto;padding:4px}
-#pets-dialog .profile-library-card{border:0;border-radius:8px;background:transparent;margin:0 0 4px;overflow:visible}#pets-dialog .profile-library-card>summary{min-height:48px;padding:12px;gap:8px;border-radius:8px;background:transparent;align-items:center}#pets-dialog .profile-library-card>summary:hover,#pets-dialog .profile-library-card[open]>summary{background:#F1F5EC}#pets-dialog .profile-library-card>summary strong{font-size:14px;line-height:20px;font-weight:600}#pets-dialog .profile-library-card>summary::after{content:'›';font-size:20px;line-height:20px;transform:rotate(0);transition:transform .3s var(--ease)}#pets-dialog .profile-library-card[open]>summary::after{transform:rotate(90deg)}#pets-dialog .profile-library-card summary:focus-visible{outline:2px solid #8FAE85;outline-offset:2px}#pets-dialog .profile-context-badge{background:transparent;padding:0;color:#718173;font-size:12px;line-height:16px}#pets-dialog .profile-unconfirmed{color:#947348}#pets-dialog .profile-library-detail{padding:4px 12px 12px}#pets-dialog .profile-grid{grid-template-columns:112px minmax(0,1fr);margin:8px 0 12px;gap:8px 16px;font-size:14px;line-height:20px}#pets-dialog .profile-grid dd{font-weight:400;color:#334B3D}#pets-dialog .profile-grid dt{color:#849087;font-size:12px;line-height:20px}#pets-dialog .profile-more{padding:0;margin:8px 0 0;border:0;background:transparent;border-radius:0;font-size:12px;line-height:16px;color:#748178}#pets-dialog .profile-more>summary{cursor:pointer;padding:4px 0;list-style:none;font-size:12px;line-height:16px;color:#748178}#pets-dialog .profile-more>summary::-webkit-details-marker{display:none}#pets-dialog .profile-more>summary::before{content:'›';display:inline-block;margin-right:8px;transform:rotate(0)}#pets-dialog .profile-more[open]>summary::before{transform:rotate(90deg)}#pets-dialog .profile-more p{font-size:12px;line-height:20px;margin:8px 0;color:#748178;overflow-wrap:anywhere}#pets-dialog .profile-issues>summary{color:#947348}.profile-record-list{list-style:none;padding:0;margin:8px 0}.profile-record-list li{padding:8px;margin:4px 0;border-radius:8px;background:#F7F8F3}.profile-record-heading{display:flex;justify-content:space-between;gap:12px;align-items:baseline}.profile-record-heading strong{font-size:12px;line-height:16px;font-weight:500}.profile-record-heading time{font-size:12px;line-height:16px;color:#849087;overflow-wrap:anywhere}#pets-dialog .profile-record-list p{margin:4px 0}.profile-library-card>summary:active{transform:translateY(1px)}@media(max-width:700px){#pets-dialog{padding:16px}#pets-dialog .profile-grid{grid-template-columns:96px minmax(0,1fr);gap:8px 12px}}@media(prefers-reduced-motion:reduce){#pets-dialog .profile-library-card>summary::after{transition:none}}
+#pets-dialog .profile-library-card{border:0;border-radius:8px;background:transparent;margin:0 0 4px;overflow:visible}#pets-dialog .profile-library-item .profile-library-card>summary{display:grid;grid-template-columns:minmax(0,1fr) auto 32px 20px;min-height:56px;padding:12px;gap:8px;border-radius:8px;background:transparent;align-items:center}#pets-dialog .profile-library-item .profile-library-card>summary strong{grid-column:1;grid-row:1;min-width:0}#pets-dialog .profile-library-item .profile-context-badge{grid-column:2;grid-row:1}#pets-dialog .profile-library-item .profile-library-card>summary::after{grid-column:4;grid-row:1;justify-self:center}#pets-dialog .profile-options{right:40px;top:12px}#pets-dialog .profile-library-card>summary:hover,#pets-dialog .profile-library-card[open]>summary{background:#F1F5EC}#pets-dialog .profile-library-card>summary strong{font-size:14px;line-height:20px;font-weight:600}#pets-dialog .profile-library-card>summary::after{content:'›';font-size:20px;line-height:20px;transform:rotate(0);transition:transform .3s var(--ease)}#pets-dialog .profile-library-card[open]>summary::after{transform:rotate(90deg)}#pets-dialog .profile-library-card summary:focus-visible{outline:2px solid #8FAE85;outline-offset:2px}#pets-dialog .profile-context-badge{background:transparent;padding:0;color:#718173;font-size:12px;line-height:16px}#pets-dialog .profile-unconfirmed{color:#947348}#pets-dialog .profile-library-detail{padding:4px 12px 12px}#pets-dialog .profile-grid{grid-template-columns:112px minmax(0,1fr);margin:8px 0 12px;gap:8px 16px;font-size:14px;line-height:20px}#pets-dialog .profile-grid dd{font-weight:400;color:#334B3D}#pets-dialog .profile-grid dt{color:#849087;font-size:12px;line-height:20px}#pets-dialog .profile-more{padding:0;margin:8px 0 0;border:0;background:transparent;border-radius:0;font-size:12px;line-height:16px;color:#748178}#pets-dialog .profile-more>summary{cursor:pointer;padding:4px 0;list-style:none;font-size:12px;line-height:16px;color:#748178}#pets-dialog .profile-more>summary::-webkit-details-marker{display:none}#pets-dialog .profile-more>summary::before{content:'›';display:inline-block;margin-right:8px;transform:rotate(0)}#pets-dialog .profile-more[open]>summary::before{transform:rotate(90deg)}#pets-dialog .profile-more p{font-size:12px;line-height:20px;margin:8px 0;color:#748178;overflow-wrap:anywhere}#pets-dialog .profile-issues>summary{color:#947348}.profile-record-list{list-style:none;padding:0;margin:8px 0}.profile-record-list li{padding:8px;margin:4px 0;border-radius:8px;background:#F7F8F3}.profile-record-heading{display:flex;justify-content:space-between;gap:12px;align-items:baseline}.profile-record-heading strong{font-size:12px;line-height:16px;font-weight:500}.profile-record-heading time{font-size:12px;line-height:16px;color:#849087;overflow-wrap:anywhere}#pets-dialog .profile-record-list p{margin:4px 0}.profile-library-card>summary:active{transform:translateY(1px)}@media(max-width:700px){#pets-dialog{padding:16px}#pets-dialog .profile-grid{grid-template-columns:96px minmax(0,1fr);gap:8px 12px}}@media(prefers-reduced-motion:reduce){#pets-dialog .profile-library-card>summary::after{transition:none}}
 
 /* v42: a quiet paw icon and chevron identify the read-only archive entry. */
 #manage-pets{gap:8px;max-width:224px}#manage-pets .pet-entry-icon{display:block;flex:none;width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}#manage-pets .pet-entry-chevron{display:block;flex:none;width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.65}#manage-pets #pet-summary{min-width:0}@media(max-width:700px){#manage-pets{max-width:160px;gap:4px}}
@@ -436,7 +436,7 @@ body{background:#EFEEE8}.shell{max-width:1800px;background:#F9FAF5;border-color:
 
 <dialog id="copy-dialog" class="cloud-dialog"><h2>复制内容</h2><p>浏览器未允许自动复制。请长按或选中下方文字复制。</p><textarea id="copy-content" readonly aria-label="待复制的原文" rows="10"></textarea><div class="cloud-actions"><button type="button" data-close-dialog="copy-dialog">关闭</button></div></dialog>
 
-<dialog id="privacy-dialog" class="cloud-dialog info-dialog" aria-labelledby="privacy-title"><header><h2 id="privacy-title">隐私说明</h2><button type="button" data-close-dialog="privacy-dialog" aria-label="关闭隐私说明">×</button></header><p>本项目用于宠物咨询作业。请勿提交身份证件、支付信息或不必要的个人敏感资料。</p><h3>登录用户</h3><p>邮箱登录由 Supabase Auth 处理。聊天文字、宠物档案、照护记录和图片附件存储于 Supabase，Worker 负责登录校验与账号隔离。宠物资料仅在成功写入后才是云端档案，不能把模型的推测视为已确认事实。</p><h3>访客</h3><p>临时会话保留在当前页面内存；刷新或关闭后无法恢复，不保存访客宠物档案。为了生成回复，当前问题、近期文字上下文及本轮图片仍会经过 Cloudflare Worker 发送到学校 FastGPT；人机验证由 Cloudflare Turnstile 处理。</p><h3>AI 服务</h3><p>登录用户提问时，Worker 会把本轮内容、近期上下文和相关宠物资料提供给学校 FastGPT。学校配置的模型服务也会处理这些内容，其运行日志和保留策略由学校及对应服务方管理，本页面不能承诺第三方零留存。</p><h3>留言、导出和删除</h3><p>留言反馈另行保存于 Supabase，不公开展示，不会自动附上聊天或照片。联系邮箱可选，维护者可在后台查看、处理并清理留言，暂无固定回复时限。导出文件保存在你的设备，退出登录不会删除已下载文件。</p><p>可在账号窗口导出聊天与档案，或删除全部云端业务数据。图片删除由后台继续清理；此操作保留登录账号。留言不属于聊天数据删除范围，如需删除留言，请提交回执编号联系维护者。删除登录账号、第三方日志等需求也请通过留言说明。</p><p>云端记录保留到主动删除；请以本页实际功能和学校服务政策为准。不同账号的数据通过后端权限隔离，Supabase 私钥和 FastGPT 密钥不下发到浏览器。</p></dialog>
+<dialog id="privacy-dialog" class="cloud-dialog info-dialog" aria-labelledby="privacy-title"><header><h2 id="privacy-title">隐私说明</h2><button type="button" data-close-dialog="privacy-dialog" aria-label="关闭隐私说明">×</button></header><p>本项目用于宠物咨询作业。请勿提交身份证件、支付信息或不必要的个人敏感资料。</p><h3>登录用户</h3><p>邮箱登录由 Supabase Auth 处理。聊天文字、宠物档案、照护记录和图片附件存储于 Supabase，Worker 负责登录校验与账号隔离。为恢复流式回复，Cloudflare 会临时缓存生成内容，最后更新约10分钟后自动清理。宠物资料仅在成功写入后才是云端档案，不能把模型的推测视为已确认事实。</p><h3>访客</h3><p>临时会话保留在当前页面内存；刷新或关闭后无法恢复，不保存访客宠物档案。为了生成回复，当前问题、近期文字上下文及本轮图片仍会经过 Cloudflare Worker 发送到学校 FastGPT；人机验证由 Cloudflare Turnstile 处理。</p><h3>AI 服务</h3><p>登录用户提问时，Worker 会把本轮内容、近期上下文和相关宠物资料提供给学校 FastGPT。学校配置的模型服务也会处理这些内容，其运行日志和保留策略由学校及对应服务方管理，本页面不能承诺第三方零留存。</p><h3>留言、导出和删除</h3><p>留言反馈另行保存于 Supabase，不公开展示，不会自动附上聊天或照片。联系邮箱可选，维护者可在后台查看、处理并清理留言，暂无固定回复时限。导出文件保存在你的设备，退出登录不会删除已下载文件。</p><p>可在账号窗口导出聊天与档案，或删除全部云端业务数据。图片删除由后台继续清理；此操作保留登录账号。留言不属于聊天数据删除范围，如需删除留言，请提交回执编号联系维护者。删除登录账号、第三方日志等需求也请通过留言说明。</p><p>云端记录保留到主动删除；请以本页实际功能和学校服务政策为准。不同账号的数据通过后端权限隔离，Supabase 私钥和 FastGPT 密钥不下发到浏览器。</p></dialog>
 <dialog id="help-dialog" class="cloud-dialog info-dialog" aria-labelledby="help-title"><header><h2 id="help-title">使用帮助</h2><button type="button" data-close-dialog="help-dialog" aria-label="关闭使用帮助">×</button></header><h3>怎样补充档案？</h3><p>登录后直接告诉我，例如“我家猫名字叫豆豆，品种是英短，现在2岁，体重4.5公斤，2026-10-01打了猫三联”。档案显示实际已保存的资料，也支持逐项编辑，可在新会话继续查看。手动修改的字段需要你确认才会被聊天中的不同信息更新；未显示的内容尚不能视为已存档。</p><h3>示例提问会直接发送吗？</h3><p>不会。点击示例仅填入输入框，你可以修改后点击发送。</p><h3>导出文件在哪里？</h3><p>账号窗口中点击“导出聊天与档案（JSON）”。生成后会显示文件名和下载链接；如浏览器阻止自动下载，可再次点击链接，或查看系统下载目录。图片只导出附件标识，不打包原图。</p><h3>如何反馈或联系维护者？</h3><p>点击页面底部“留言反馈”在新标签页填写问题。提交后保留回执编号。留言不公开，目前没有实时在线客服，也不保证即时回复。不要在留言里填写密码或密钥。</p></dialog>
 
 <script>
@@ -464,6 +464,20 @@ body{background:#EFEEE8}.shell{max-width:1800px;background:#F9FAF5;border-color:
   if (chat && 'MutationObserver' in window) new MutationObserver(reconcile).observe(chat, { childList: true });
   reconcile();
 })();
+
+// Incremental SSE framing. Handles byte splits, CRLF/CR, comments and multiline data.
+async function* readSSE(response,{maxBytes=16777216}={}){
+ if(!response.body)throw Error('STREAM_BODY_MISSING');
+ const reader=response.body.getReader(),decoder=new TextDecoder();let buffer='',event='',data=[],bytes=0;
+ const line=value=>{if(value.startsWith(':'))return;if(value.startsWith('event:'))event=value.slice(6).replace(/^ /,'');else if(value.startsWith('data:'))data.push(value.slice(5).replace(/^ /,''))};
+ try{
+  while(true){const item=await reader.read();if(item.done){buffer+=decoder.decode();break}bytes+=item.value.byteLength;if(bytes>maxBytes)throw Error('STREAM_BODY_LIMIT');buffer+=decoder.decode(item.value,{stream:true});
+   let i;while((i=buffer.search(/[\r\n]/))>=0){if(buffer[i]==='\r'&&i===buffer.length-1)break;const value=buffer.slice(0,i),size=buffer[i]==='\r'&&buffer[i+1]==='\n'?2:1;buffer=buffer.slice(i+size);if(value===''){if(data.length)yield {event:event||'message',data:data.join('\n')};event='';data=[]}else line(value)}
+  }
+  if(buffer){for(const value of buffer.split(/\r\n|\r|\n/)){if(value===''){if(data.length)yield {event:event||'message',data:data.join('\n')};event='';data=[]}else line(value)}}
+  if(data.length)yield {event:event||'message',data:data.join('\n')};
+ }finally{await reader.cancel().catch(()=>{});reader.releaseLock()}
+}
 
 // Advisory only: texture and lighting can make a sharp image score low.
 function assessImagePixels(pixels,width,height,originalWidth=width,originalHeight=height){
@@ -588,6 +602,7 @@ let config={...DEFAULT_CONFIG},auth=null,authSubscription=null,authEpoch=0,ident
 let guestSessions=[],activeGuest=null;
 let conversations=[],pets=[],active=null,messages=[],guestTurns=[],photo=null,busy=false,epoch=0,photoEpoch=0;
 let activeTask=null,pendingSubmit=null,firstSequence=null,authMode='login',recovery=false,widget=null,turnstileToken='',widgetPromise=null;
+let receiving=false;
 let controllers=new Set(),authTimer=null,configNotice='',serverConfigReady=false;
 let guestPass=null,verificationPromise=null,verificationGeneration=0;
 let exportUrl=null;
@@ -604,12 +619,12 @@ function showError(error){if(error?.name==='AbortError'||error?.code==='STALE_VI
 function guarded(fn){return (...args)=>Promise.resolve().then(()=>fn(...args)).catch(showError)}
 function assertEpoch(stamp){if(stamp!==epoch)throw new ClientError('页面已切换','STALE_VIEW')}
 function stopWait(){epoch++;$('upload-status').hidden=true;turnstileToken='';for(const c of controllers)c.abort();controllers.clear();activeTask=null;setBusy(false)}
-function setBusy(value){busy=value;updateWaiting(value);document.querySelectorAll('[data-reply-retry]').forEach(b=>b.disabled=value);$('send').disabled=value;$('question').disabled=value;$('attach').disabled=value;$('take-photo').disabled=value;document.querySelectorAll('.photo-remove').forEach(b=>b.disabled=value);$('remove-photo').disabled=value;$('manage-pets').disabled=value;$('send-text').textContent=value?'等待回复':'发送';$('send-icon').style.display=value?'none':'';$('cancel-request').hidden=!value;chat.setAttribute('aria-busy',String(value));}
+function setBusy(value){receiving=false;busy=value;updateWaiting(value);document.querySelectorAll('[data-reply-retry]').forEach(b=>b.disabled=value);$('send').disabled=value;$('question').disabled=value;$('attach').disabled=value;$('take-photo').disabled=value;document.querySelectorAll('.photo-remove').forEach(b=>b.disabled=value);$('remove-photo').disabled=value;$('manage-pets').disabled=value;$('send-text').textContent=value?'等待回复':'发送';$('send-icon').style.display=value?'none':'';$('cancel-request').hidden=!value;chat.setAttribute('aria-busy',String(value));}
 function fitQuestion(){updateInputCount();const q=$('question');q.style.height='40px';q.style.height=Math.min(96,Math.max(40,q.scrollHeight))+'px'}
 function updateInputCount(){const n=$('question').value.length;$('char-count').textContent=n+' / 6000';$('char-count').classList.toggle('near-limit',n>=5400);$('question').setAttribute('aria-invalid',String(n>6000));}
 function inputError(message){$('input-error').textContent=message;$('input-error').hidden=!message;if(message)$('question').setAttribute('aria-invalid','true');}
 function updateWaiting(value){
- $('busy-banner').hidden=!value;if(value){if(waitingStarted===null){waitingStarted=Date.now();waitingTimer=setInterval(()=>{if(busy)$('busy-copy').textContent='正在处理你的问题 · 已等待 '+Math.floor((Date.now()-waitingStarted)/1000)+' 秒，可取消等待。'},1000)}$('busy-copy').textContent='正在处理你的问题，请稍候。'}
+ $('busy-banner').hidden=!value;if(value){if(waitingStarted===null){waitingStarted=Date.now();waitingTimer=setInterval(()=>{if(busy)$('busy-copy').textContent=(receiving?'正在输出回复 · 已用时 ':'正在处理你的问题 · 已等待 ')+Math.floor((Date.now()-waitingStarted)/1000)+' 秒，可取消等待。'},1000)}$('busy-copy').textContent='正在处理你的问题，请稍候。'}
  else{clearInterval(waitingTimer);waitingTimer=null;waitingStarted=null;}
 }
 async function copyOriginal(value){try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(value);toast('已复制')}catch{$('copy-content').value=value;openDialog('copy-dialog');$('copy-content').focus();$('copy-content').select()}}
@@ -640,7 +655,7 @@ function validateConfig(c){
  if(key&&!key.startsWith('sb_publishable_')&&!key.includes('.'))throw new ClientError('请输入 Supabase Publishable Key 或旧版 anon key');
  return c;
 }
-async function request(path,{method='GET',body,guest=false,stamp=epoch,timeout=25000,onUpload}={}){
+async function request(path,{method='GET',body,guest=false,stamp=epoch,timeout=25000,onUpload,onEvent}={}){
  assertEpoch(stamp);
  let token;
  if(!guest){
@@ -653,12 +668,39 @@ async function request(path,{method='GET',body,guest=false,stamp=epoch,timeout=2
  try{
   const headers={'Content-Type':'application/json'};if(token)headers.Authorization='Bearer '+token;
   let response;
-  try{response=onUpload?await uploadRequest(config.apiBase+path,method,headers,body,ctrl.signal,onUpload):await fetch(config.apiBase+path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),signal:ctrl.signal,cache:'no-store'});}catch(e){assertEpoch(stamp);if(e.name==='AbortError')throw new ClientError('等待超时，服务可能仍在处理。可继续查询或使用同一次提交重试。','NETWORK_TIMEOUT');throw new ClientError('无法连接后端。请检查网络和 Worker 的 ALLOWED_ORIGINS。','NETWORK');}
-  assertEpoch(stamp);let data;try{data=await response.json()}catch{throw new ClientError('后端返回格式异常，请检查 Worker 部署','BAD_RESPONSE')}
+  try{response=onUpload&&onEvent&&'readyState' in new XMLHttpRequest()?await uploadStreamRequest(config.apiBase+path,method,headers,body,ctrl.signal,onUpload):onUpload&&!onEvent?await uploadRequest(config.apiBase+path,method,headers,body,ctrl.signal,onUpload):await fetch(config.apiBase+path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),signal:ctrl.signal,cache:'no-store'});}catch(e){assertEpoch(stamp);if(e.name==='AbortError')throw new ClientError('等待超时，服务可能仍在处理。可继续查询或使用同一次提交重试。','NETWORK_TIMEOUT');throw new ClientError('无法连接后端。请检查网络和 Worker 的 ALLOWED_ORIGINS。','NETWORK');}
+  assertEpoch(stamp);
+  if(response.ok&&onEvent&&(response.headers?.get('content-type')||'').includes('text/event-stream')){
+   let latest;
+   for await(const frame of readSSE(response)){
+    assertEpoch(stamp);let event;try{event=JSON.parse(frame.data)}catch{throw new ClientError('流式响应格式异常','BAD_STREAM')}
+    if(frame.event==='error')throw new ClientError(event.message||'输出中断',event.code||'STREAM_FAILED');
+    onEvent(frame.event,event);
+    if(frame.event==='task')latest=event;
+    if(frame.event==='done')return event;
+   }
+   if(latest)return latest;throw new ClientError('输出连接中断，已显示内容可能不完整。','STREAM_INTERRUPTED');
+  }
+  let data;try{data=await response.json()}catch{throw new ClientError('后端返回格式异常，请检查 Worker 部署','BAD_RESPONSE')}
   if(!response.ok){if(response.status===401&&!guest)expireSession();throw new ClientError(data.error?.message||'请求失败',data.error?.code,response.status)}
   return data;
- }finally{clearTimeout(timer);controllers.delete(ctrl)}
+ }catch(error){assertEpoch(stamp);if(error.name==='AbortError')throw new ClientError('连接超时，已显示内容可能不完整。','NETWORK_TIMEOUT');throw error;}finally{clearTimeout(timer);controllers.delete(ctrl)}
 }
+function uploadStreamRequest(url,method,headers,body,signal,onUpload){return new Promise((resolve,reject)=>{
+ const xhr=new XMLHttpRequest();let opened=false,offset=0,controller,finishJson,failJson,finished=false;
+ const json=new Promise((a,b)=>{finishJson=a;failJson=b});json.catch(()=>{});
+ const stream=new ReadableStream({start(c){controller=c},cancel(){xhr.abort()}});
+ const headersView={get:name=>xhr.getResponseHeader(name)};
+ const ready=()=>{if(!opened&&xhr.readyState>=2){opened=true;resolve({ok:xhr.status>=200&&xhr.status<300,status:xhr.status,headers:headersView,body:stream,json:()=>json})}};
+ const cleanup=()=>signal.removeEventListener('abort',abort);
+ const error=e=>{if(finished)return;finished=true;cleanup();if(!opened)reject(e);failJson(e);try{controller.error(e)}catch{}};
+ const pump=()=>{ready();const next=xhr.responseText||'';if(next.length>offset){controller.enqueue(new TextEncoder().encode(next.slice(offset)));offset=next.length}};
+ const abort=()=>xhr.abort();xhr.open(method,url);for(const [k,v]of Object.entries(headers))xhr.setRequestHeader(k,v);
+ xhr.onreadystatechange=ready;xhr.upload.onprogress=e=>{if(!finished&&e.lengthComputable)onUpload(e.loaded/e.total)};xhr.onprogress=pump;
+ xhr.onload=()=>{if(finished)return;pump();finished=true;cleanup();controller.close();try{finishJson(JSON.parse(xhr.responseText))}catch{finishJson(null)}};
+ xhr.onerror=()=>error(new Error('NETWORK'));xhr.onabort=()=>error(new DOMException('Aborted','AbortError'));
+ signal.addEventListener('abort',abort,{once:true});if(signal.aborted){error(new DOMException('Aborted','AbortError'));return}xhr.send(JSON.stringify(body));
+})}
 function uploadRequest(url,method,headers,body,signal,onUpload){return new Promise((resolve,reject)=>{
  const xhr=new XMLHttpRequest();let settled=false;const finish=(fn,value)=>{if(settled)return;settled=true;signal.removeEventListener('abort',abort);fn(value)};const abort=()=>{xhr.abort();finish(reject,new DOMException('Aborted','AbortError'))};
  xhr.open(method,url);for(const [k,v]of Object.entries(headers))xhr.setRequestHeader(k,v);
@@ -760,7 +802,7 @@ function createGuestConversation(){
 function saveGuestView(){
  if(!activeGuest)return;
  activeGuest.draft=$('question').value;activeGuest.photo=photo?{...photo}:null;activeGuest.scrollTop=chat.scrollTop;
- if(activeGuest.pending){activeGuest.pending.content='已停止等待。切换会话前的问题可重新发送。';activeGuest.pending.status='cancelled';const bubble=chat.querySelector('.message.assistant:last-child .bubble');if(bubble)bubble.textContent=activeGuest.pending.content;activeGuest.pending=null}
+ if(activeGuest.pending){if(!activeGuest.pending.partial)activeGuest.pending.content='已停止等待。切换会话前的问题可重新发送。';activeGuest.pending.status='cancelled';const bubble=chat.querySelector('.message.assistant:last-child .bubble');if(bubble&&!activeGuest.pending.partial)bubble.textContent=activeGuest.pending.content;activeGuest.pending=null}
 }
 function showGuestConversation(c){
  clearView();activeGuest=c;guestTurns=c.turns;
@@ -840,30 +882,41 @@ async function openConversation(id){
 async function olderMessages(){if(!active||!firstSequence)return;const stamp=epoch;const rows=await request('/api/conversations/'+active.id+'/messages?before='+firstSequence,{stamp});assertEpoch(stamp);messages=[...rows.slice().reverse(),...messages];firstSequence=rows.length===50?Math.min(...rows.map(m=>Number(m.sequence))):null;renderMessages();if(!rows.length)toast('已载入全部消息')}
 function addAction(parent,label,fn){const b=element('button',label,'task-action');b.type='button';b.addEventListener('click',guarded(async()=>{b.disabled=true;try{await fn()}finally{b.disabled=false}}));parent.append(b);return b}
 function wait(ms,stamp){return new Promise(resolve=>setTimeout(resolve,ms)).then(()=>assertEpoch(stamp))}
+function showStreamText(bubble,text){
+ if(typeof text!=='string'||!text)return;
+ receiving=true;const nearBottom=chat.scrollHeight-chat.scrollTop-chat.clientHeight<100;
+ bubble.dataset.partialAnswer=text;renderMarkdown(bubble,text);if(nearBottom)scrollDown();
+}
+function streamNote(bubble,text){
+ const body=bubble.closest('.message-body');if(!body)return;
+ let note=body.querySelector('.stream-note');if(!text){note?.remove();return}
+ if(!note){note=element('p',undefined,'task-status stream-note');note.setAttribute('role','status');body.append(note)}note.textContent=text;
+}
 async function pollTurn(turnId,bubble,stamp=epoch){
  assertEpoch(stamp);setBusy(true);activeTask={id:turnId,bubble};
- const start=Date.now();let failures=0;
+ const start=Date.now();let failures=0,useStream=true;
  try{
   while(Date.now()-start<10*60*1000){
    assertEpoch(stamp);let task;
-   try{task=await request('/api/turns/'+turnId,{stamp});failures=0;}catch(e){assertEpoch(stamp);if(e.status===401)throw e;if(++failures>=3)throw e;setStatus(e.status===429?'请求较多，稍后继续查询…':'连接中断，正在恢复任务查询…');await wait(e.status===429?12000:6000,stamp);continue}
+   try{task=await request('/api/turns/'+turnId+(useStream?'/stream':''),{stamp,...(useStream?{onEvent:(event,data)=>{if(event==='task'&&data.status==='processing'){showStreamText(bubble,data.partial_answer);if(data.partial_answer){streamNote(bubble,'正在输出…');setStatus('正在接收回复…')}}}}:{})});failures=0;}catch(e){assertEpoch(stamp);if(useStream&&(e.status===404||e.status>=500||['BAD_RESPONSE','BAD_STREAM'].includes(e.code))){useStream=false;continue}if(e.status===401)throw e;if(++failures>=3)throw e;setStatus(e.status===429?'请求较多，稍后继续查询…':'连接中断，正在恢复任务查询…');await wait(e.status===429?12000:6000,stamp);continue}
    if(task.status==='completed'){
-    renderMarkdown(bubble,task.answer||'任务已完成。');replyActions(bubble,task.answer||'任务已完成。',cloudSource(turnId));
+    streamNote(bubble,'');delete bubble.dataset.partialAnswer;renderMarkdown(bubble,task.answer||'任务已完成。');replyActions(bubble,task.answer||'任务已完成。',cloudSource(turnId));
     setMessageTime(bubble,task.updated_at??null);archiveCreatedNotice(bubble,task.created_pets,task.archive_changes);
     setStatus('回复已保存到云端。');pendingSubmit=null;
     void loadArchiveNotices([{turnId,bubble}],stamp);
     const cid=active?.id;void reloadLists(stamp).then(()=>{if(stamp!==epoch||active?.id!==cid)return;const c=conversations.find(c=>c.id===cid);if(c){active=c;$('active-session-title').textContent=c.title;renderShell()}}).catch(e=>{if(stamp===epoch&&e.code!=='STALE_VIEW')console.warn('CHAT_LIST_REFRESH_UNAVAILABLE',e.code||'UNKNOWN')});return;
    }else if(['failed','needs_review','cancelled'].includes(task.status)){
-    bubble.textContent=task.status==='needs_review'?'上游可能已处理，但回复未能确认。重试可能产生重复调用。':task.status==='cancelled'?'已请求取消；已开始的上游调用不保证停止。':'本次处理失败，问题已保存在云端。';
+    const failureText=task.status==='needs_review'?'上游可能已处理，但回复未能确认。重试可能产生重复调用。':task.status==='cancelled'?'已请求取消；已开始的上游调用不保证停止。':'本次处理失败，问题已保存在云端。';
+    if(bubble.dataset.partialAnswer)streamNote(bubble,'输出未完成。'+failureText);else bubble.textContent=failureText;
     if(task.status!=='cancelled')addAction(bubble,'再试一次',()=>retryTurn(turnId,bubble));setStatus('任务已结束，可查看提示后重试。');return;
    }
-   bubble.textContent=task.status==='pending'?'问题已提交，正在排队…':'正在处理你的问题，请稍候…';setStatus((task.status==='pending'?'后台排队中':'后台处理中')+' · '+Math.floor((Date.now()-start)/1000)+'秒');await wait(4000,stamp);
+   if(task.partial_answer)showStreamText(bubble,task.partial_answer);if(!bubble.dataset.partialAnswer)bubble.textContent=task.status==='pending'?'问题已提交，正在排队…':'正在处理你的问题，请稍候…';setStatus((task.status==='pending'?'后台排队中':'后台处理中')+' · '+Math.floor((Date.now()-start)/1000)+'秒');await wait(useStream?2500:4000,stamp);
   }
-  bubble.textContent='后台尚未返回结果。你可以稍后继续查询，或在会话列表重新打开。';addAction(bubble,'继续查询',()=>pollTurn(turnId,bubble,epoch));
- }catch(e){if(e.code==='STALE_VIEW'||e.name==='AbortError')return;showError(e);bubble.textContent='暂时无法查询结果，后台任务仍可能继续。';addAction(bubble,'继续查询',()=>pollTurn(turnId,bubble,epoch));}
+  if(bubble.dataset.partialAnswer)streamNote(bubble,'输出尚未完成，可继续查询。');else bubble.textContent='后台尚未返回结果。你可以稍后继续查询，或在会话列表重新打开。';addAction(bubble,'继续查询',()=>pollTurn(turnId,bubble,epoch));
+ }catch(e){if(e.code==='STALE_VIEW'||e.name==='AbortError')return;showError(e);if(bubble.dataset.partialAnswer)streamNote(bubble,'连接中断，已显示内容可能不完整。');else bubble.textContent='暂时无法查询结果，后台任务仍可能继续。';addAction(bubble,'继续查询',()=>pollTurn(turnId,bubble,epoch));}
  finally{if(stamp===epoch){activeTask=null;setBusy(false)}}
 }
-async function retryTurn(turnId,bubble){const task=await request('/api/turns/'+turnId);let accept=false;if(task.status==='needs_review'){accept=await confirmChoice('确认重试','上一次上游调用可能已经执行。继续重试可能重复调用或计费，是否继续？');if(!accept)return}await request('/api/turns/'+turnId+'/retry',{method:'POST',body:{accept_possible_duplicate:accept}});bubble.textContent='已提交重试…';await pollTurn(turnId,bubble,epoch)}
+async function retryTurn(turnId,bubble){const task=await request('/api/turns/'+turnId);let accept=false;if(task.status==='needs_review'){accept=await confirmChoice('确认重试','上一次上游调用可能已经执行。继续重试可能重复调用或计费，是否继续？');if(!accept)return}await request('/api/turns/'+turnId+'/retry',{method:'POST',body:{accept_possible_duplicate:accept}});delete bubble.dataset.partialAnswer;streamNote(bubble,'');bubble.textContent='已提交重试…';await pollTurn(turnId,bubble,epoch)}
 async function inspectFailed(turnId){const b=addMessage('assistant','正在查看任务状态…');await pollTurn(turnId,b,epoch)}
 async function send(repeat=null){
  if(busy||preparingPhotos)return;const raw=repeat?repeat.text:$('question').value;const input=raw.trim()||((repeat?repeat.images?.length||repeat.attachment_ids?.length:photo)?'请描述这些宠物图片中可以观察到的内容，并按图片顺序说明。':'');if(!input){inputError('请输入问题或添加图片后再发送。');$('question').focus();return}
@@ -936,13 +989,13 @@ async function sendGuest(input,repeat=null){
  if(c.entries.length===2&&!c.manualTitle)c.title=summarizeTitle(input,image.length>0);
  $('active-session-title').textContent=c.title;renderShell();
  setBusy(true);addMessage('user',input,image,createdAt);const bubble=addMessage('assistant',reply.content,undefined,createdAt);if(!repeat){$('question').value='';clearPhoto();fitQuestion()}
- try{const data=await request('/api/guest/chat',{method:'POST',guest:true,timeout:125000,stamp,...(image.length?{onUpload:p=>uploadProgress('图片上传 '+Math.round(p*100)+'%'+(p===1?'，等待回复…':''),Math.round(p*100))}:{}),body:{text:input,history,guest_session_token:token,...(image.length?{images:image}:{})}});assertEpoch(stamp);reply.content=data.answer;reply.created_at=data.answered_at??new Date().toISOString();reply.status='complete';c.pending=null;c.turns.push({text:input,answer:data.answer});c.updated_at=reply.created_at;renderMarkdown(bubble,data.answer);replyActions(bubble,data.answer,{text:input,images:image,conversation_id:c.id});setMessageTime(bubble,reply.created_at);renderShell();setStatus('当前为访客，登录后可保存会话，让我持续了解你的宠物。');}
- catch(e){if(stamp!==epoch)return;if(['GUEST_SESSION_EXPIRED','GUEST_SESSION_INVALID','CHALLENGE_REQUIRED'].includes(e.code)){clearGuestPass();resetVerification();renderVerification()}showError(e);reply.content='访客请求失败，本次未写入云端。你可以重新填写问题后发送。';reply.status='failed';c.pending=null;bubble.textContent=reply.content;replyActions(bubble,'',{text:input,images:image,conversation_id:c.id},{failed:true});if(!repeat&&!$('question').value)$('question').value=input;fitQuestion();}
+ try{const data=await request('/api/guest/chat',{method:'POST',guest:true,timeout:125000,stamp,onEvent:(event,data)=>{if(event==='delta'&&typeof data.text==='string'){reply.content=reply.partial?reply.content+data.text:data.text;reply.partial=true;showStreamText(bubble,reply.content);streamNote(bubble,'正在输出…');setStatus('正在接收回复…')}},...(image.length?{onUpload:p=>uploadProgress('图片上传 '+Math.round(p*100)+'%'+(p===1?'，等待回复…':''),Math.round(p*100))}:{}),body:{text:input,history,stream:true,guest_session_token:token,...(image.length?{images:image}:{})}});assertEpoch(stamp);reply.content=data.answer;reply.created_at=data.answered_at??new Date().toISOString();reply.status='complete';c.pending=null;c.turns.push({text:input,answer:data.answer});c.updated_at=reply.created_at;reply.partial=false;delete bubble.dataset.partialAnswer;streamNote(bubble,'');renderMarkdown(bubble,data.answer);replyActions(bubble,data.answer,{text:input,images:image,conversation_id:c.id});setMessageTime(bubble,reply.created_at);renderShell();setStatus('当前为访客，登录后可保存会话，让我持续了解你的宠物。');}
+ catch(e){if(stamp!==epoch)return;if(['GUEST_SESSION_EXPIRED','GUEST_SESSION_INVALID','CHALLENGE_REQUIRED'].includes(e.code)){clearGuestPass();resetVerification();renderVerification()}showError(e);if(reply.partial){streamNote(bubble,'本次输出中断，已显示内容不完整，请重试。')}else{reply.content='访客请求失败，本次未写入云端。你可以重新填写问题后发送。';bubble.textContent=reply.content}reply.status='failed';c.pending=null;replyActions(bubble,'',{text:input,images:image,conversation_id:c.id},{failed:true});if(!repeat&&!$('question').value)$('question').value=input;fitQuestion();}
  finally{if(stamp===epoch){$('upload-status').hidden=true;setBusy(false)}}
 }
 async function cancelRequest(){
  const task=activeTask;const wasCloud=!!identity;if(!wasCloud)saveGuestView();stopWait();
- if(wasCloud&&task){try{await request('/api/turns/'+task.id+'/cancel',{method:'POST',body:{}});task.bubble.textContent='已请求取消。已开始的上游调用不保证停止。';setStatus('已取消等待，可以继续提问。');}catch(e){showError(e);setStatus('已停止等待，后台取消状态尚未确认。');task.bubble.textContent='已停止本页等待，但未能确认后台取消。';addAction(task.bubble,'查询后台状态',()=>pollTurn(task.id,task.bubble,epoch))}}
+ if(wasCloud&&task){try{await request('/api/turns/'+task.id+'/cancel',{method:'POST',body:{}});if(task.bubble.dataset.partialAnswer)streamNote(task.bubble,'已停止等待，以上内容未完成。');else task.bubble.textContent='已请求取消。已开始的上游调用不保证停止。';setStatus('已取消等待，可以继续提问。');}catch(e){showError(e);setStatus('已停止等待，后台取消状态尚未确认。');if(task.bubble.dataset.partialAnswer)streamNote(task.bubble,'已停止等待，以上内容未完成；取消状态尚未确认。');else task.bubble.textContent='已停止本页等待，但未能确认后台取消。';addAction(task.bubble,'查询后台状态',()=>pollTurn(task.id,task.bubble,epoch))}}
  else {if(!wasCloud){resetVerification();renderVerification()}setStatus(wasCloud?'已停止等待。若提交已到达后台，可重新打开会话查询。':'已停止等待，本次访客请求不会写入云端。');}
 }
 async function preparePhotos(files){
