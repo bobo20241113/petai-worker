@@ -50,7 +50,9 @@ export async function runTurn(env, turnId) {
     const priorState = await db.rows('conversation_states',{conversation_id:'eq.'+conversationId,owner_id:'eq.'+owner,limit:'1'});
     // Urgent handling must not wait for extraction; Cron retries it in the background.
     const urgent = /(?:呼吸困难|失去意识|昏迷|持续抽搐|血流不止|误食.{0,8}老鼠药|尿不出来)/.test(current.content);
-    if (!claimed.memory_done && !urgent) {
+    if (!claimed.memory_done && current.memory_excluded) {
+      await db.rpc('petai_apply_memory',{p_turn:turnId,p_lease:lease,p_data:{operations:[]}});
+    } else if (!claimed.memory_done && !urgent) {
       let memoryStage='extract_validate';
       try {
         const parsed=await extractSemanticMemory(env,{message:current.content,current_pet:conv.pet_id,pets:pets.map(p=>({id:p.id,name:p.name_confirmed?p.name:null,label:p.display_name,species:p.species,breed_description:p.breed_description,ownership_confirmed:p.ownership_confirmed})),profile:ctx.profile,records:ctx.records.map(r=>({id:r.id,category:r.category,details:r.details})),history:history.slice(-8).map(m=>({role:m.role,content:m.content})),previous_state:priorState[0]?.state||{},received_at:current.created_at},pets,conv.pet_id,history);
@@ -116,6 +118,7 @@ export async function syncMemory(env, turnId) {
   try {
     const conv=await db.own('conversations',turn.owner_id,turn.conversation_id);
     const current=(await db.rows('messages',{turn_id:'eq.'+turnId,role:'eq.user',owner_id:'eq.'+turn.owner_id,limit:'1'}))[0];
+    if(current.memory_excluded){await db.rpc('petai_apply_memory',{p_turn:turnId,p_lease:turn.lease_token,p_data:{operations:[]}});return;}
     const rawPets=await db.rows('pets',{owner_id:'eq.'+turn.owner_id,limit:'100'});
     const pets=(await petSummaries(db,turn.owner_id,rawPets)).map(p=>({...p,name:rawPets.find(raw=>raw.id===p.id).name}));
     const history=await db.rows('messages',{conversation_id:'eq.'+conv.id,owner_id:'eq.'+turn.owner_id,sequence:'lt.'+current.sequence,status:'eq.complete',memory_excluded:'eq.false',order:'sequence.desc',limit:'8'});

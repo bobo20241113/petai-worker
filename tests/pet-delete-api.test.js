@@ -1,0 +1,7 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {route} from '../src/index.js';
+const U='11111111-1111-4111-8111-111111111111',P='22222222-2222-4222-8222-222222222222';
+test('DELETE pet passes the authenticated owner to atomic RPC; no anonymous or malformed-ID delete',async()=>{
+ const previous=globalThis.fetch,calls=[];globalThis.fetch=async(url,init)=>{calls.push({url,init});if(new URL(url).pathname==='/auth/v1/user')return Response.json({id:U});if(String(url).endsWith('/rpc/petai_delete_pet')){assert.deepEqual(JSON.parse(init.body),{p_owner:U,p_pet:P});return Response.json({deleted:true,pet_id:P})}throw Error('unexpected '+url)};
+ const env={SUPABASE_URL:'https://db.invalid',SUPABASE_SECRET_KEY:'sb_secret_test',API_RATE_LIMITER:{limit:async()=>({success:true})}};
+ try{const response=await route(new Request('https://pet.invalid/api/pets/'+P,{method:'DELETE',headers:{Authorization:'Bearer test'}}),env,{});assert.equal((await response.json()).deleted,true);const n=calls.length;await assert.rejects(route(new Request('https://pet.invalid/api/pets/'+P,{method:'DELETE'}),env,{}),e=>e.code==='AUTH_REQUIRED');assert.equal(calls.length,n);await assert.rejects(route(new Request('https://pet.invalid/api/pets/bad',{method:'DELETE',headers:{Authorization:'Bearer test'}}),env,{}),e=>e.code==='INVALID_ID');assert.equal(calls.filter(c=>c.url.endsWith('/rpc/petai_delete_pet')).length,1)}finally{globalThis.fetch=previous}
+});

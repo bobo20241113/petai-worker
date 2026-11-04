@@ -38,6 +38,10 @@ details.help-drawer{position:relative;flex:none;z-index:20}.help-drawer>summary{
 /* v25: an account library; opening a profile never picks the chat subject. */
 .profile-library-note{font-size:12px!important;line-height:20px!important;margin-bottom:16px!important}.profile-library-title{font-size:18px;line-height:28px;margin:16px 0}.profile-library-card{border:1px solid #e0e9e3;border-radius:12px;margin:12px 0;overflow:hidden}.profile-library-card>summary{padding:16px;display:flex;align-items:center;gap:12px;justify-content:space-between;cursor:pointer;background:#f5f9f6;list-style:none}.profile-library-card>summary::-webkit-details-marker{display:none}.profile-library-card>summary::after{content:'＋';font-size:16px;line-height:20px;color:#65796a}.profile-library-card[open]>summary::after{content:'−'}.profile-library-card>summary strong{font-size:14px;line-height:20px;flex:1;min-width:0;overflow-wrap:anywhere}.profile-library-detail{padding:0 16px 16px}.profile-context-badge{font-size:12px;line-height:16px;padding:4px 8px;background:#e5f1e8;color:#42644c;border-radius:9999px;white-space:nowrap}.profile-library-card summary:focus-visible{outline:2px solid #52765e;outline-offset:-4px}
 
+/* Single-pet archive options, separate from the expand/collapse control. */
+.profile-library-item{position:relative}.profile-library-item .profile-library-card>summary{padding-right:64px}.profile-options{position:absolute;right:36px;top:8px;z-index:2}.profile-options>summary{list-style:none;cursor:pointer;display:grid;place-items:center;width:32px;height:32px;border-radius:8px;color:#65796a;font-size:20px;line-height:24px}.profile-options>summary::-webkit-details-marker{display:none}.profile-options>summary:hover,.profile-options[open]>summary{background:#e5f1e8}.profile-options>summary:focus-visible{outline:2px solid #52765e;outline-offset:2px}.profile-delete-menu{position:absolute;right:0;top:36px;min-width:128px;background:#fff;padding:4px;border:1px solid #e0e9e3;border-radius:12px;box-shadow:0 8px 24px #17251b1a}.profile-delete-button{width:100%;border:0;background:#fff8f5;border-radius:8px;padding:8px 12px;text-align:left;color:#9a5543;font-size:14px;line-height:20px;cursor:pointer}.profile-delete-button:hover{background:#f8eee9}.profile-delete-button:disabled{opacity:.5;cursor:wait}#pets-dialog .profile-delete-status{font-size:12px;line-height:20px;padding:0 12px 8px;margin:0}
+.profile-library-item:has(.profile-options[open]){padding-bottom:48px}
+
 /* v26: warm companion workspace. Presentation only; app and renderer unchanged. */
 :root{--ink:#263C35;--muted:#63756D;--green:#356852;--green-dark:#295440;--paper:#F6F5F0;--line:#E3E7DE;--sage:#EAF0E6}
 body{background:#EFEEE8}.shell{max-width:1800px;background:#F9FAF5;border-color:#E1E5DA;box-shadow:0 16px 48px #263c3508}.top{background:transparent;height:80px}.brand-mark{background:#356852;border-radius:12px;box-shadow:none}.brand em{color:#356852}.top-context strong{color:#356852}.top-actions #new-mobile,.nav .chat-home{background:#356852;border-color:#356852;box-shadow:none}.top-actions #new-mobile:hover,.nav .chat-home:hover{background:#295440}.body{grid-template-columns:208px minmax(0,1fr);gap:16px}.sidebar{padding-top:16px}.nav button{border-radius:12px;min-height:48px}.nav-label{letter-spacing:0}.center{background:#fff;border-radius:24px;padding:16px;border-color:#E3E7DE}.cloud-strip{background:#F7F8F3;border-color:#E7EBE1;border-radius:12px}.cloud-strip button{background:#EAF0E6;color:#356852}.conversation-top{padding:8px 8px 16px}.conversation-title{color:#334E42;font-size:18px;line-height:28px}.conversation-title svg{color:#648474}.pet-memory{background:#F1F5EC;border-color:#DFE7D7;color:#3E654C}.chat{border:0;background:#fff;border-radius:16px;padding:24px 32px}.chat:has(#welcome:not([hidden])){background:#FCFCF8}#welcome{max-width:1200px;margin:0 auto;grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);gap:24px;align-items:center}.welcome-copy{padding:24px 0}.eyebrow{font-size:12px;line-height:16px;letter-spacing:0;color:#54745D;background:#EAF0E6;padding:8px 12px;border-radius:9999px;margin-bottom:24px}.welcome-title{font-size:36px;line-height:40px;letter-spacing:-.03em;max-width:680px;background:linear-gradient(100deg,#182E25,#66796B);background-clip:text;-webkit-background-clip:text;color:transparent}.welcome-description{font-size:14px;line-height:20px;margin-top:24px;max-width:680px;color:#63756D}.companion-scene{position:relative;align-self:center;min-width:0;text-align:center;padding:16px 0;overflow:hidden}.scene-label{display:inline-block;font-size:12px;line-height:16px;color:#6C806A;letter-spacing:.08em}.companion-scene .pet-illustration{display:block;width:100%;height:auto;max-height:288px;fill:none;overflow:visible}.scene-caption{display:inline-flex;align-items:center;gap:8px;font-size:12px;line-height:16px;color:#697E65}.scene-caption>span{font-size:20px;line-height:28px;color:#BE8065}.suggestions{grid-column:1/-1;grid-row:2;gap:16px}.suggestion-card{min-height:128px;background:#fff;border-color:#E0E7D9;border-radius:16px;gap:16px;box-shadow:none}.suggestion-card:first-child{background:#F0F5E9;border-color:#DEE8D3}.suggestion-card:nth-child(2){background:#FCF4EF;border-color:#F0E4DA}.suggestion-card:nth-child(3){background:#FAF7EE;border-color:#ECE6D7}.suggestion-card:nth-child(4){background:#F0F4F3;border-color:#E0E7E4}.suggestion-card:hover{transform:translateY(-4px);border-color:#A5B99B;background:#F4F7EF;box-shadow:0 8px 24px #263c3508}.suggestion-card strong{font-size:14px;line-height:20px;color:#334E42}.category-icon{border-radius:8px;background:#E4EDD9}.photo-prompt{grid-column:1/-1;grid-row:3;display:flex;flex-direction:row;align-items:center;justify-content:space-between;min-height:0;padding:16px 24px;gap:24px;background:#F5F7EF;border:1px solid #E4EADA;border-radius:16px}.photo-label{display:none}.photo-prompt strong{font-size:14px;line-height:20px;font-weight:600;max-width:none}.photo-prompt strong br{display:none}.photo-prompt p:not(.photo-label){font-size:12px;line-height:16px;margin-top:4px}.photo-prompt button{background:#fff;border-color:#D8E2CF;color:#3D654A;font-size:14px;line-height:20px;box-shadow:none;flex:none;min-height:40px;padding:8px 12px}.photo-prompt button:hover{background:#E6EEDC}.photo-prompt button svg{color:#61815A}.composer-wrap{padding-top:16px}.composer{background:#FAFBF7;border-color:#D5DFCA;box-shadow:0 4px 16px #263c3505;border-radius:16px;padding:12px}.composer:focus-within{border-color:#8FAE85;box-shadow:0 0 0 4px #EDF2E6}.composer .send{background:#356852;border-radius:12px;box-shadow:none;font-size:16px;line-height:24px;padding:8px 12px}.composer .send:hover{background:#295440}.composer .attach{background:#EAF0E3;border-radius:8px;color:#68815D}.bubble{background:#F5F7F1;border-color:#E5EADF;color:#334B3D}.user .bubble{background:#EBF1E3;border-color:#DBE5CF}.avatar{background:#EAF0E3;color:#52794A}.user .avatar{background:#356852}.side-note{position:relative;background:#EAF0E3;border-color:#E0E8D8;padding:16px;border-radius:16px}.side-note strong{font-size:14px;line-height:20px;font-weight:600}.sidebar-cat{display:block;width:96px;height:64px;margin:0 auto 8px;fill:none}.side-footer{text-align:center;padding:0;font-size:12px;line-height:16px}.side-note span{font-size:12px;line-height:16px}.cloud-dialog{border-radius:24px}.cloud-actions .primary,.cloud-button.primary,.cloud-tabs button[aria-selected="true"]{background:#356852;border-color:#356852}.hint{color:#69786D}.intro{animation:companion-enter .7s var(--ease) both;animation-delay:calc(var(--order,0)*60ms)}
@@ -722,7 +726,7 @@ function toggleSessionOptions(button){
  panel.style.top=Math.max(8,anchor.bottom+8+bounds.height>window.innerHeight-8?anchor.top-bounds.height-8:anchor.bottom+8)+'px';
 }
 async function reloadLists(stamp=epoch){
- const [cs,ps]=await Promise.all([request('/api/conversations',{stamp}),request('/api/pets',{stamp})]);assertEpoch(stamp);conversations=cs;pets=ps;renderShell();
+ const [cs,ps]=await Promise.all([request('/api/conversations',{stamp}),request('/api/pets',{stamp})]);assertEpoch(stamp);conversations=cs;pets=ps.filter(p=>!deletedPetIds.has(p.id));renderShell();
 }
 async function useSession(session,event=''){
  if(event==='PASSWORD_RECOVERY'){recovery=true;setAuthMode('recovery');openDialog('auth-dialog')}
@@ -776,10 +780,11 @@ function newConversation(){
  else{stopWait();clearView();renderShell();setStatus('账号档案会保留，本轮对象根据聊天自动确定。')}
  $('sessions-dialog').close();$('question').focus();
 }
+const deletedPetIds=new Set();
 function archiveCreatedNotice(bubble,created=[],changes=[]){
  const body=bubble.closest('.message-body');if(!body||!identity)return;
- const groups=new Map();for(const pet of Array.isArray(created)?created:[])if(pet.id)groups.set(pet.id,{pet,created:true,updated:false,review:false});
- for(const pet of Array.isArray(changes)?changes:[]){if(!pet.id)continue;const g=groups.get(pet.id)||{pet,created:false,updated:false,review:false};g.pet=pet;g.updated=!!pet.updated_fields?.length;g.review=!!pet.review_fields?.length;groups.set(pet.id,g)}
+ const groups=new Map();for(const pet of Array.isArray(created)?created:[])if(pet.id&&!deletedPetIds.has(pet.id))groups.set(pet.id,{pet,created:true,updated:false,review:false});
+ for(const pet of Array.isArray(changes)?changes:[]){if(!pet.id||deletedPetIds.has(pet.id))continue;const g=groups.get(pet.id)||{pet,created:false,updated:false,review:false};g.pet=pet;g.updated=!!pet.updated_fields?.length;g.review=!!pet.review_fields?.length;groups.set(pet.id,g)}
  body.querySelectorAll('.archive-created').forEach(n=>n.remove());
  for(const {pet,created:made,updated,review}of groups.values()){
   if(!made&&!updated&&!review)continue;const note=element('div',undefined,'archive-created');note.setAttribute('role','status');note.dataset.petId=pet.id;note.archiveReceipt={pet,made,updated,reviewFields:[...(pet.review_fields||[])]};
@@ -959,7 +964,7 @@ async function preparePhotos(files){
  }}finally{preparingPhotos=false;if(stamp===epoch){$('upload-status').hidden=true;setBusy(busy)}$('file').value='';$('camera-file').value='';}
 }
 let confirmResolver=null,renameId=null,renameMode=null;
-function confirmChoice(title,description){if(confirmResolver)confirmResolver(false);$('confirm-title').textContent=title;$('confirm-description').textContent=description;openDialog('confirm-dialog');return new Promise(resolve=>confirmResolver=resolve)}
+function confirmChoice(title,description,{confirmText='继续',danger=false}={}){$('confirm-yes').textContent=confirmText;$('confirm-yes').classList.toggle('danger',danger);$('confirm-yes').classList.toggle('primary',!danger);if(confirmResolver)confirmResolver(false);$('confirm-title').textContent=title;$('confirm-description').textContent=description;openDialog('confirm-dialog');return new Promise(resolve=>confirmResolver=resolve)}
 function finishConfirm(value){$('confirm-dialog').close();const fn=confirmResolver;confirmResolver=null;fn?.(value)}
 async function renameConversation(id){const c=(identity?conversations:guestSessions).find(c=>c.id===id);if(!c)return;renameMode=identity?'cloud':'guest';renameId=id;$('rename-title').value=c.title;openDialog('rename-dialog')}
 async function deleteConversation(id){
@@ -982,7 +987,7 @@ async function openProfiles(focusPetId=null,focusReview=false){
  try{
   const [list,latest]=await Promise.all([request('/api/pets',{stamp}),cid?request('/api/conversations/'+cid,{stamp}):Promise.resolve(null)]);
   assertEpoch(stamp);if(view!==profileRequest)return;
-  pets=list.filter(p=>p.ownership_confirmed!==false);if(latest&&active?.id===cid)active=latest;renderShell();area.replaceChildren();
+  pets=list.filter(p=>p.ownership_confirmed!==false&&!deletedPetIds.has(p.id));if(latest&&active?.id===cid)active=latest;renderShell();area.replaceChildren();
   if(!pets.length){area.append(element('p','暂无已保存档案。','profile-empty-title'));const intro=element('button','在聊天中补充资料','cloud-button');intro.type='button';intro.onclick=()=>{$('pets-dialog').close();$('question').value='我家宠物名字叫___，种类是___，品种是___，现在___岁，体重___公斤。';fitQuestion();$('question').focus();setStatus('已填入资料示例，请替换空白内容后再发送。')};area.append(intro);return}
   // Compact read-only list: opening a row only fetches its details.
   const names=pets.map(p=>petDisplay(p));
@@ -992,11 +997,30 @@ async function openProfiles(focusPetId=null,focusReview=false){
    const title=element('strong',label+(duplicates>1?' '+(names.slice(0,index+1).filter(n=>n===label).length):''));
    summary.append(title);if(p.id===active?.pet_id)summary.append(element('span','本轮','profile-context-badge'));if(p.ownership_confirmed===false)summary.append(element('span','待确认','profile-context-badge profile-unconfirmed'));
    summary.setAttribute('aria-label','查看 '+title.textContent+' 的档案');
-   const detail=element('section',undefined,'profile-library-detail');card.append(summary,detail);area.append(card);
+   const detail=element('section',undefined,'profile-library-detail');card.append(summary,detail);
+   const wrapper=element('div',undefined,'profile-library-item'),options=element('details',undefined,'profile-options'),more=element('summary','···');more.setAttribute('aria-label','管理 '+title.textContent+' 的档案');
+   const menu=element('div',undefined,'profile-delete-menu'),remove=element('button','删除档案','profile-delete-button');remove.type='button';remove.setAttribute('aria-label','删除 '+title.textContent+' 的档案');
+   options.append(more,menu);menu.append(remove);wrapper.append(card,options);area.append(wrapper);
+   options.addEventListener('toggle',()=>{if(options.open)for(const other of area.querySelectorAll('.profile-options'))if(other!==options)other.open=false});
+   remove.onclick=guarded(async()=>{options.open=false;await deletePetProfile(p,wrapper,remove)});
    const load=async()=>{if(!card.open||card.dataset.loaded)return;card.dataset.loaded='loading';try{await renderProfile(p.id,detail,view);card.dataset.loaded='yes'}catch(e){card.dataset.loaded='';detail.textContent='暂时无法读取，请重新展开。';throw e}};
    card.addEventListener('toggle',guarded(load));if(p.id===focusPetId){card.open=true;await load();const target=focusReview?detail.querySelector('.profile-issues'):null;if(target){target.open=true;target.scrollIntoView?.({block:'nearest'})}else card.scrollIntoView?.({block:'nearest'})}
   }
  }catch(e){if(view===profileRequest&&stamp===epoch)area.textContent='暂时无法读取账号档案，请稍后再打开。';throw e}
+}
+async function deletePetProfile(p,wrapper,button){
+ const stamp=epoch;if(!identity)return;
+ if(!await confirmChoice('删除宠物档案','删除“'+petDisplay(p)+'”及其资料、照护记录和待确认项。聊天记录会保留，相关旧消息不再用于自动建档。此操作无法撤销。',{confirmText:'删除档案',danger:true}))return;
+ if(stamp!==epoch||!identity)return;
+ button.disabled=true;button.textContent='正在删除…';const status=element('p','正在删除档案…','profile-delete-status');status.setAttribute('role','status');wrapper.append(status);
+ try{
+  await request('/api/pets/'+p.id,{method:'DELETE',stamp});assertEpoch(stamp);deletedPetIds.add(p.id);
+  pets=pets.filter(x=>x.id!==p.id);for(const c of conversations)if(c.pet_id===p.id)c.pet_id=null;if(active?.pet_id===p.id)active.pet_id=null;
+  for(const m of messages){m.created_pets=(m.created_pets||[]).filter(x=>x.id!==p.id);m.archive_changes=(m.archive_changes||[]).filter(x=>x.id!==p.id)}
+  for(const note of chat.querySelectorAll('.archive-created'))if(note.dataset.petId===p.id)note.remove();
+  wrapper.remove();renderShell();if(!$('profile-content').querySelector('.profile-library-item'))$('profile-content').replaceChildren(element('p','暂无已保存档案。','profile-empty-title'));
+  toast('档案已删除，聊天记录已保留。');
+ }catch(e){if(stamp!==epoch)return;status.textContent=e.code==='PET_BUSY'?'相关会话仍在处理，请等待完成后再删除。':e.message||'删除失败，请重试。';status.classList.add('cloud-error');button.disabled=false;button.textContent='删除档案';}
 }
 const FIELD_NAMES={name:'名字',species:'种类',birth_date:'出生日期',sex:'性别',neutered:'绝育情况',breed_description:'品种或外观',age_note:'年龄原文',computed_age:'按生日计算年龄'};
 const CATEGORY_NAMES={deworming:'驱虫记录',vaccine:'疫苗记录',weight:'体重记录',diagnosis_report:'主人转述诊断',care_plan:'照护计划'};
@@ -1163,6 +1187,7 @@ $('confirm-yes').addEventListener('click',()=>finishConfirm(true));$('confirm-no
 $('continue-guest').addEventListener('click',()=>{$('auth-dialog').close();if(!identity)newConversation()});
 for(const tab of document.querySelectorAll('[data-auth-mode]'))tab.addEventListener('click',()=>setAuthMode(tab.dataset.authMode));
 document.addEventListener('click',event=>{
+ for(const menu of document.querySelectorAll('.profile-options[open]'))if(!menu.contains(event.target))menu.open=false;
  const options=event.target.closest('[data-session-options]');
  if(options){toggleSessionOptions(options);return}
  closeSessionOptions();
@@ -1176,7 +1201,7 @@ document.addEventListener('click',event=>{
  if(event.target.closest('#load-older'))guarded(olderMessages)();
  const help=$('help-drawer');if(help.open&&!help.contains(event.target))help.open=false;
 });
-document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.querySelector('.session-more[aria-expanded="true"]')){event.preventDefault();event.stopPropagation();closeSessionOptions(true)}},true);
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.querySelector('.profile-options[open]')){event.preventDefault();event.stopPropagation();const menu=document.querySelector('.profile-options[open]');menu.open=false;menu.querySelector('summary').focus();return;}if(event.key==='Escape'&&document.querySelector('.session-more[aria-expanded="true"]')){event.preventDefault();event.stopPropagation();closeSessionOptions(true)}},true);
 document.addEventListener('scroll',()=>closeSessionOptions(),true);
 window.addEventListener('resize',()=>closeSessionOptions());
 window.addEventListener('pageshow',event=>{if(event.persisted&&!identity)newConversation()});

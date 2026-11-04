@@ -14,7 +14,7 @@ export class DB {
       let err; try { err = await boundedJson(response, 16000); } catch { err = {}; }
       const failure=(...args)=>{const e=new ApiError(...args);if(typeof err.code==='string'&&/^[A-Z0-9_]{1,32}$/.test(err.code))e.database_code=err.code;return e;};
       if(['42P01','42703','PGRST202','PGRST204','PGRST205'].includes(err.code))throw failure(503,'SCHEMA_NOT_READY','数据库结构尚未完成升级，请管理员检查迁移及接口缓存');
-      const known = {NOT_FOUND:[404,'NOT_FOUND','记录不存在'], CONFLICT:[409,'CONFLICT','数据已更新或会话有正在处理的问题'], QUOTA:[429,'QUOTA','今日请求次数已达上限']};
+      const known = {PET_DELETE_UPGRADE_REQUIRED:[503,'SCHEMA_NOT_READY','删除档案功能需要先执行013数据库升级'],PET_BUSY:[409,'PET_BUSY','相关会话仍在处理，请等待回复完成后再删除档案'], NOT_FOUND:[404,'NOT_FOUND','记录不存在'], CONFLICT:[409,'CONFLICT','数据已更新或会话有正在处理的问题'], QUOTA:[429,'QUOTA','今日请求次数已达上限']};
       const match = Object.entries(known).find(([key]) => err.message?.includes(key));
       if (match) throw failure(...match[1]);
       throw failure(503, 'DATABASE_ERROR', '数据库操作失败，请稍后重试');

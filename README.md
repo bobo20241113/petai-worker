@@ -1,3 +1,7 @@
+# 宠AI v53：单个宠物档案删除
+
+先执行Supabase **013_pet_deletion.sql**，再部署完整Worker **1.23.0**（含新页面）。档案右侧“···”提供删除入口，保留聊天，并阻止相关旧消息和后台任务重建。FastGPT不变。见 [PET_DELETION_V53.md](PET_DELETION_V53.md)。
+
 # 宠AI v52：记忆操作类型兼容
 
 实际模型输出使用new_fact/new_record，新增有限类型别名兼容，其余语义与安全校验保留。部署完整Worker **1.22.0**，建议同步发布独立记忆流程v52；无新SQL、无页面改动、主聊天回答仍原文返回。见 [MEMORY_TYPES_V52.md](MEMORY_TYPES_V52.md)。

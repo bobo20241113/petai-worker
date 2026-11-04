@@ -70,7 +70,7 @@ export async function route(request,env,ctx) {
     const db=new DB(env);const rows=await db.insert('feedback_messages',{owner_id:owner,category,message,contact_email:email||null});return response({id:rows[0].id,created_at:rows[0].created_at},201);
   }
   if(method==='GET'&&!p.startsWith('/api/')&&p!=='/health'&&env.ASSETS)return env.ASSETS.fetch(request);
-  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.22.0',memory_protocol:2});
+  if(p==='/health'&&method==='GET')return response({ok:true,service:'petai-api',version:'1.23.0',memory_protocol:2});
   if(p==='/api/guest/session'&&method==='POST')return guest(request,env,true);
   if(p==='/api/guest/chat'&&method==='POST')return guest(request,env);
   if(!p.startsWith('/api/'))throw new ApiError(404,'NOT_FOUND','接口不存在');
@@ -91,6 +91,7 @@ export async function route(request,env,ctx) {
   if(p==='/api/pets'&&method==='GET')return response(await petSummaries(db,user));
   let m;
   if((m=p.match(/^\/api\/pets\/([^/]+)$/))&&method==='GET')return response(await petContext(db,user,id(m[1])));
+  if((m=p.match(/^\/api\/pets\/([^/]+)$/))&&method==='DELETE')return response(await db.rpc('petai_delete_pet',{p_owner:user,p_pet:id(m[1])}));
   if((m=p.match(/^\/api\/pets\/([^/]+)\/fields$/))&&method==='PATCH'){
     const pet=id(m[1]),edit=validatePetEdit(await jsonBody(request,8192));
     return response(await db.rpc('petai_edit_pet_field',{p_owner:user,p_pet:pet,p_field:edit.field,p_value:edit.value,p_version:edit.version,p_issue:edit.issue_id}));
