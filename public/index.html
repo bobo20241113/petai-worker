@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN"><head><script>try{document.documentElement.dataset.style=localStorage.getItem("petai-ui-style")==="playful"?"playful":"garden"}catch{}</script><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<html lang="zh-CN" data-style="playful"><head><script>try{document.documentElement.dataset.style=localStorage.getItem("petai-ui-style")==="garden"?"garden":"playful"}catch{}</script><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="宠AI，陪你了解宠物的日常照护、行为习惯、健康信号与养宠规定。支持文字咨询与图片观察。"><meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#f4f5f6"><title>宠AI · 云端宠物助手</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -368,6 +368,27 @@ html[data-style=playful] .suggestion-card>span:not(.category-icon):not(.suggesti
 html[data-style=playful] .suggestion-card small{width:60%}
 html[data-style=playful] .help-content :is(h3,strong){color:#5b487b}
 html[data-style=playful] .help-content :is(p,.step-number){color:#80728f}
+
+/* v58: the header uses the same blue and lilac palette as the workspace. */
+html[data-style=playful] .top{background:#faf9ff;border:1px solid #ded8f0;box-shadow:0 4px 16px #51447705}
+html[data-style=playful] .brand-mark{background:#768ee8;border-radius:12px;color:#fff}
+html[data-style=playful] .brand h1{color:#37304f}
+html[data-style=playful] .brand em{color:#7484d5}
+html[data-style=playful] .brand p{color:#8d819f}
+html[data-style=playful] .top-context{color:#9387a6}
+html[data-style=playful] .top-context strong{color:#665582}
+html[data-style=playful] .top .top-actions{background:transparent}
+html[data-style=playful] .style-picker>summary{background:#efebfa;border-color:#e0d7f0;color:#7a6397}
+html[data-style=playful] .style-picker>summary:hover{background:#e6def5}
+html[data-style=playful] .style-picker>summary:focus-visible{outline-color:#9c85ca}
+html[data-style=playful] .top-actions #account-button,html[data-style=playful] .top-actions #open-sessions{background:#efebfa;border-color:#e5dff1;color:#6d5a88}
+html[data-style=playful] .top-actions #account-button:hover,html[data-style=playful] .top-actions #open-sessions:hover{background:#e6def5}
+html[data-style=playful] .top-actions #new-mobile:hover{background:#657fe0;border-color:#657fe0}
+html[data-style=playful] .conversation-title svg{color:#9681b4}
+html[data-style=playful] .local-section-head button{background:#efebfa;border-color:#e0d7ee;color:#8a70a4}
+html[data-style=playful] .local-section-head button:hover{background:#e6def5}
+html[data-style=playful] .chat:focus-visible{outline-color:#c5b5e0}
+@media(max-width:700px){html[data-style=playful] .brand-mark{border-radius:8px}}
 </style>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head><body>
@@ -566,7 +587,7 @@ html[data-style=playful] .help-content :is(p,.step-number){color:#80728f}
 (()=>{
  const root=document.documentElement,picker=document.getElementById('style-picker');
  const apply=(style)=>{
-  root.dataset.style=style==='playful'?'playful':'garden';
+  root.dataset.style=style==='garden'?'garden':'playful';
   const scene=document.querySelector('.companion-scene');if(scene)scene.setAttribute('aria-label',root.dataset.style==='playful'?'戴黄色项圈的可爱小狗插画':'依偎在一起的橘猫和小狗，轻轻眨眼、摇尾巴');
   picker.querySelectorAll('[data-style]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.style===root.dataset.style)));
  };
