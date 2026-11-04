@@ -1,3 +1,5 @@
+> v56：新增「清新花园 / 缤纷伙伴」风格切换，详见 [UI_V56.md](UI_V56.md)。本版只改 UI，无需 SQL 或 FastGPT 更新。
+
 # 宠AI v55：真实流式回复
 
 部署完整Worker **1.24.0**，连同新增ANSWER_STREAMS Durable Object绑定与Cloudflare迁移配置一起更新。登录与访客均支持真实SSE，最终原文仍保存至Supabase。本次无新Supabase SQL，FastGPT流程不变。见 [STREAMING_V55.md](STREAMING_V55.md)。
