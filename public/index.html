@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-style="playful"><head><script>try{document.documentElement.dataset.style=localStorage.getItem("petai-ui-style")==="garden"?"garden":"playful"}catch{}</script><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<html data-worker-hosted lang="zh-CN" data-style="playful"><head><script>try{document.documentElement.dataset.style=localStorage.getItem("petai-ui-style")==="garden"?"garden":"playful"}catch{}</script><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="宠AI，陪你了解宠物的日常照护、行为习惯、健康信号与养宠规定。支持文字咨询与图片观察。"><meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#f4f5f6"><title>宠AI · 云端宠物助手</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -574,7 +574,7 @@ html[data-style=playful] .chat:focus-visible{outline-color:#c5b5e0}
 <dialog id="pets-dialog" class="cloud-dialog" aria-labelledby="pets-title"><header><h2 id="pets-title">宠物档案</h2><button type="button" data-close-dialog="pets-dialog" aria-label="关闭档案">×</button></header><p class="profile-intro">云端已保存 · 新会话也能查看。可从聊天补充，或逐项编辑。手动资料由你确认后才更新。</p><div id="profile-content" class="readonly-records" aria-live="polite"></div></dialog>
 <dialog id="auth-dialog" class="cloud-dialog" aria-labelledby="auth-title"><header><h2 id="auth-title">和它的故事，接着聊</h2><button type="button" data-close-dialog="auth-dialog" aria-label="关闭账号窗口">×</button></header><div id="auth-entry"><p>登录后会话保存在云端。明确的宠物资料经提取成功后写入档案；是否已保存，请以档案页实际显示为准。</p><div class="cloud-tabs" role="tablist" aria-label="账号操作"><button type="button" data-auth-mode="login" role="tab" aria-selected="true">登录</button><button type="button" data-auth-mode="signup" role="tab" aria-selected="false">注册</button><button type="button" data-auth-mode="reset" role="tab" aria-selected="false">重置密码</button></div><form id="auth-form"><div id="auth-email-wrap"><label for="auth-email">邮箱</label><input id="auth-email" type="email" autocomplete="email" required></div><div id="auth-password-wrap"><label for="auth-password">密码</label><input id="auth-password" type="password" autocomplete="current-password" required maxlength="200"></div><p id="auth-status" class="cloud-status" role="status" aria-live="polite"></p><div class="cloud-actions"><button type="button" id="continue-guest">暂不登录</button><button type="submit" id="auth-submit" class="primary">登录</button></div></form></div><div id="auth-logged-in" hidden><div class="auth-account"><p>当前账号</p><strong id="account-email"></strong><p>宠物档案仅展示已写入云端的资料。退出会清空当前页面数据，云端记录仍保留。</p></div><p id="export-status" role="status" aria-live="polite"></p><a id="export-download" class="export-download" hidden>下载导出文件</a><div class="cloud-actions"><button type="button" id="export-data">导出聊天与档案（JSON）</button><button type="button" id="sign-out">退出登录</button><button type="button" id="delete-cloud-data" class="danger">删除全部云端数据</button></div></div></dialog>
 <dialog id="confirm-dialog" class="cloud-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-description"><header><h2 id="confirm-title">确认操作</h2></header><p id="confirm-description"></p><div class="cloud-actions"><button type="button" id="confirm-no">取消</button><button type="button" id="confirm-yes" class="primary">继续</button></div></dialog>
-<dialog id="settings-dialog" class="cloud-dialog" aria-labelledby="settings-title"><header><h2 id="settings-title">连接设置</h2><button type="button" data-close-dialog="settings-dialog" aria-label="关闭连接设置">×</button></header><p class="settings-public-note">页面会从 Worker 自动读取公开登录配置。下面不需要、也不允许填写 Supabase Secret Key、service_role 或 FastGPT 密钥。</p><p id="config-origin"></p><form id="settings-form"><label for="config-worker">Worker 后端地址</label><input id="config-worker" type="url" required autocomplete="off"><label for="config-supabase">Supabase 项目 URL（公开）</label><input id="config-supabase" type="url" autocomplete="off" placeholder="https://项目标识.supabase.co"><label for="config-publishable">Supabase Publishable Key（公开）</label><input id="config-publishable" autocomplete="off" spellcheck="false" placeholder="sb_publishable_… 或旧版 anon key"><label for="config-turnstile">Turnstile Site Key（公开）</label><input id="config-turnstile" autocomplete="off" placeholder="访客模式使用"><p>若 Worker 已配置这些公开值，请点“重新读取”。手工填写只作为兼容旧后端的方式，公开配置可保存到当前浏览器。</p><p id="config-status" class="cloud-status" role="status"></p><div class="cloud-actions"><button type="button" id="check-connection">检查连接</button><button type="button" id="reload-config">重新读取</button><button type="submit" class="primary">保存公开配置</button></div></form></dialog>
+<dialog id="settings-dialog" class="cloud-dialog" aria-labelledby="settings-title"><header><h2 id="settings-title">连接设置</h2><button type="button" data-close-dialog="settings-dialog" aria-label="关闭连接设置">×</button></header><p class="settings-public-note">页面会从 Worker 自动读取公开登录配置。下面不需要、也不允许填写 Supabase Secret Key、service_role 或 FastGPT 密钥。</p><p id="config-origin"></p><form id="settings-form"><label for="config-worker">Worker 后端地址</label><input readonly id="config-worker" type="url" required autocomplete="off"><label for="config-supabase">Supabase 项目 URL（公开）</label><input id="config-supabase" type="url" autocomplete="off" placeholder="https://项目标识.supabase.co"><label for="config-publishable">Supabase Publishable Key（公开）</label><input id="config-publishable" autocomplete="off" spellcheck="false" placeholder="sb_publishable_… 或旧版 anon key"><label for="config-turnstile">Turnstile Site Key（公开）</label><input id="config-turnstile" autocomplete="off" placeholder="访客模式使用"><p>若 Worker 已配置这些公开值，请点“重新读取”。手工填写只作为兼容旧后端的方式，公开配置可保存到当前浏览器。</p><p id="config-status" class="cloud-status" role="status"></p><div class="cloud-actions"><button type="button" id="check-connection">检查连接</button><button type="button" id="reload-config">重新读取</button><button type="submit" class="primary">保存公开配置</button></div></form></dialog>
 <input id="file" type="file" multiple accept="image/jpeg,image/png,image/webp" hidden><input id="camera-file" type="file" accept="image/*" capture="environment" hidden><div id="toast" class="toast cloud-toast" role="status" hidden></div>
 
 <dialog id="copy-dialog" class="cloud-dialog"><h2>复制内容</h2><p>浏览器未允许自动复制。请长按或选中下方文字复制。</p><textarea id="copy-content" readonly aria-label="待复制的原文" rows="10"></textarea><div class="cloud-actions"><button type="button" data-close-dialog="copy-dialog">关闭</button></div></dialog>
@@ -662,6 +662,7 @@ function summarizeTitle(value,hasImages=false){
 
 'use strict';
 (() => {
+const sameOriginApi=document.documentElement.hasAttribute('data-worker-hosted')&&location.protocol!=='file:';
 function removeWelcome(){const w=$('welcome');if(w)w.remove()}
 function messageTimeMillis(value){
  if(value===null||value===undefined||value===''||!['string','number'].includes(typeof value))return NaN;
@@ -754,7 +755,7 @@ function renderMarkdown(parent,s){
   }
 }
 
-const DEFAULT_CONFIG={apiBase:'https://petai-worker.bobo20241113.workers.dev',supabaseUrl:'',supabasePublishableKey:'',turnstileSiteKey:'',guestEnabled:null};
+const DEFAULT_CONFIG={apiBase:sameOriginApi?location.origin:'https://petai-worker.bobo20241113.workers.dev',supabaseUrl:'',supabasePublishableKey:'',turnstileSiteKey:'',guestEnabled:null};
 const CONFIG_KEY='petai.cloud.public.v1';
 const $=id=>document.getElementById(id);
 const chat=$('chat');
@@ -805,7 +806,15 @@ function scrollDown(){chat.scrollTop=chat.scrollHeight}
 function restoreWelcome(){chat.innerHTML=welcomeMarkup}
 function clearPhoto(){photoEpoch++;photo=null;$('file').value='';$('camera-file').value='';renderPhotos()}
 function clearView(){profileRequest++;$('profile-content').replaceChildren();$('pets-dialog').close();active=null;activeGuest=null;messages=[];guestTurns=[];pendingSubmit=null;firstSequence=null;clearPhoto();$('question').value='';$('active-session-title').textContent='新对话';restoreWelcome();fitQuestion()}
-function readConfig(){try{const c=JSON.parse(localStorage.getItem(CONFIG_KEY)||'{}');for(const k of Object.keys(DEFAULT_CONFIG))if(typeof c[k]==='string'&&c[k])config[k]=c[k]}catch{}}
+function readConfig(){
+ try{
+  const saved=JSON.parse(localStorage.getItem(CONFIG_KEY)||'{}');
+  for(const key of Object.keys(DEFAULT_CONFIG)){
+   if(key==='apiBase'&&sameOriginApi)continue;
+   if(typeof saved[key]==='string'&&saved[key])config[key]=saved[key];
+  }
+ }catch{}
+}
 function validateConfig(c){
  const api=new URL(c.apiBase);if(api.protocol!=='https:'&&!(api.protocol==='http:'&&['localhost','127.0.0.1'].includes(api.hostname)))throw new ClientError('Worker 地址需要使用 HTTPS');
  c.apiBase=api.origin+api.pathname.replace(/\/$/,'');
@@ -1334,7 +1343,7 @@ async function loadServerConfig(){
  }catch{configNotice='无法读取 Worker 公开配置。若页面与后端不同域，请检查 ALLOWED_ORIGINS；连接设置可手工填写公开信息。';}finally{clearTimeout(timeout)}
 }
 async function saveSettings(event){
- event.preventDefault();const next=validateConfig({...config,apiBase:$('config-worker').value.trim().replace(/\/$/,''),supabaseUrl:$('config-supabase').value.trim(),supabasePublishableKey:$('config-publishable').value.trim(),turnstileSiteKey:$('config-turnstile').value.trim()});
+ event.preventDefault();const next=validateConfig({...config,apiBase:sameOriginApi?DEFAULT_CONFIG.apiBase:$('config-worker').value.trim().replace(/\/$/,''),supabaseUrl:$('config-supabase').value.trim(),supabasePublishableKey:$('config-publishable').value.trim(),turnstileSiteKey:$('config-turnstile').value.trim()});
  const changeProject=next.supabaseUrl!==config.supabaseUrl||next.supabasePublishableKey!==config.supabasePublishableKey;
  if(identity&&!await confirmChoice('更新连接配置','这会清空当前页面的账号数据并重新读取云端状态，未发送草稿将丢失。是否继续？'))return;
  stopWait();if(changeProject&&auth)await auth.auth.signOut({scope:'local'});identity=null;userId=null;conversations=[];pets=[];discardGuestSessions();clearView();config=next;clearGuestPass();
