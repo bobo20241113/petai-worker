@@ -21,3 +21,25 @@ test('actual queue runner follows semantic new-subject result; bad/legacy extrac
  try{await runTurn({SUPABASE_URL:'https://db.invalid',SUPABASE_SECRET_KEY:'sb_secret_test',FASTGPT_API_URL:'https://school.invalid/chat',FASTGPT_API_KEY:'main',MEMORY_API_URL:'https://memory.invalid/chat',MEMORY_API_KEY:'memory',...(mode==='streamed'?{ANSWER_STREAMS:{idFromName:n=>n,get:()=>({fetch:async(_url,init)=>{updates.push(JSON.parse(init.body));return new Response(null,{status:204})}})}}:{})},T);assert.equal(memoryCalls,mode==='repair'?2:1);assert.equal(completed,raw);if(mode==='streamed'){assert.ok(updates.some(u=>u.status==='processing'&&u.partial_answer===raw));assert.equal(updates.at(-1).answer,raw)}assert.equal(applied,!bad);assert.equal(pending,bad);if(bad)assert.equal(profile,'');else{assert.equal(JSON.parse(profile).id,N);assert.equal(JSON.parse(profile).breed_description,'泰迪')}}finally{globalThis.fetch=previous}
  }
 });
+test('plain greetings skip both model calls while keeping clarification state and cloud history',async()=>{
+ const previous=globalThis.fetch,requests=[];
+ const state={pending_question:'要咨询哪一项养宠规定？'};
+ globalThis.fetch=async(url,init={})=>{
+  const path=new URL(url).pathname;
+  requests.push({path,body:init.body?JSON.parse(init.body):null});
+  switch(path){
+   case '/rest/v1/rpc/petai_claim_turn':return Response.json({owner_id:U,conversation_id:C,lease_token:L,memory_done:false});
+   case '/rest/v1/messages':return Response.json([{content:'你好 吃饭了吗'}]);
+   case '/rest/v1/conversation_states':return Response.json([{state}]);
+   case '/rest/v1/rpc/petai_apply_memory':
+   case '/rest/v1/rpc/petai_complete_turn':return Response.json(null);
+   default:throw Error('unexpected request: '+url);
+  }
+ };
+ try{
+  await runTurn({SUPABASE_URL:'https://db.invalid',SUPABASE_SECRET_KEY:'sb_secret_test'},T);
+  assert.deepEqual(requests.map(r=>r.path),['/rest/v1/rpc/petai_claim_turn','/rest/v1/messages','/rest/v1/conversation_states','/rest/v1/rpc/petai_apply_memory','/rest/v1/rpc/petai_complete_turn']);
+  assert.deepEqual(requests[3].body.p_data,{operations:[],state});
+  assert.match(requests[4].body.p_answer,/我是宠AI/);
+ }finally{globalThis.fetch=previous}
+});

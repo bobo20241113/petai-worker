@@ -1234,7 +1234,11 @@ async function pollTurn(turnId,bubble,stamp=epoch){
  assertEpoch(stamp);setBusy(true);activeTask={id:turnId,bubble};
  const start=Date.now();let failures=0,useStream=true;
  const onProgress=(event,task)=>{
-  if(event!=='task'||task.status!=='processing'||!task.partial_answer)return;
+  if(event!=='task'||task.status!=='processing')return;
+  if(!task.partial_answer){
+   if(!bubble.dataset.partialAnswer){bubble.textContent='正在处理你的问题，请稍候…';setStatus('后台处理中');}
+   return;
+  }
   showStreamText(bubble,task.partial_answer);
   streamNote(bubble,'正在输出…');setStatus('正在接收回复…');
  };
@@ -1258,7 +1262,7 @@ async function pollTurn(turnId,bubble,stamp=epoch){
     if(bubble.dataset.partialAnswer)streamNote(bubble,'输出未完成。'+failureText);else bubble.textContent=failureText;
     if(task.status!=='cancelled')addAction(bubble,'再试一次',()=>retryTurn(turnId,bubble));setStatus('任务已结束，可查看提示后重试。');return;
    }
-   if(task.partial_answer)showStreamText(bubble,task.partial_answer);if(!bubble.dataset.partialAnswer)bubble.textContent=task.status==='pending'?'问题已提交，正在排队…':'正在处理你的问题，请稍候…';setStatus((task.status==='pending'?'后台排队中':'后台处理中')+' · '+Math.floor((Date.now()-start)/1000)+'秒');
+   if(task.partial_answer)showStreamText(bubble,task.partial_answer);if(!bubble.dataset.partialAnswer)bubble.textContent=task.status==='pending'?'问题已提交，正在排队…':'正在处理你的问题，请稍候…';setStatus(task.status==='pending'?'后台排队中':'后台处理中');
    const delay=useStream?(task.status==='pending'?2500:750):4000;
    await wait(delay,stamp);
   }

@@ -141,7 +141,12 @@ export async function route(request,env,ctx) {
     // Single-image clients keep the original RPC; arrays use the atomic multi-image RPC.
     const multiple=Object.hasOwn(b,'attachment_ids');
     const turn=await db.rpc(multiple?'petai_submit_turn_images':'petai_submit_turn',{p_owner:user,p_conversation:cid,p_request:client,p_text:input,...(multiple?{p_attachments:attachments}:{p_attachment:attachments[0]||null}),p_hash:await hash(JSON.stringify(multiple?{input,attachments}:{input,attachment:attachments[0]||null})),p_daily_limit:Number(env.MAX_USER_TURNS_PER_DAY)||100});
-    if(turn.status==='pending'){try{await enqueue(db,env,turn.id);}catch{/* cron replays outbox */}}
+    if(turn.status==='pending'){
+      // The submission RPC already recorded the outbox. Keep delivery outside the response path.
+      const delivery=enqueue(db,env,turn.id).catch(()=>{/* cron replays outbox */});
+      if(ctx?.waitUntil)ctx.waitUntil(delivery);
+      else await delivery;
+    }
     return response({turn_id:turn.id,status:turn.status,created_at:turn.created_at},202);
   }
   if((m=p.match(/^\/api\/turns\/([^/]+)\/stream$/))&&method==='GET'){

@@ -7,3 +7,33 @@ test('stream route authenticates and scopes owner before touching the private du
  const req=()=>new Request('https://app/api/turns/'+T+'/stream',{headers:{Authorization:'Bearer test'}});
  try{await assert.rejects(route(new Request('https://app/api/turns/'+T+'/stream'),env,{}),e=>e.code==='AUTH_REQUIRED');assert.equal(touched,0);allowed=false;await assert.rejects(route(req(),env,{}),e=>e.code==='NOT_FOUND');assert.equal(touched,0);allowed=true;await route(req(),env,{});assert.equal(touched,1);status='completed';const streamed=await worker.fetch(req(),env,{});assert.equal(streamed.headers.get('Cache-Control'),'no-store, no-transform');const frames=[];for await(const e of readSSE(streamed))frames.push(JSON.parse(e.data));assert.equal(frames[0].answer,' 完整原文 ');assert.equal(frames[0].context_snapshot,undefined);assert.equal(frames[0].lease_token,undefined)}finally{globalThis.fetch=previous}
 });
+test('a durably saved turn responds while queue delivery is still in flight',async()=>{
+ const previous=globalThis.fetch;
+ let release,delivery,marked=false;
+ const queueWrite=new Promise(resolve=>{release=resolve});
+ globalThis.fetch=async(url)=>{
+  const path=new URL(url).pathname;
+  switch(path){
+   case '/auth/v1/user':return Response.json({id:U});
+   case '/rest/v1/rpc/petai_submit_turn':return Response.json({id:T,status:'pending'});
+   case '/rest/v1/outbox':marked=true;return Response.json([]);
+   default:throw Error('unexpected request: '+url);
+  }
+ };
+ const env={SUPABASE_URL:'https://db.invalid',SUPABASE_SECRET_KEY:'sb_secret_test',
+  API_RATE_LIMITER:{limit:async()=>({success:true})},
+  CHAT_QUEUE:{send:({turn_id})=>{assert.equal(turn_id,T);return queueWrite}}
+ };
+ try{
+  const request=new Request('https://app/api/conversations/'+T+'/turns',{method:'POST',headers:{Authorization:'Bearer test','Content-Type':'application/json'},
+   body:JSON.stringify({client_request_id:T,text:'你好'})});
+  const response=await route(request,env,{waitUntil:promise=>{delivery=promise}});
+  assert.equal(response.status,202);
+  assert.equal((await response.json()).turn_id,T);
+  assert.equal(marked,false);
+  assert.ok(delivery);
+  release();
+  await delivery;
+  assert.equal(marked,true);
+ }finally{release();await delivery;globalThis.fetch=previous}
+});

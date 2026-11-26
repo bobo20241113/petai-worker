@@ -12,6 +12,17 @@ export async function enqueue(db, env, turnId) {
   await env.CHAT_QUEUE.send({turn_id:turnId});
   await db.update('outbox',{turn_id:'eq.'+turnId},{delivered_at:new Date().toISOString()});
 }
+function greetingReply(message) {
+  if (message.attachment_id || message.attachment_ids?.length) return null;
+  const input = message.content.trim();
+  if (/^(你好|您好|哈[喽啰]|嗨|早上好|下午好|晚上好|hello|hi)[\s！!。？?～~]*$/iu.test(input)) {
+    return '你好！我是宠AI。有什么想了解的养宠问题吗？';
+  }
+  if (/^(你|你好|您好)[\s，,。！!]*吃饭了[吗么][\s？?！!。]*$/u.test(input)) {
+    return '你好！我是宠AI，不用吃饭。想聊聊毛孩子的饮食，还是有其他养宠问题？';
+  }
+  return null;
+}
 export async function petContext(db, owner, petId) {
   if (!petId) return {profile:null,records:[],issues:[]};
   const pet = await db.own('pets',owner,petId);
@@ -36,9 +47,27 @@ export async function runTurn(env, turnId) {
   const db = new DB(env); const claimed = await db.rpc('petai_claim_turn',{p_turn:turnId});
   if (!claimed) return;
   const {owner_id:owner,conversation_id:conversationId,lease_token:lease} = claimed;
+  let stream=streamStub(env,turnId,claimed.attempt);
+  const publish=async task=>{try{await publishAnswer(stream,{id:turnId,attempt:claimed.attempt,...task})}catch{stream=null;console.warn('ANSWER_STREAM_UNAVAILABLE')}};
+  async function complete(answer,partial,progressDone) {
+    await Promise.all([db.rpc('petai_complete_turn',{p_turn:turnId,p_lease:lease,p_answer:answer}),progressDone]);
+    // Cancellation may have won while the answer was running.
+    const result=stream?await db.own('chat_turns',owner,turnId):null;
+    if(result)await publish({status:result.status,answer:result.status==='completed'?answer:null,partial_answer:partial,updated_at:result.updated_at});
+  }
   try {
-    let conv = await db.own('conversations',owner,conversationId);
     const current = (await db.rows('messages',{owner_id:'eq.'+owner,turn_id:'eq.'+turnId,role:'eq.user',limit:'1'}))[0]; if (!current) throw new Error('MESSAGE_MISSING');
+    const greeting=greetingReply(current);
+    if(greeting){
+      if(!claimed.memory_done){
+        const [prior]=await db.rows('conversation_states',{conversation_id:'eq.'+conversationId,owner_id:'eq.'+owner,limit:'1'});
+        // An empty legacy operation list preserves the current binding; carry forward clarification state.
+        await db.rpc('petai_apply_memory',{p_turn:turnId,p_lease:lease,p_data:{operations:[],state:prior?.state||{}}});
+      }
+      await complete(greeting,'');
+      return;
+    }
+    let conv = await db.own('conversations',owner,conversationId);
     const rows = await db.rows('messages',{owner_id:'eq.'+owner,conversation_id:'eq.'+conversationId,sequence:'lt.'+current.sequence,order:'sequence.desc',limit:'24'});
     const history = successfulHistory(rows.filter(m=>m.turn_id!==turnId));
     const rawPets=await db.rows('pets',{owner_id:'eq.'+owner,order:'created_at.asc',limit:'100'});
@@ -83,8 +112,7 @@ export async function runTurn(env, turnId) {
     // Persist before calling upstream: a lost response is not automatically safe to repeat.
     const started = await db.rpc('petai_start_answer',{p_turn:turnId,p_lease:lease,p_context:{messages,variables,memory_pet_id:memoryTarget,auto_binding_allowed:!match.ambiguous,workflow:env.WORKFLOW_VERSION}});
     if (!started) return;
-    let answer,partial='',stream=streamStub(env,turnId,claimed.attempt);
-    const publish=async task=>{try{await publishAnswer(stream,{id:turnId,attempt:claimed.attempt,...task})}catch{stream=null;console.warn('ANSWER_STREAM_UNAVAILABLE')}};
+    let answer,partial='';
     const progress=progressPublisher(publish);
     try {
       answer=await fastgptStream(env,messages,variables,(_delta,text)=>{
@@ -98,10 +126,7 @@ export async function runTurn(env, turnId) {
       await publish({status:'needs_review',partial_answer:partial});
       return;
     }
-    await Promise.all([progress.stop(),db.rpc('petai_complete_turn',{p_turn:turnId,p_lease:lease,p_answer:answer})]);
-    // DB remains authoritative: cancellation may have won while the upstream was running.
-    const result=stream?await db.own('chat_turns',owner,turnId):null;
-    if(result)await publish({status:result.status,answer:result.status==='completed'?answer:null,partial_answer:partial,updated_at:result.updated_at});
+    await complete(answer,partial,progress.stop());
   } catch {
     // The SQL function upgrades to needs_review if answer_started was already set.
     await db.rpc('petai_fail_turn',{p_turn:turnId,p_lease:lease,p_status:'failed',p_error:'PROCESSING_FAILED'});
