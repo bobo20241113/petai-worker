@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {readSSE} from '../src/sse.js';import {fastgptStream,guestStream} from '../src/streaming.js';import {AnswerStream} from '../src/answer-stream.js';
+import {readSSE} from '../src/sse.js';import {fastgptStream,guestStream} from '../src/streaming.js';import {AnswerStream,progressPublisher} from '../src/answer-stream.js';
 const env={FASTGPT_API_URL:'https://school.invalid/chat',FASTGPT_API_KEY:'test'},encoder=new TextEncoder();
 const response=text=>{const bytes=encoder.encode(text);return new Response(new ReadableStream({start(c){for(let i=0;i<bytes.length;i+=3)c.enqueue(bytes.slice(i,i+3));c.close()}}),{headers:{'content-type':'text/event-stream'}})};
 const part=text=>'event: answer\r\ndata: '+JSON.stringify({choices:[{delta:{content:text},finish_reason:null}]})+'\r\n\r\n';
@@ -15,4 +15,48 @@ test('private durable stream stores progress for reconnect, preserves final text
  await publish({status:'processing',partial_answer:'你好'});assert.ok(store.has('meta'));
  const reopened=new AnswerStream(ctx),res=await reopened.fetch(new Request('https://internal/subscribe?id=turn&attempt=1')),reader=res.body.getReader();const first=new TextDecoder().decode((await reader.read()).value);assert.match(first,/你好/);await reader.cancel();
  await publish({status:'completed',answer:'你好\n原文 ',partial_answer:'你好\n原文 '});const frames=[];for await(const f of readSSE(await obj.fetch(new Request('https://internal/subscribe'))))frames.push(JSON.parse(f.data));assert.equal(frames[0].answer,'你好\n原文 ');await obj.alarm();assert.equal(store.size,0);
+});
+test('active replies stay on one subscription past the old cutoff, while idle subscriptions close',async t=>{
+ t.mock.timers.enable({apis:['setTimeout','Date']});
+ const obj=new AnswerStream({
+  blockConcurrencyWhile:fn=>fn(),
+  storage:{get:async()=>undefined,put:async()=>{},setAlarm:async()=>{}}
+ });
+ const subscribe=()=>obj.fetch(new Request('https://internal/subscribe?id=turn'));
+ const publish=partial_answer=>obj.fetch(new Request('https://internal/update',{
+  method:'POST',body:JSON.stringify({id:'turn',status:'processing',partial_answer})
+ }));
+ const frames=readSSE(await subscribe());
+ assert.equal(JSON.parse((await frames.next()).value.data).partial_answer,'');
+ t.mock.timers.tick(10000);
+ await publish('第一段');
+ assert.equal(JSON.parse((await frames.next()).value.data).partial_answer,'第一段');
+ t.mock.timers.tick(10000);
+ await publish('第一段，第二段');
+ assert.equal(JSON.parse((await frames.next()).value.data).partial_answer,'第一段，第二段');
+ t.mock.timers.tick(18000);
+ assert.equal((await frames.next()).done,true);
+ assert.equal(obj.clients.size,0);
+});
+test('slow progress publishing coalesces updates and drains before a terminal update',async t=>{
+ t.mock.timers.enable({apis:['setTimeout','Date']});
+ const sent=[],writes=[];
+ const publisher=progressPublisher(task=>{
+  sent.push(task.partial_answer);
+  return new Promise(resolve=>writes.push(resolve));
+ });
+ publisher.push('一');
+ publisher.push('一二');
+ publisher.push('一二三');
+ assert.deepEqual(sent,['一']);
+ writes.shift()();
+ await Promise.resolve();
+ t.mock.timers.tick(150);
+ assert.deepEqual(sent,['一','一二三']);
+ publisher.push('一二三四');
+ const stop=publisher.stop();
+ writes.shift()();
+ await stop;
+ t.mock.timers.tick(150);
+ assert.deepEqual(sent,['一','一二三']);
 });
